@@ -18,6 +18,12 @@ The app will be available at `localhost:3000`.
 
 From there, you can view any example, see the zero-shot prompt that created the code, and remix it for your own ideas.
 
+### Community Deployments
+
+The community has created additional deployments of these examples:
+
+- **[Static GitHub Pages Version](https://aonsyed.github.io/gpt5examples/)** – A fully static deployment that works immediately without any local setup. Perfect for browsing examples quickly or as a reference for deploying your own static version. ([Source](https://github.com/aonsyed/gpt5examples))
+
 ## Build with GPT-5
 
 If you want to experiment with similar prompts, you can try GPT-5 in your preferred coding environment:
