@@ -6,9 +6,15 @@ These demos were selected to showcase the model’s strengths in coding — espe
 
 ## Explore Examples
 
-You can explore the demos directly here:
+You can explore the demos by cloning this repo and running it locally:
 
-**▶ [Browse the examples](http://openai.github.io/gpt-5-coding-examples/)**
+```
+cd front-end
+npm install
+npm run dev
+```
+
+The app will be available at `localhost:3000`.
 
 From there, you can view any example, see the zero-shot prompt that created the code, and remix it for your own ideas.
 
