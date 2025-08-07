@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Farewell Message Board</title>
+    <meta name="color-scheme" content="light dark" />
+    <style>
+      :root {
+        --bg: #fcfcff;
+        --surface: #ffffff;
+        --surface-2: #f5f6fb;
+        --text: #0f1220;
+        --muted: #6b7183;
+        --border: #e8eaf2;
+        --primary: #ff6b6b;
+        --primary-2: #4ecdc4;
+        --primary-contrast: #ffffff;
+        --radius: 18px;
+        --radius-sm: 12px;
+        --shadow-1: 0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06);
+        --shadow-2: 0 8px 28px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1016;
+          --surface: #141925;
+          --surface-2: #182133;
+          --text: #eef2fb;
+          --muted: #b0b6c7;
+          --border: #253047;
+          --primary: #ff7f7f;
+          --primary-2: #67e5dc;
+          --primary-contrast: #0d1016;
+          --shadow-1: 0 1px 2px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.35);
+          --shadow-2: 0 8px 28px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.3);
+        }
+      }
+
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        background:
+          radial-gradient(800px 600px at 100% -10%, color-mix(in oklab, var(--primary), transparent 86%), transparent 60%),
+          radial-gradient(900px 700px at -10% 20%, color-mix(in oklab, var(--primary-2), transparent 85%), transparent 60%),
+          var(--bg);
+      }
+
+      .container { max-width: 1080px; margin: 0 auto; padding: 24px; }
+
+      header.appbar {
+        position: sticky; top: 0; z-index: 10;
+        backdrop-filter: blur(10px) saturate(160%);
+        background: linear-gradient(180deg, color-mix(in oklab, var(--surface), transparent 10%), color-mix(in oklab, var(--surface), transparent 18%));
+        border-bottom: 1px solid var(--border);
+      }
+      .appbar .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; }
+      .brand { display: inline-flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: 0.2px; }
+      .brand .logo {
+        width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: var(--primary-contrast);
+        background: conic-gradient(from 0deg, var(--primary), var(--primary-2), #ffd166, #ffd6e8, var(--primary));
+        box-shadow: 0 6px 16px color-mix(in oklab, var(--primary), transparent 70%);
+      }
+      .brand .title { font-size: 16px; }
+
+      .btn {
+        --btn-h: 40px; --btn-px: 16px; --btn-radius: 999px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        height: var(--btn-h); padding: 0 var(--btn-px);
+        border-radius: var(--btn-radius); border: 1px solid transparent;
+        font-weight: 700; letter-spacing: .2px; cursor: pointer; user-select: none;
+        transition: transform .06s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn:disabled { opacity: .6; cursor: not-allowed; }
+      .btn-primary { background: linear-gradient(180deg, var(--primary), color-mix(in oklab, var(--primary), black 10%)); color: var(--primary-contrast); box-shadow: 0 6px 16px color-mix(in oklab, var(--primary), transparent 72%); }
+      .btn-secondary { background: linear-gradient(180deg, var(--surface-2), color-mix(in oklab, var(--surface-2), black 6%)); color: var(--text); border-color: var(--border); }
+      .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+      .btn-lg { --btn-h: 48px; --btn-px: 22px; }
+      .btn-sm { --btn-h: 32px; --btn-px: 12px; font-weight: 600; }
+
+      .avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #ffd166, #ff6b6b); color: #0d0f14; font-weight: 900; font-size: 13px; }
+      .login { display: inline-flex; align-items: center; gap: 10px; }
+
+      .hero { padding: 28px 24px 6px; }
+      .hero h1 { margin: 0 0 8px 0; font-size: 28px; line-height: 1.15; }
+      .hero p { margin: 0; color: var(--muted); }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+      .card {
+        background:
+          radial-gradient(120px 80px at 0% 0%, color-mix(in oklab, var(--primary), transparent 90%), transparent 60%),
+          radial-gradient(120px 80px at 100% 0%, color-mix(in oklab, var(--primary-2), transparent 90%), transparent 60%),
+          var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-1);
+        display: grid; gap: 10px; padding: 14px 14px 16px; min-height: 140px;
+        transition: box-shadow .2s ease, transform .06s ease;
+      }
+      .card:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); }
+
+      .header { display: flex; align-items: center; gap: 12px; }
+      .pic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 24px; background: var(--surface-2); border: 1px solid var(--border); }
+      .who { display: grid; }
+      .who .author { font-weight: 800; }
+      .who .when { color: var(--muted); font-size: 12px; }
+      .message { font-size: 15px; line-height: 1.5; margin: 0; }
+
+      .fab { position: fixed; right: 24px; bottom: 24px; z-index: 20; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: linear-gradient(180deg, var(--primary), color-mix(in oklab, var(--primary), black 10%)); color: var(--primary-contrast); box-shadow: 0 10px 24px color-mix(in oklab, var(--primary), transparent 70%); cursor: pointer; border: none; }
+      .fab:active { transform: translateY(1px); }
+
+      .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.42); display: none; align-items: center; justify-content: center; z-index: 30; }
+      .modal-overlay.open { display: flex; }
+      .modal { width: min(560px, calc(100% - 32px)); background: var(--surface); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); box-shadow: var(--shadow-2); overflow: hidden; }
+      .modal header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+      .modal header h3 { margin: 0; font-size: 18px; }
+      .modal .body { padding: 18px; display: grid; gap: 14px; }
+      .modal .footer { padding: 16px 18px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+      .field { display: grid; gap: 6px; }
+      label { font-size: 13px; color: var(--muted); }
+      input[type="text"], textarea, select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; outline: none; transition: border-color .2s ease, box-shadow .2s ease; }
+      input[type="text"]:focus, textarea:focus, select:focus { border-color: color-mix(in oklab, var(--primary), white 12%); box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary), transparent 84%); }
+      textarea { resize: vertical; min-height: 120px; }
+
+      .emoji-choices { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+      .emoji-choices button { height: 42px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; font-size: 20px; transition: transform .06s ease, box-shadow .2s ease, background .2s ease; }
+      .emoji-choices button:hover { box-shadow: var(--shadow-1); }
+      .emoji-choices button.active { outline: 3px solid color-mix(in oklab, var(--primary), transparent 70%); background: color-mix(in oklab, var(--primary), var(--surface-2) 92%); }
+
+      .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px); background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 10px 14px; border-radius: 999px; box-shadow: var(--shadow-2); opacity: 0; transition: opacity .2s ease, transform .2s ease; z-index: 40; }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+      .empty-state { text-align: center; color: var(--muted); padding: 40px 0; }
+
+      @media (max-width: 540px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="appbar">
+      <div class="row">
+        <div class="brand" aria-label="Site">
+          <div class="logo" aria-hidden="true">🌈</div>
+          <div class="title">Farewell Board</div>
+        </div>
+        <div class="login">
+          <div id="loginAvatar" class="avatar" aria-hidden="true">G</div>
+          <button id="loginBtn" class="btn btn-secondary btn-sm" aria-pressed="false" aria-label="Toggle sign-in">Sign in</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="container hero">
+        <h1>Send love. Share memories. Celebrate new beginnings.</h1>
+        <p>Leave a kind note to send them off with a smile.</p>
+      </section>
+
+      <section class="container">
+        <div id="board" class="grid" aria-live="polite"></div>
+        <div id="empty" class="empty-state" style="display:none">Be the first to write a message.</div>
+      </section>
+    </main>
+
+    <button id="writeFab" class="fab" aria-label="Write a new message" title="Write">✍️</button>
+
+    <div id="writeOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="writeTitle">
+      <div class="modal">
+        <header>
+          <h3 id="writeTitle">Write a message</h3>
+          <button id="closeModal" class="btn btn-ghost btn-sm" aria-label="Close">Close</button>
+        </header>
+        <div class="body">
+          <form id="writeForm">
+            <div class="field">
+              <label for="author">Your name</label>
+              <input type="text" id="author" name="author" placeholder="e.g., Alex" maxlength="40" required />
+            </div>
+            <div class="field">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" placeholder="Write something kind and memorable…" maxlength="500" required></textarea>
+            </div>
+            <div class="field">
+              <label>Pick a picture</label>
+              <div class="emoji-choices" id="emojiChoices"></div>
+              <input type="hidden" id="icon" name="icon" />
+            </div>
+          </form>
+        </div>
+        <div class="footer">
+          <button id="cancelBtn" class="btn btn-ghost">Cancel</button>
+          <button id="saveBtn" form="writeForm" class="btn btn-primary">Post</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const STORAGE_KEY = 'farewell_messages';
+      const LOGIN_KEY = 'farewell_login';
+
+      const defaultMessages = [
+        { author: 'Alex',   text: 'Thank you for the laughs and late-night debugging sessions. Wishing you blue skies and smooth landings in your next adventure.', icon: '🚀', date: '2024-06-03T09:00:00Z' },
+        { author: 'Priya',  text: "We'll miss your calm under pressure and your celebratory dance when tests pass. Don't be far!", icon: '⭐️', date: '2024-06-04T13:30:00Z' },
+        { author: 'Mateo',  text: 'Your kindness set the tone here. Go build something beautiful, we\'ll be cheering.', icon: '🌸', date: '2024-06-05T16:15:00Z' },
+        { author: 'Linh',   text: 'You turned problems into puzzles we wanted to solve. Keep that magic.', icon: '💡', date: '2024-06-06T10:45:00Z' },
+        { author: 'Sam',    text: "Coffee runs won't be the same without you. May your next mug always be full.", icon: '☕️', date: '2024-06-07T12:00:00Z' },
+        { author: 'Jordan', text: 'Thanks for mentoring me with patience and humor. Onward and upward!', icon: '❤️', date: '2024-06-08T09:40:00Z' },
+        { author: 'Rui',    text: "Shipping day high-fives won't feel right without you. Send postcards.", icon: '🏆', date: '2024-06-09T11:20:00Z' },
+        { author: 'Noor',   text: 'You leave a trail of well-named variables and happy teammates. Bon voyage!', icon: '📚', date: '2024-06-10T14:50:00Z' },
+        { author: 'Eva',    text: "From standups to sunsets, it's been a joy. Keep in touch.", icon: '☀️', date: '2024-06-11T18:05:00Z' },
+        { author: 'Theo',   text: 'Here\'s to new challenges, new friends, and a familiar playlist on repeat.', icon: '🎵', date: '2024-06-12T08:25:00Z' },
+      ].map((m, i) => ({ id: i + 1, ...m }));
+
+      function loadMessages() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (!saved) return [...defaultMessages];
+          const data = JSON.parse(saved);
+          if (!Array.isArray(data)) return [...defaultMessages];
+          return data.length ? data : [...defaultMessages];
+        } catch (e) {
+          return [...defaultMessages];
+        }
+      }
+
+      function saveMessages(list) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch (e) {}
+      }
+
+      function loadLogin() {
+        try { return JSON.parse(localStorage.getItem(LOGIN_KEY)) || { loggedIn: false, name: 'Guest' }; } catch (e) { return { loggedIn: false, name: 'Guest' }; }
+      }
+      function saveLogin(state) { try { localStorage.setItem(LOGIN_KEY, JSON.stringify(state)); } catch (e) {} }
+
+      let state = { messages: loadMessages(), login: loadLogin() };
+
+      const board = document.getElementById('board');
+      const empty = document.getElementById('empty');
+      const toast = document.getElementById('toast');
+      const loginBtn = document.getElementById('loginBtn');
+      const loginAvatar = document.getElementById('loginAvatar');
+      const writeFab = document.getElementById('writeFab');
+      const writeOverlay = document.getElementById('writeOverlay');
+      const closeModalBtn = document.getElementById('closeModal');
+      const cancelBtn = document.getElementById('cancelBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const form = document.getElementById('writeForm');
+      const authorInput = document.getElementById('author');
+      const messageInput = document.getElementById('message');
+      const iconInput = document.getElementById('icon');
+      const emojiChoices = document.getElementById('emojiChoices');
+
+      const EMOJIS = ['🎈','🎉','🌟','🌻','💌','🧡','🍀','✨','📸','🎨','🚀','⭐️','🌸','💡','☕️','❤️','🏆','📚','☀️','🎵'];
+
+      function fmtDate(iso) {
+        try {
+          const d = new Date(iso);
+          const now = new Date();
+          const sameYear = d.getFullYear() === now.getFullYear();
+          const opts = { month: 'short', day: 'numeric' };
+          if (!sameYear) opts.year = 'numeric';
+          return new Intl.DateTimeFormat(undefined, opts).format(d);
+        } catch (e) { return ''; }
+      }
+
+      function el(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
+
+      function renderBoard() {
+        board.innerHTML = '';
+        if (!state.messages.length) { empty.style.display = 'block'; return; }
+        empty.style.display = 'none';
+        state.messages.forEach(msg => {
+          const card = el('article', 'card');
+          card.setAttribute('aria-label', `Message from ${msg.author}`);
+
+          const header = el('div', 'header');
+          const pic = el('div', 'pic'); pic.textContent = msg.icon || '💬'; pic.setAttribute('aria-hidden', 'true');
+          const who = el('div', 'who');
+          const a = el('div', 'author'); a.textContent = msg.author;
+          const when = el('div', 'when'); when.textContent = fmtDate(msg.date);
+          who.append(a, when);
+          header.append(pic, who);
+
+          const body = el('p', 'message'); body.textContent = msg.text;
+          card.append(header, body);
+          board.append(card);
+        });
+      }
+
+      function showToast(text) {
+        toast.textContent = text; toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1800);
+      }
+
+      function openModal() {
+        writeOverlay.classList.add('open');
+        authorInput.value = state.login.loggedIn ? (state.login.name || 'You') : (state.login.name || 'Guest');
+        messageInput.value = '';
+        const choice = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+        iconInput.value = choice;
+        [...emojiChoices.children].forEach(btn => btn.classList.toggle('active', btn.dataset.emoji === choice));
+        setTimeout(() => messageInput.focus(), 30);
+      }
+      function closeModal() { writeOverlay.classList.remove('open'); }
+
+      function updateLoginUI() {
+        loginBtn.textContent = state.login.loggedIn ? 'Signed in' : 'Sign in';
+        loginBtn.setAttribute('aria-pressed', String(state.login.loggedIn));
+        const initial = (state.login.name || 'G').slice(0,1).toUpperCase();
+        loginAvatar.textContent = initial;
+      }
+
+      function toggleLogin() {
+        const was = state.login.loggedIn;
+        state.login.loggedIn = !was;
+        if (state.login.loggedIn && (!state.login.name || state.login.name === 'Guest')) {
+          const name = prompt('Pick a display name:', 'You');
+          if (name && name.trim()) state.login.name = name.trim().slice(0, 20); else state.login.name = 'You';
+        }
+        if (!state.login.loggedIn) state.login.name = 'Guest';
+        saveLogin(state.login); updateLoginUI();
+      }
+
+      function setupEmojiChoices() {
+        EMOJIS.forEach(e => {
+          const b = el('button'); b.type = 'button'; b.textContent = e; b.dataset.emoji = e;
+          b.addEventListener('click', () => { iconInput.value = e; [...emojiChoices.children].forEach(x => x.classList.remove('active')); b.classList.add('active'); });
+          emojiChoices.append(b);
+        });
+      }
+
+      loginBtn.addEventListener('click', toggleLogin);
+      writeFab.addEventListener('click', openModal);
+      closeModalBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+      writeOverlay.addEventListener('click', (e) => { if (e.target === writeOverlay) closeModal(); });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveBtn.disabled = true;
+        const author = (authorInput.value || '').trim().slice(0, 40) || 'Anonymous';
+        const text = (messageInput.value || '').trim().slice(0, 500);
+        const icon = iconInput.value || '💬';
+        if (!text) { saveBtn.disabled = false; return; }
+        const id = (state.messages.at(-1)?.id || 0) + 1;
+        const date = new Date().toISOString();
+        const item = { id, author, text, icon, date };
+        state.messages = [item, ...state.messages];
+        saveMessages(state.messages);
+        renderBoard();
+        saveBtn.disabled = false;
+        closeModal();
+        showToast('Message posted');
+      });
+
+      function init() { setupEmojiChoices(); updateLoginUI(); renderBoard(); }
+      init();
+    </script>
+  </body>
+  </html>

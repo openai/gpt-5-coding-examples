@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Music Theory Trainer</title>
+  <style>
+    :root{
+      --bg1:#0f1126;--bg2:#1a1d3a;--accent:#ffd166;--accent2:#06d6a0;--accent3:#ef476f;--text:#f2f3fb;
+      --key-white:#fff8f0;--key-white-edge:#e6dfd7;--key-black:#1b1b1b;--key-active:#79ffe0;
+      --btn:#2b2e57;--btn-hover:#3a3e75;--chip:#23254b;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: radial-gradient(1200px 600px at 10% -10%, #22275c 0%, transparent 60%),
+                  radial-gradient(1200px 600px at 120% 20%, #2c2f69 0%, transparent 60%),
+                  linear-gradient(160deg,var(--bg1),var(--bg2));
+    }
+    header{
+      position:sticky;top:0;z-index:50;
+      background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,0));
+      backdrop-filter:saturate(1.2) blur(6px);
+      padding:18px 16px 10px 16px;
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap
+    }
+    .logo{
+      width:42px;height:42px;border-radius:10px;
+      display:grid;place-items:center;
+      background:conic-gradient(from 180deg,#8ecae6,#219ebc,#023047,#ffb703,#fb8500,#8ecae6);
+      box-shadow:0 6px 20px rgba(0,0,0,.35) inset, 0 4px 14px rgba(0,0,0,.25);
+      color:#fff;font-weight:900
+    }
+    h1{margin:0;font-size: clamp(20px, 3.2vw, 34px)}
+    .subtitle{opacity:.8}
+    .container{max-width:1200px;margin:0 auto;padding:8px 16px 40px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+    .tab-btn{border:0;border-radius:999px;padding:10px 14px;background:var(--btn);color:var(--text);cursor:pointer}
+    .tab-btn.active{background:linear-gradient(180deg,var(--accent),#f0b74c);color:#1b1b1b;font-weight:700}
+    .section{display:none}
+    .section.active{display:block}
+
+    .panel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 14px 18px;margin:16px 0;box-shadow:0 6px 30px rgba(0,0,0,.25)}
+    .panel h2{margin:8px 6px 10px;font-size:22px}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .grow{flex:1 1 280px}
+
+    .piano-wrapper{position:relative;user-select:none}
+    .white-keys{display:flex;height:220px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0));border-radius:12px;padding:8px}
+    .key.white{flex:1 1 auto;height:100%;margin:0 2px;background:linear-gradient(180deg,var(--key-white),#efe7df);border:1px solid var(--key-white-edge);border-bottom:8px solid #d6cfc7;border-radius:6px;position:relative;box-shadow:inset 0 1px 0 #fff, 0 8px 20px rgba(0,0,0,.25)}
+    .key.white.active{box-shadow:inset 0 1px 0 #fff, 0 2px 6px rgba(0,0,0,.25);transform:translateY(4px);border-bottom-width:4px;background:#fff}
+    .black-keys{position:absolute;left:0;right:0;top:8px;bottom:40px;pointer-events:none}
+    .key.black{position:absolute;width:28px;border-radius:0 0 6px 6px;height:calc(100% - 14px);background:linear-gradient(180deg,#3a3a3a,#111);border:1px solid #000;box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px rgba(0,0,0,.5);pointer-events:auto}
+    .key.black.active{background:linear-gradient(180deg,#505050,#222);transform:translateY(3px)}
+    .key-label{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:12px;color:#333}
+    .key.white.marked .key-label{color:#111;font-weight:700}
+    .key.black .key-label{color:#ddd}
+    .mark{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--accent2);box-shadow:0 0 12px var(--accent2);display:none}
+    .key.marked .mark{display:block}
+
+    .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .select, select, .btn{background:var(--btn);border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:10px;padding:10px 12px}
+    .btn{cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),#f0b74c);color:#1a1a1a;border:0;font-weight:800}
+    .btn.good{background:linear-gradient(180deg,var(--accent2),#05c696);color:#0b1b19;border:0;font-weight:800}
+    .btn.bad{background:linear-gradient(180deg,var(--accent3),#c93555);color:#2a0c13;border:0;font-weight:800}
+
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{background:var(--chip);border:1px solid rgba(255,255,255,.1);padding:8px 10px;border-radius:999px}
+
+    .options{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:10px}
+    .option{background:var(--btn);border:1px solid rgba(255,255,255,.15);padding:10px;border-radius:10px;cursor:pointer;text-align:center}
+    .option.correct{background:linear-gradient(180deg,var(--accent2),#05c696);color:#0b1b19;border:0;font-weight:800}
+    .option.wrong{background:linear-gradient(180deg,var(--accent3),#c93555);color:#2a0c13;border:0;font-weight:800}
+
+    .score{display:flex;gap:8px;align-items:center;margin-top:10px}
+    .badge{background:rgba(255,255,255,.12);padding:6px 10px;border-radius:999px}
+
+    .note-fetti{position:fixed;left:0;right:0;top:0;pointer-events:none}
+    .muted{opacity:.7}
+    .small{font-size:12px;opacity:.85}
+    .hint{opacity:.85;margin:6px 0}
+
+    .audio-gate{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:100}
+    .audio-gate.visible{display:grid}
+    .gate-card{background:#111633;border:1px solid rgba(255,255,255,.14);padding:20px;border-radius:12px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.5)}
+    .gate-card h3{margin:8px 0 14px}
+
+    .footer{opacity:.7;text-align:center;margin-top:28px}
+    @media (max-width: 700px){
+      .white-keys{height:180px}
+      .black-keys{bottom:30px}
+      .key.black{width:24px}
+    }
+  </style>
+</head>
+<body>
+  <div class="audio-gate" id="audioGate">
+    <div class="gate-card">
+      <div style="font-size:42px">🎧🎹</div>
+      <h3>Tap to start audio</h3>
+      <div class="muted">Browsers require a gesture before sound can play.</div>
+      <div style="height:10px"></div>
+      <button class="btn primary" id="startAudioBtn">Start</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="logo">♫</div>
+    <div>
+      <h1>Music Theory Trainer</h1>
+      <div class="subtitle small">Teach notes, scales, and chords. Interactive piano + ear training.</div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="chips">
+      <div class="chip">Interactive Piano</div>
+      <div class="chip">Scales</div>
+      <div class="chip">Chords</div>
+      <div class="chip">Ear Training</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="play">Playground</button>
+      <button class="tab-btn" data-tab="train">Ear Training</button>
+    </div>
+
+    <section id="tab-play" class="section active">
+      <div class="panel">
+        <h2>Interactive Piano</h2>
+        <div class="hint">Click the keys or use your keyboard (Z-M rows for white notes, numbers for black notes) to play. Toggle markers by building a scale or chord below.</div>
+        <div class="piano-wrapper">
+          <div id="whiteKeys" class="white-keys"></div>
+          <div id="blackKeys" class="black-keys"></div>
+        </div>
+        <div style="height:8px"></div>
+        <div class="controls">
+          <label class="small muted">Range</label>
+          <select id="rangeSelect">
+            <option value="48-72">C3 - C5</option>
+            <option value="52-76">E3 - E5</option>
+            <option value="55-79">G3 - G5</option>
+            <option value="60-84" selected>C4 - C6</option>
+          </select>
+          <button class="btn" id="sustainBtn">Sustain: Off</button>
+          <button class="btn" id="clearMarksBtn">Clear Marks</button>
+          <div class="small muted">Volume</div>
+          <input id="volRange" type="range" min="0" max="1" step="0.01" value="0.8" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="panel grow">
+          <h2>Scales Lab</h2>
+          <div class="controls">
+            <label>Root</label>
+            <select id="scaleRoot"></select>
+            <label>Type</label>
+            <select id="scaleType"></select>
+            <button class="btn" id="markScaleBtn">Mark</button>
+            <button class="btn primary" id="playScaleBtn">Play Scale</button>
+          </div>
+          <div class="hint">Marks the keys of the selected scale and plays it ascending and descending.</div>
+        </div>
+        <div class="panel grow">
+          <h2>Chords Lab</h2>
+          <div class="controls">
+            <label>Root</label>
+            <select id="chordRoot"></select>
+            <label>Quality</label>
+            <select id="chordQuality"></select>
+            <button class="btn" id="markChordBtn">Mark</button>
+            <button class="btn primary" id="playChordBtn">Play Chord</button>
+          </div>
+          <div class="hint">Shows and plays the chord (block + arpeggio). Try different qualities.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-train" class="section">
+      <div class="panel">
+        <h2>Note Trainer</h2>
+        <div class="controls">
+          <button class="btn primary" id="newNoteQ">New Note</button>
+          <button class="btn" id="replayNoteQ">Replay</button>
+          <div class="score">
+            <div class="badge" id="noteScore">0 / 0</div>
+            <div class="badge" id="noteStreak">Streak 0</div>
+          </div>
+        </div>
+        <div class="options" id="noteOptions"></div>
+        <div class="hint small">Tip: You can also answer by pressing the piano key you think matches.</div>
+      </div>
+
+      <div class="panel">
+        <h2>Chord Quality Trainer</h2>
+        <div class="controls">
+          <button class="btn primary" id="newChordQ">New Chord</button>
+          <button class="btn" id="replayChordQ">Replay</button>
+          <div class="score">
+            <div class="badge" id="chordScore">0 / 0</div>
+            <div class="badge" id="chordStreak">Streak 0</div>
+          </div>
+        </div>
+        <div class="options" id="chordOptions"></div>
+        <div class="hint small">Random root; identify the quality by ear.</div>
+      </div>
+
+      <div class="panel">
+        <h2>Scale Detective</h2>
+        <div class="controls">
+          <button class="btn primary" id="newScaleQ">New Scale</button>
+          <button class="btn" id="replayScaleQ">Replay</button>
+          <div class="score">
+            <div class="badge" id="scaleScore">0 / 0</div>
+            <div class="badge" id="scaleStreak">Streak 0</div>
+          </div>
+        </div>
+        <div class="options" id="scaleOptions"></div>
+        <div class="hint small">Hear a scale ascending. Pick the type.</div>
+      </div>
+    </section>
+
+    <div class="footer small">Have fun learning! Built with WebAudio in a single HTML file.</div>
+  </div>
+
+  <canvas class="note-fetti" id="fetti"></canvas>
+
+  <script>
+    const NOTE_NAMES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+    const NOTE_NAMES_FLAT =  ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+    const IS_BLACK = [false,true,false,true,false,false,true,false,true,false,true,false];
+    const SCALE_TYPES = {
+      "Major": [2,2,1,2,2,2,1],
+      "Natural Minor": [2,1,2,2,1,2,2],
+      "Harmonic Minor": [2,1,2,2,1,3,1],
+      "Melodic Minor (asc)": [2,1,2,2,2,2,1],
+      "Dorian": [2,1,2,2,2,1,2],
+      "Mixolydian": [2,2,1,2,2,1,2],
+      "Major Pentatonic": [2,2,3,2,3],
+      "Minor Pentatonic": [3,2,2,3,2],
+      "Blues": [3,2,1,1,3,2]
+    };
+    const CHORD_QUALITIES = {
+      "Major": [0,4,7],
+      "Minor": [0,3,7],
+      "Diminished": [0,3,6],
+      "Augmented": [0,4,8],
+      "Major 7": [0,4,7,11],
+      "Dominant 7": [0,4,7,10],
+      "Minor 7": [0,3,7,10]
+    };
+
+    const byId = id => document.getElementById(id);
+    const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+
+    const AudioEngine = (() => {
+      let ctx, master, limiter;
+      let sustain = false;
+      const activeVoices = new Map();
+      const now = () => ctx?.currentTime || 0;
+      const midiToFreq = m => 440 * Math.pow(2, (m - 69) / 12);
+
+      const ensure = async () => {
+        if (!ctx) {
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+          master = ctx.createGain();
+          master.gain.value = byId('volRange').valueAsNumber;
+          limiter = ctx.createDynamicsCompressor();
+          limiter.threshold.value = -6;
+          limiter.knee.value = 1;
+          limiter.ratio.value = 12;
+          limiter.attack.value = 0.003;
+          limiter.release.value = 0.08;
+          master.connect(limiter).connect(ctx.destination);
+        }
+        if (ctx.state === 'suspended') await ctx.resume();
+        return ctx;
+      };
+
+      const setVolume = v => { if (master) master.gain.value = v; };
+      const setSustain = v => sustain = v;
+
+      const makeVoice = (freq) => {
+        const t0 = now();
+        const gain = ctx.createGain();
+        const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const mix = ctx.createGain();
+        osc.type = 'sine';
+        osc2.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t0);
+        osc2.frequency.setValueAtTime(freq * 2, t0);
+        mix.gain.value = 0.35;
+        osc.connect(mix);
+        osc2.connect(mix);
+        const filt = ctx.createBiquadFilter();
+        filt.type = 'lowpass';
+        filt.frequency.value = 6000;
+        mix.connect(filt);
+        filt.connect(gain);
+        gain.connect(master);
+
+        const atk = 0.01, dec = 0.12, sus = 0.6, rel = 0.3;
+        gain.gain.setValueAtTime(0, t0);
+        gain.gain.linearRampToValueAtTime(1, t0 + atk);
+        gain.gain.linearRampToValueAtTime(sus, t0 + atk + dec);
+        osc.start(t0);
+        osc2.start(t0);
+        return { osc, osc2, gain, t0, release: rel };
+      };
+
+      const playNote = async (midi, dur = 0.6) => {
+        await ensure();
+        const freq = midiToFreq(midi);
+        const voice = makeVoice(freq);
+        activeVoices.set(midi, voice);
+        const endAt = now() + dur;
+        if (!sustain) stopAt(midi, endAt);
+        return midi;
+      };
+
+      const stopAt = (midi, t) => {
+        const v = activeVoices.get(midi);
+        if (!v) return;
+        const off = Math.max(now(), t);
+        v.gain.gain.cancelScheduledValues(now());
+        v.gain.gain.setTargetAtTime(0, off, v.release);
+        try { v.osc.stop(off + v.release * 2); v.osc2.stop(off + v.release * 2); } catch(e) {}
+        setTimeout(() => activeVoices.delete(midi), 1200);
+      };
+
+      const stopAll = () => {
+        for (const [m,v] of activeVoices) stopAt(m, now());
+      };
+
+      const pluck = async (freq, dur = 0.15) => {
+        await ensure();
+        const t0 = now();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(freq, t0);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g).connect(master);
+        o.start(t0);
+        o.stop(t0 + dur + 0.02);
+      };
+
+      return { ensure, playNote, stopAt, stopAll, setSustain, setVolume, midiToFreq, pluck };
+    })();
+
+    const Piano = (() => {
+      let startMidi = 60, endMidi = 84;
+      const map = new Map();
+      const whiteEl = byId('whiteKeys');
+      const blackEl = byId('blackKeys');
+      let whiteCount = 0;
+
+      const clear = () => { whiteEl.innerHTML = ''; blackEl.innerHTML=''; map.clear(); };
+
+      const midiToName = (m, prefSharp=true) => {
+        const nameArr = prefSharp ? NOTE_NAMES_SHARP : NOTE_NAMES_FLAT;
+        const pc = ((m % 12) + 12) % 12;
+        const oct = Math.floor(m/12)-1;
+        return nameArr[pc] + oct;
+      };
+
+      const build = (range = '60-84') => {
+        const [s,e] = range.split('-').map(x=>parseInt(x,10));
+        startMidi = s; endMidi = e;
+        clear();
+        const whites = [];
+        let wIndex = 0;
+        for (let m=s;m<=e;m++) if (!IS_BLACK[m%12]) whites.push(m);
+        whiteCount = whites.length;
+        const whiteWidthPct = 100 / whiteCount;
+
+        let whiteIndexOf = new Map();
+        for (let m of whites) {
+          const k = document.createElement('div');
+          k.className = 'key white';
+          k.dataset.midi = String(m);
+          const label = document.createElement('div');
+          label.className = 'key-label';
+          label.textContent = midiToName(m);
+          k.appendChild(label);
+          const dot = document.createElement('div'); dot.className='mark'; k.appendChild(dot);
+          whiteEl.appendChild(k);
+          map.set(m, k);
+          whiteIndexOf.set(m, wIndex++);
+        }
+        let blackIdx = 0;
+        for (let m=s;m<=e;m++) if (IS_BLACK[m%12]) {
+          let prev = m-1; while (IS_BLACK[prev%12]) prev--;
+          const baseIndex = whiteIndexOf.get(prev);
+          const leftPct = (baseIndex+1)*whiteWidthPct - (whiteWidthPct*0.3);
+          const k = document.createElement('div');
+          k.className = 'key black';
+          k.style.left = `calc(${leftPct}% - 14px)`;
+          k.dataset.midi = String(m);
+          const label = document.createElement('div');
+          label.className='key-label'; label.textContent = midiToName(m).replace(/\d+$/,'');
+          k.appendChild(label);
+          const dot = document.createElement('div'); dot.className='mark'; k.appendChild(dot);
+          blackEl.appendChild(k);
+          map.set(m, k);
+          blackIdx++;
+        }
+        bind();
+      };
+
+      const bind = () => {
+        for (const [m, el] of map) {
+          el.addEventListener('pointerdown', async e => {
+            e.preventDefault();
+            el.classList.add('active');
+            await AudioEngine.ensure();
+            AudioEngine.playNote(parseInt(m,10), 0.8);
+            if (typeof EarTraining?.pianoAnswer === 'function') EarTraining.pianoAnswer(parseInt(m,10));
+          });
+          const up = () => { el.classList.remove('active'); };
+          el.addEventListener('pointerup', up);
+          el.addEventListener('pointerleave', up);
+        }
+      };
+
+      const markNotes = (midis, clearOthers=true) => {
+        if (clearOthers) for (const el of map.values()) el.classList.remove('marked');
+        for (const m of midis) {
+          const el = map.get(m);
+          if (el) el.classList.add('marked');
+        }
+      };
+
+      const allMidis = () => Array.from(map.keys()).sort((a,b)=>a-b);
+      const getRange = () => [startMidi, endMidi];
+      return { build, markNotes, allMidis, getRange, midiToName };
+    })();
+
+    const UI = (() => {
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      tabButtons.forEach(btn => btn.addEventListener('click', () => {
+        tabButtons.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+        byId('tab-'+btn.dataset.tab).classList.add('active');
+      }));
+
+      const populateNotes = (sel) => {
+        const el = typeof sel === 'string' ? byId(sel) : sel;
+        el.innerHTML = '';
+        for (let i=0;i<12;i++) {
+          const o = document.createElement('option');
+          o.value = i; o.textContent = NOTE_NAMES_SHARP[i];
+          el.appendChild(o);
+        }
+      };
+
+      const populateScaleTypes = () => {
+        const s = byId('scaleType'); s.innerHTML='';
+        Object.keys(SCALE_TYPES).forEach(name=>{
+          const o = document.createElement('option'); o.value=name; o.textContent=name; s.appendChild(o);
+        });
+      };
+      const populateChordQualities = () => {
+        const s = byId('chordQuality'); s.innerHTML='';
+        Object.keys(CHORD_QUALITIES).forEach(name=>{
+          const o = document.createElement('option'); o.value=name; o.textContent=name; s.appendChild(o);
+        });
+      };
+      populateNotes('scaleRoot');
+      populateNotes('chordRoot');
+      populateScaleTypes();
+      populateChordQualities();
+
+      const rangeSelect = byId('rangeSelect');
+      rangeSelect.addEventListener('change', () => Piano.build(rangeSelect.value));
+
+      const sustainBtn = byId('sustainBtn');
+      let sustain=false; sustainBtn.addEventListener('click',()=>{sustain=!sustain; AudioEngine.setSustain(sustain); sustainBtn.textContent = 'Sustain: ' + (sustain?'On':'Off');});
+
+      const volRange = byId('volRange'); volRange.addEventListener('input', e => AudioEngine.setVolume(volRange.valueAsNumber));
+
+      byId('clearMarksBtn').addEventListener('click', ()=> Piano.markNotes([], true));
+
+      const markScaleBtn = byId('markScaleBtn');
+      const playScaleBtn = byId('playScaleBtn');
+      const markChordBtn = byId('markChordBtn');
+      const playChordBtn = byId('playChordBtn');
+
+      const buildScale = (rootPc, type) => {
+        const steps = SCALE_TYPES[type] || SCALE_TYPES['Major'];
+        const [lo, hi] = Piano.getRange();
+        const mids = [];
+        const pcs = [rootPc];
+        let pc = rootPc;
+        for (let s of steps) { pc = (pc + s) % 12; pcs.push(pc); }
+        for (let m = lo; m <= hi; m++) if (pcs.includes(m%12)) mids.push(m);
+        return mids;
+      };
+      const playScale = async (rootPc, type) => {
+        const [lo, hi] = Piano.getRange();
+        let start = lo; while (start%12 !== rootPc && start<hi) start++;
+        const steps = SCALE_TYPES[type] || SCALE_TYPES['Major'];
+        const seq = [start]; let cur=start;
+        for (let s of steps) { cur += s; if (cur<=hi) seq.push(cur); }
+        const down = seq.slice(0,-1).slice().reverse();
+        const order = seq.concat(down);
+        let t=0; for (const m of order) { setTimeout(()=>AudioEngine.playNote(m, 0.5), t); t+=280; }
+      };
+
+      const buildChord = (rootPc, quality) => {
+        const intervals = CHORD_QUALITIES[quality] || CHORD_QUALITIES['Major'];
+        const [lo, hi] = Piano.getRange();
+        let root = lo; while (root%12 !== rootPc && root<hi) root++;
+        const mids = intervals.map(semi => root + semi).filter(m=>m<=hi);
+        return mids;
+      };
+      const playChord = async (rootPc, quality) => {
+        const mids = buildChord(rootPc, quality);
+        mids.forEach(m => AudioEngine.playNote(m, 1.2));
+        let t=240; for (const m of mids) { setTimeout(()=>AudioEngine.playNote(m, 0.6), t); t+=220; }
+      };
+
+      markScaleBtn.addEventListener('click', ()=>{
+        const root = parseInt(byId('scaleRoot').value,10);
+        const type = byId('scaleType').value;
+        const mids = buildScale(root, type);
+        Piano.markNotes(mids);
+      });
+      playScaleBtn.addEventListener('click', ()=>{
+        const root = parseInt(byId('scaleRoot').value,10);
+        const type = byId('scaleType').value; playScale(root, type);
+      });
+      markChordBtn.addEventListener('click', ()=>{
+        const root = parseInt(byId('chordRoot').value,10);
+        const q = byId('chordQuality').value;
+        const mids = buildChord(root, q); Piano.markNotes(mids);
+      });
+      playChordBtn.addEventListener('click', ()=>{
+        const root = parseInt(byId('chordRoot').value,10);
+        const q = byId('chordQuality').value; playChord(root, q);
+      });
+
+      return { buildScale, buildChord, playScale, playChord };
+    })();
+
+    const EarTraining = (() => {
+      const rand = a => a[Math.floor(Math.random()*a.length)];
+      const shuffle = a => { for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a;};
+      const pitchClassName = pc => NOTE_NAMES_SHARP[pc];
+      const midisInRange = () => Piano.allMidis();
+
+      const newNoteQBtn = byId('newNoteQ');
+      const replayNoteQBtn = byId('replayNoteQ');
+      const noteOptionsEl = byId('noteOptions');
+      const noteScoreEl = byId('noteScore');
+      const noteStreakEl = byId('noteStreak');
+      let noteQ = null, noteScore=0, noteTotal=0, noteStreak=0;
+      const askNote = async () => {
+        const all = midisInRange();
+        noteQ = rand(all);
+        await AudioEngine.ensure();
+        AudioEngine.playNote(noteQ, 1.0);
+        renderNoteOptions();
+      };
+      const renderNoteOptions = () => {
+        noteOptionsEl.innerHTML = '';
+        for (let i=0;i<12;i++){
+          const btn = document.createElement('div');
+          btn.className='option'; btn.textContent = NOTE_NAMES_SHARP[i];
+          btn.addEventListener('click', ()=> answerNote(i, btn));
+          noteOptionsEl.appendChild(btn);
+        }
+      };
+      const answerNote = (pc, btn) => {
+        if (noteQ==null) return;
+        const correctPc = noteQ%12;
+        const correct = pc===correctPc;
+        if (correct) { btn.classList.add('correct'); confetti(); noteScore++; noteStreak++; AudioEngine.pluck(880, 0.1); }
+        else { btn.classList.add('wrong'); noteStreak=0; AudioEngine.pluck(220, 0.2); }
+        noteTotal++; noteScoreEl.textContent=`${noteScore} / ${noteTotal}`; noteStreakEl.textContent = `Streak ${noteStreak}`;
+      };
+      newNoteQBtn.addEventListener('click', askNote);
+      replayNoteQBtn.addEventListener('click', ()=>{ if (noteQ!=null) AudioEngine.playNote(noteQ, 1.0); });
+
+      const newChordQBtn = byId('newChordQ');
+      const replayChordQBtn = byId('replayChordQ');
+      const chordOptionsEl = byId('chordOptions');
+      const chordScoreEl = byId('chordScore');
+      const chordStreakEl = byId('chordStreak');
+      let chordQ = null, chordScore=0, chordTotal=0, chordStreak=0;
+      const chordQuals = Object.keys(CHORD_QUALITIES);
+      const askChord = async () => {
+        const all = midisInRange();
+        const root = rand(all);
+        const qual = rand(chordQuals);
+        chordQ = { root, qual };
+        await AudioEngine.ensure();
+        UI.playChord(root%12, qual);
+        renderChordOptions(qual);
+      };
+      const renderChordOptions = (answerQual) => {
+        chordOptionsEl.innerHTML='';
+        const opts = shuffle(chordQuals.slice()).slice(0,4);
+        if (!opts.includes(answerQual)) { opts[0] = answerQual; shuffle(opts); }
+        for (const q of opts) {
+          const btn = document.createElement('div'); btn.className='option'; btn.textContent=q; chordOptionsEl.appendChild(btn);
+          btn.addEventListener('click', ()=>{
+            const correct = q===chordQ.qual; if (correct){btn.classList.add('correct');chordScore++;chordStreak++;confetti();AudioEngine.pluck(990,0.1);} else {btn.classList.add('wrong');chordStreak=0;AudioEngine.pluck(196,0.2);}
+            chordTotal++; chordScoreEl.textContent=`${chordScore} / ${chordTotal}`; chordStreakEl.textContent=`Streak ${chordStreak}`;
+          });
+        }
+      };
+      newChordQBtn.addEventListener('click', askChord);
+      replayChordQBtn.addEventListener('click', ()=>{ if (chordQ) UI.playChord(chordQ.root%12, chordQ.qual); });
+
+      const newScaleQBtn = byId('newScaleQ');
+      const replayScaleQBtn = byId('replayScaleQ');
+      const scaleOptionsEl = byId('scaleOptions');
+      const scaleScoreEl = byId('scaleScore');
+      const scaleStreakEl = byId('scaleStreak');
+      const scaleTypes = Object.keys(SCALE_TYPES);
+      let scaleQ=null, scaleScore=0, scaleTotal=0, scaleStreak=0;
+      const askScale = async () => {
+        const all = midisInRange();
+        const root = rand(all);
+        const type = rand(scaleTypes);
+        scaleQ = { root, type };
+        await AudioEngine.ensure();
+        UI.playScale(root%12, type);
+        renderScaleOptions(type);
+      };
+      const renderScaleOptions = (answerType) => {
+        scaleOptionsEl.innerHTML='';
+        const opts = shuffle(scaleTypes.slice()).slice(0,4);
+        if (!opts.includes(answerType)) { opts[0] = answerType; shuffle(opts); }
+        for (const s of opts) {
+          const btn = document.createElement('div'); btn.className='option'; btn.textContent=s; scaleOptionsEl.appendChild(btn);
+          btn.addEventListener('click', ()=>{
+            const correct = s===scaleQ.type; if (correct){btn.classList.add('correct');scaleScore++;scaleStreak++;confetti();AudioEngine.pluck(1020,0.1);} else {btn.classList.add('wrong');scaleStreak=0;AudioEngine.pluck(180,0.2);} scaleTotal++; scaleScoreEl.textContent=`${scaleScore} / ${scaleTotal}`; scaleStreakEl.textContent=`Streak ${scaleStreak}`;
+          });
+        }
+      };
+      newScaleQBtn.addEventListener('click', askScale);
+      replayScaleQBtn.addEventListener('click', ()=>{ if (scaleQ) UI.playScale(scaleQ.root%12, scaleQ.type); });
+
+      const pianoAnswer = (midi) => {
+        const pc = midi%12;
+        const buttons = Array.from(noteOptionsEl.children);
+        const btn = buttons[pc];
+        if (btn) btn.click();
+      };
+
+      return { pianoAnswer };
+    })();
+
+    const Confetti = (() => {
+      const canvas = byId('fetti');
+      const ctx = canvas.getContext('2d');
+      const notes = ['♪','♫','♩','♬','𝄞'];
+      let W=window.innerWidth, H=200, items=[];
+      const reset = () => { W = window.innerWidth; H = 240; canvas.width=W; canvas.height=H; };
+      window.addEventListener('resize', reset); reset();
+      const spawn = () => {
+        for (let i=0;i<14;i++) {
+          items.push({ x: Math.random()*W, y: -10 - Math.random()*30, vy: 1.2+Math.random()*1.2, rot: Math.random()*Math.PI, vr:(Math.random()-.5)*0.1, s:16+Math.random()*12, t: 120+Math.random()*80, ch: notes[Math.floor(Math.random()*notes.length)], col: `hsl(${Math.random()*360},90%,70%)` });
+        }
+      };
+      const tick = () => {
+        ctx.clearRect(0,0,W,H);
+        items.forEach(it=>{
+          it.t--; it.y+=it.vy; it.rot+=it.vr; ctx.save(); ctx.translate(it.x,it.y); ctx.rotate(it.rot); ctx.fillStyle=it.col; ctx.font=`${it.s}px serif`; ctx.fillText(it.ch,0,0); ctx.restore();
+        });
+        items = items.filter(it=>it.t>0 && it.y<H+20);
+        requestAnimationFrame(tick);
+      };
+      tick();
+      return { spawn };
+    })();
+    const confetti = () => Confetti.spawn();
+
+    const Keybinds = (() => {
+      const mapWhite = ['z','x','c','v','b','n','m',',','.','/','a','s','d','f','g','h','j','k','l',';','q','w','e','r','t','y','u','i','o','p'];
+      const mapBlack = ['1','2','3','4','5','6','7','8','9','0'];
+      const isBlackPC = pc => IS_BLACK[pc];
+      window.addEventListener('keydown', async e => {
+        const [lo, hi] = Piano.getRange();
+        const mids = Piano.allMidis();
+        const whites = mids.filter(m=>!isBlackPC(m%12));
+        const blacks = mids.filter(m=>isBlackPC(m%12));
+        const wi = mapWhite.indexOf(e.key.toLowerCase());
+        if (wi>-1 && wi<whites.length) { await AudioEngine.ensure(); AudioEngine.playNote(whites[wi], 0.9); }
+        const bi = mapBlack.indexOf(e.key.toLowerCase());
+        if (bi>-1 && bi<blacks.length) { await AudioEngine.ensure(); AudioEngine.playNote(blacks[bi], 0.9); }
+      });
+    })();
+
+    const AudioGate = (() => {
+      const gate = byId('audioGate');
+      const btn = byId('startAudioBtn');
+      const open = () => gate.classList.add('visible');
+      const close = () => gate.classList.remove('visible');
+      const first = () => { open(); };
+      btn.addEventListener('click', async () => { await AudioEngine.ensure(); close(); AudioEngine.pluck(660,0.1); });
+      setTimeout(first, 200);
+    })();
+
+    Piano.build('60-84');
+  </script>
+</body>
+</html>
+

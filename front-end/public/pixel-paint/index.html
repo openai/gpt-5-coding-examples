@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pixel Paint ’99</title>
+    <script>
+      tailwind = typeof tailwind !== 'undefined' ? tailwind : undefined;
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = {
+        theme: {
+          extend: {
+            boxShadow: {
+              neon: '0 0 0 3px rgba(34, 211, 238, 0.6), 0 0 24px rgba(34, 211, 238, 0.8)',
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html, body { height: 100%; }
+      body { background: radial-gradient(1200px 600px at 50% -10%, rgba(34,197,94,.08), transparent 50%), #0b0b12; }
+      .title-chunky { text-shadow: 0 2px 0 rgba(0,0,0,0.5); letter-spacing: .06em; }
+      .focus-neon { box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.7), 0 0 28px rgba(34, 211, 238, 0.9); }
+      .tooltip { transform-origin: bottom center; }
+    </style>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="min-h-full text-zinc-100 antialiased">
+    <div id="root" class="p-4 md:p-8"></div>
+    <script type="text/babel">
+      const { useState, useMemo, useEffect, useRef, Fragment } = React;
+
+      const PALETTE = [
+        '#000000', '#1D2B53', '#7E2553', '#008751',
+        '#AB5236', '#5F574F', '#C2C3C7', '#FFF1E8',
+        '#FF004D', '#FFA300', '#FFEC27', '#00E436',
+        '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA',
+      ];
+
+      const TOOLS = {
+        pencil: { id: 'pencil', label: 'Pencil (B)', key: 'b' },
+        eraser: { id: 'eraser', label: 'Eraser (E)', key: 'e' },
+        fill:   { id: 'fill', label: 'Fill (F)', key: 'f' },
+      };
+
+      function cls(...xs) {
+        return xs.filter(Boolean).join(' ');
+      }
+
+      function Icon({ name, className = 'w-5 h-5' }) {
+        switch (name) {
+          case 'pencil':
+            return (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 5l4 4M4 16l8-8 4 4-8 8H4v-4z" />
+              </svg>
+            );
+          case 'eraser':
+            return (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M3 16l6-6 8 8H5l-2-2zm9-9l3-3 5 5-3 3-5-5z" />
+              </svg>
+            );
+          case 'fill':
+            return (
+              <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+                <path d="M8 3l8 8-6.5 6.5a4.6 4.6 0 11-6.5-6.5L8 3zM20 16.5a2.5 2.5 0 11-5 0c0-1.38 2.5-4.5 2.5-4.5s2.5 3.12 2.5 4.5z" />
+              </svg>
+            );
+          case 'grid':
+            return (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
+                <path strokeWidth="2" d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+              </svg>
+            );
+          case 'undo':
+            return (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 14l-4-4 4-4M5 10h8a6 6 0 110 12h-2" />
+              </svg>
+            );
+          case 'redo':
+            return (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 14l4-4-4-4M19 10H11a6 6 0 100 12h2" />
+              </svg>
+            );
+          case 'clear':
+            return (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M10 7v12m4-12v12M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7l1-3h4l1 3" />
+              </svg>
+            );
+          default:
+            return null;
+        }
+      }
+
+      function useUndoableState(initial) {
+        const [state, setState] = useState(initial);
+        const [undo, setUndo] = useState([]);
+        const [redo, setRedo] = useState([]);
+        const max = 100;
+
+        const commit = (next) => {
+          setUndo((u) => {
+            const nu = [...u, state];
+            if (nu.length > max) nu.shift();
+            return nu;
+          });
+          setRedo([]);
+          setState(next);
+        };
+        const canUndo = undo.length > 0;
+        const canRedo = redo.length > 0;
+        const doUndo = () => {
+          setUndo((u) => {
+            if (!u.length) return u;
+            const prev = u[u.length - 1];
+            setRedo((r) => [...r, state]);
+            setState(prev);
+            return u.slice(0, -1);
+          });
+        };
+        const doRedo = () => {
+          setRedo((r) => {
+            if (!r.length) return r;
+            const next = r[r.length - 1];
+            setUndo((u) => [...u, state]);
+            setState(next);
+            return r.slice(0, -1);
+          });
+        };
+        return { state, setState, commit, canUndo, canRedo, doUndo, doRedo, undoStack: undo, redoStack: redo };
+      }
+
+      function floodFillFlat(pixels, w, h, sx, sy, target, replacement) {
+        if (target === replacement) return pixels;
+        const idx = (x, y) => y * w + x;
+        const within = (x, y) => x >= 0 && y >= 0 && x < w && y < h;
+        const out = pixels.slice();
+        const q = [];
+        if (!within(sx, sy)) return out;
+        if (out[idx(sx, sy)] !== target) return out;
+        q.push([sx, sy]);
+        out[idx(sx, sy)] = replacement;
+        while (q.length) {
+          const [x, y] = q.shift();
+          const neighbors = [
+            [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]
+          ];
+          for (const [nx, ny] of neighbors) {
+            if (within(nx, ny)) {
+              const i = idx(nx, ny);
+              if (out[i] === target) {
+                out[i] = replacement;
+                q.push([nx, ny]);
+              }
+            }
+          }
+        }
+        return out;
+      }
+
+      function PixelPaint99App() {
+        const W = 32, H = 32, CELL = 16;
+        const { state: pixels, setState: setPixels, commit, canUndo, canRedo, doUndo, doRedo } = useUndoableState(
+          new Array(W * H).fill(-1)
+        );
+        const [tool, setTool] = useState(TOOLS.pencil.id);
+        const [color, setColor] = useState(0);
+        const [showGrid, setShowGrid] = useState(true);
+        const [isDrawing, setIsDrawing] = useState(false);
+        const [strokeStarted, setStrokeStarted] = useState(false);
+        const [isFocused, setIsFocused] = useState(true);
+
+        const containerRef = useRef(null);
+
+        useEffect(() => {
+          const onUp = () => {
+            setIsDrawing(false);
+            setStrokeStarted(false);
+          };
+          window.addEventListener('mouseup', onUp);
+          window.addEventListener('mouseleave', onUp);
+          return () => {
+            window.removeEventListener('mouseup', onUp);
+            window.removeEventListener('mouseleave', onUp);
+          };
+        }, []);
+
+        const idx = (x, y) => y * W + x;
+
+        const paintAt = (x, y) => {
+          if (x < 0 || y < 0 || x >= W || y >= H) return;
+          const i0 = idx(x, y);
+          if (!strokeStarted) {
+            const willChange = tool === TOOLS.pencil.id ? (pixels[i0] !== color) : (pixels[i0] !== -1);
+            if (!willChange) return;
+            commit(pixels.slice());
+            setStrokeStarted(true);
+          }
+          if (tool === TOOLS.pencil.id) {
+            setPixels((prev) => {
+              const i = idx(x, y);
+              if (prev[i] === color) return prev;
+              const copy = prev.slice();
+              copy[i] = color;
+              return copy;
+            });
+          } else if (tool === TOOLS.eraser.id) {
+            setPixels((prev) => {
+              const i = idx(x, y);
+              if (prev[i] === -1) return prev;
+              const copy = prev.slice();
+              copy[i] = -1;
+              return copy;
+            });
+          }
+        };
+
+        const fillAt = (x, y) => {
+          if (x < 0 || y < 0 || x >= W || y >= H) return;
+          const i = idx(x, y);
+          const target = pixels[i];
+          const replacement = (tool === TOOLS.eraser.id) ? -1 : color;
+          if (target === replacement) return;
+          commit(pixels.slice());
+          const filled = floodFillFlat(pixels, W, H, x, y, target, replacement);
+          setPixels(filled);
+          setStrokeStarted(false);
+        };
+
+        const onMouseDownCell = (x, y, e) => {
+          e.preventDefault();
+          if (tool === TOOLS.fill.id) {
+            fillAt(x, y);
+            return;
+          }
+          setIsDrawing(true);
+          paintAt(x, y);
+        };
+        const onMouseEnterCell = (x, y, e) => {
+          if (!isDrawing) return;
+          paintAt(x, y);
+        };
+
+        const clearAll = () => {
+          if (pixels.every((p) => p === -1)) return;
+          commit(pixels.slice());
+          setPixels(new Array(W * H).fill(-1));
+        };
+
+        const handleKeyDown = (e) => {
+          const k = e.key.toLowerCase();
+          if ((e.ctrlKey || e.metaKey) && k === 'z') {
+            e.preventDefault();
+            if (e.shiftKey) doRedo(); else doUndo();
+            return;
+          }
+          if ((e.ctrlKey || e.metaKey) && (k === 'y')) {
+            e.preventDefault();
+            doRedo();
+            return;
+          }
+          if (k === 'b') { setTool(TOOLS.pencil.id); }
+          else if (k === 'e') { setTool(TOOLS.eraser.id); }
+          else if (k === 'f') { setTool(TOOLS.fill.id); }
+          else if (k === 'g') { setShowGrid((v) => !v); }
+          else if (k === 'c') { clearAll(); }
+        };
+
+        useEffect(() => {
+          const el = containerRef.current;
+          if (el) el.focus();
+        }, []);
+
+        const gridStyle = {
+          gridTemplateColumns: `repeat(${W}, ${CELL}px)`,
+          gridTemplateRows: `repeat(${H}, ${CELL}px)`,
+        };
+
+        return (
+          <div className="max-w-[980px] mx-auto">
+            <div
+              ref={containerRef}
+              tabIndex={0}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onKeyDown={handleKeyDown}
+              className={cls(
+                'select-none outline-none rounded-2xl border-4',
+                'border-zinc-800 bg-zinc-900/80 backdrop-blur',
+                'shadow-xl overflow-hidden',
+                isFocused ? 'ring-4 ring-cyan-400/70 shadow-neon' : ''
+              )}
+              aria-label="Pixel Paint ’99 window"
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b-4 border-zinc-950 bg-gradient-to-b from-zinc-700 to-zinc-800">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1 mr-2">
+                    <span className="w-3 h-3 rounded-full bg-red-500 drop-shadow" />
+                    <span className="w-3 h-3 rounded-full bg-amber-400 drop-shadow" />
+                    <span className="w-3 h-3 rounded-full bg-emerald-400 drop-shadow" />
+                  </div>
+                  <span className="uppercase font-black text-xs tracking-widest title-chunky">Pixel Paint ’99</span>
+                </div>
+                <div className="text-[10px] tracking-widest text-zinc-300/80">Tip: Press B/E/F, G for grid, Ctrl/Cmd+Z/Y, C to clear</div>
+              </div>
+
+              <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border-b border-zinc-800">
+                <ToolButton
+                  active={tool === TOOLS.pencil.id}
+                  onClick={() => setTool(TOOLS.pencil.id)}
+                  label={TOOLS.pencil.label}
+                >
+                  <Icon name="pencil" />
+                </ToolButton>
+                <ToolButton
+                  active={tool === TOOLS.eraser.id}
+                  onClick={() => setTool(TOOLS.eraser.id)}
+                  label={TOOLS.eraser.label}
+                >
+                  <Icon name="eraser" />
+                </ToolButton>
+                <ToolButton
+                  active={tool === TOOLS.fill.id}
+                  onClick={() => setTool(TOOLS.fill.id)}
+                  label={TOOLS.fill.label}
+                >
+                  <Icon name="fill" />
+                </ToolButton>
+
+                <div className="mx-3 h-6 w-px bg-zinc-800" />
+
+                <ToolButton
+                  onClick={() => setShowGrid((v) => !v)}
+                  label={showGrid ? 'Hide grid (G)' : 'Show grid (G)'}
+                  active={showGrid}
+                >
+                  <Icon name="grid" />
+                </ToolButton>
+                <ToolButton label="Undo (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={doUndo}>
+                  <Icon name="undo" />
+                </ToolButton>
+                <ToolButton label="Redo (Ctrl/Cmd+Y / Shift+Z)" disabled={!canRedo} onClick={doRedo}>
+                  <Icon name="redo" />
+                </ToolButton>
+                <ToolButton label="Clear (C)" onClick={clearAll}>
+                  <Icon name="clear" />
+                </ToolButton>
+
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-widest text-zinc-400">Palette</span>
+                  <Palette color={color} onChange={setColor} />
+                </div>
+              </div>
+
+              <div className="p-4">
+                <div className="inline-block rounded-xl border-4 border-zinc-800 bg-zinc-950 p-3">
+                  <div
+                    className="bg-white rounded-md overflow-hidden"
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
+                    <div
+                      className="grid gap-0 cursor-crosshair"
+                      style={gridStyle}
+                      onMouseLeave={() => setIsDrawing(false)}
+                    >
+                      {Array.from({ length: H }).map((_, y) => (
+                        <Fragment key={y}>
+                          {Array.from({ length: W }).map((__, x) => {
+                            const i = idx(x, y);
+                            const ci = pixels[i];
+                            const bg = ci >= 0 ? PALETTE[ci] : '#FFFFFF';
+                            return (
+                              <div
+                                key={i}
+                                aria-label={`pixel ${x},${y}`}
+                                className={cls('w-4 h-4 md:w-4 md:h-4', showGrid ? 'outline outline-1 outline-black/10' : '')}
+                                style={{ width: CELL, height: CELL, backgroundColor: bg }}
+                                onMouseDown={(e) => onMouseDownCell(x, y, e)}
+                                onMouseEnter={(e) => onMouseEnterCell(x, y, e)}
+                                role="button"
+                              />
+                            );
+                          })}
+                        </Fragment>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function ToolButton({ active, onClick, children, label, disabled }) {
+        return (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={onClick}
+            className={cls(
+              'group relative inline-flex items-center justify-center p-2 rounded-lg border-2',
+              'transition-colors',
+              disabled ? 'opacity-40 cursor-not-allowed border-zinc-800' : 'hover:bg-zinc-800 active:translate-y-[1px]',
+              active ? 'bg-zinc-800 border-cyan-400/60 text-cyan-300' : 'border-zinc-700'
+            )}
+          >
+            {children}
+            <span
+              role="tooltip"
+              className="tooltip pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-zinc-800/95 px-2 py-1 text-[10px] text-zinc-100 opacity-0 shadow-lg ring-1 ring-zinc-700 transition-all group-hover:opacity-100 group-hover:scale-100 scale-90"
+            >
+              {label}
+            </span>
+          </button>
+        );
+      }
+
+      function Palette({ color, onChange }) {
+        return (
+          <div className="grid grid-cols-8 gap-1 p-1 rounded-lg bg-zinc-800 border border-zinc-700">
+            {PALETTE.map((c, i) => (
+              <button
+                key={i}
+                title={`Color ${i}`}
+                aria-label={`Color ${i}`}
+                className={cls('w-6 h-6 rounded-sm border', i === color ? 'ring-2 ring-cyan-400 border-white' : 'border-black/20')}
+                style={{ backgroundColor: c }}
+                onClick={() => onChange(i)}
+              />
+            ))}
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<PixelPaint99App />);
+    </script>
+  </body>
+  </html>

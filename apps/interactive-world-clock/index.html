@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactive World Clock</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --panel: #171a2b;
+      --muted: #9aa3b2;
+      --text: #e8ecf4;
+      --accent: #4ea1ff;
+
+      --morning-grad: radial-gradient(120% 120% at 20% 0%, #ffeaa7 0%, #ffd271 35%, #ffaf75 70%, #ff8a5b 100%);
+      --afternoon-grad: radial-gradient(120% 120% at 20% 0%, #b9e9ff 0%, #7fd3ff 40%, #45b6ff 70%, #2a84ff 100%);
+      --evening-grad: radial-gradient(120% 120% at 20% 0%, #ffd1e1 0%, #ff8fb7 40%, #a85aff 75%, #4a1fff 100%);
+      --night-grad: radial-gradient(120% 120% at 20% 0%, #0b1022 0%, #0a0f1e 40%, #0a0d18 75%, #070a13 100%);
+    }
+
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .fitwrap {
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
+      display: grid;
+      place-items: start center;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      transform-origin: top center;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .title .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(from 180deg at 50% 50%, #ffd271 0deg, #ff8a5b 90deg, #4ea1ff 180deg, #a85aff 270deg, #ffd271 360deg);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 0 12px rgba(255,255,255,0.15);
+      font-size: 20px;
+    }
+
+    .controls {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .controls .field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="text"], select {
+      background: #0e1120;
+      color: var(--text);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 12px;
+      min-width: 260px;
+      outline: none;
+    }
+
+    button {
+      background: linear-gradient(180deg, #4ea1ff, #2a84ff);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      letter-spacing: .2px;
+      cursor: pointer;
+      transition: transform .05s ease, filter .2s ease;
+    }
+    button:active { transform: translateY(1px); }
+    button.secondary {
+      background: #21263e;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #0e1120;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+    }
+    .toggle input {
+      appearance: none;
+      width: 46px;
+      height: 26px;
+      background: #2a2f4a;
+      border-radius: 999px;
+      position: relative;
+      outline: none;
+      cursor: pointer;
+      transition: background .2s ease;
+    }
+    .toggle input::after {
+      content: "";
+      position: absolute;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: white;
+      top: 3px; left: 3px;
+      transition: transform .2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .toggle input:checked { background: #3aa3ff; }
+    .toggle input:checked::after { transform: translateX(20px); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .city-card {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      isolation: isolate;
+    }
+
+    .city-card.morning { background: var(--morning-grad); color: #1a1412; }
+    .city-card.afternoon { background: var(--afternoon-grad); color: #091a2b; }
+    .city-card.evening { background: var(--evening-grad); color: #160e1c; }
+    .city-card.night { background: var(--night-grad); color: #e6efff; }
+
+    .city-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      z-index: 1;
+    }
+    .city-name { font-weight: 800; font-size: 18px; letter-spacing: 0.2px; }
+    .city-tz { font-size: 12px; opacity: 0.85; }
+    .remove {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: inherit;
+      width: 32px; height: 32px;
+      display: grid; place-items: center;
+      border-radius: 8px;
+      backdrop-filter: blur(4px);
+    }
+
+    .time-row {
+      display: flex; align-items: baseline; gap: 10px; margin-top: 10px;
+    }
+    .icon { font-size: 22px; }
+    .time { font-size: 34px; font-weight: 800; letter-spacing: 0.5px; }
+    .ampm { font-size: 16px; opacity: 0.9; margin-left: 2px; font-weight: 700; }
+    .date { margin-top: 8px; font-size: 13px; opacity: 0.9; }
+
+    .empty {
+      color: var(--muted);
+      padding: 22px;
+      text-align: center;
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 12px;
+    }
+
+    .footer-note { color: var(--muted); font-size: 12px; text-align: center; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="fitwrap">
+    <div class="container">
+    <header>
+      <div class="title" aria-label="Interactive World Clock">
+        <div class="logo" aria-hidden="true">🕒</div>
+        <div>
+          <div style="font-size: 18px; line-height: 1;">Interactive World Clock</div>
+          <div style="font-size: 12px; color: var(--muted); line-height: 1.2;">Display current times across cities with daypart colors</div>
+        </div>
+      </div>
+      <div class="toggle" title="Toggle 12/24-hour format">
+        <span style="font-size:12px; color: var(--muted);">24h</span>
+        <input id="hourToggle" type="checkbox" aria-label="12 hour format" />
+        <span style="font-size:12px; color: var(--muted);">12h</span>
+      </div>
+    </header>
+
+    <div class="controls" role="group" aria-label="Add or remove cities">
+      <div class="field" style="flex:1 1 320px; min-width: 280px;">
+        <input id="cityInput" type="text" list="tzOptions" placeholder="Search a city (e.g., London)" aria-label="City search" />
+        <datalist id="tzOptions"></datalist>
+        <button id="addBtn" aria-label="Add city">Add city</button>
+      </div>
+      <button id="addLocalBtn" class="secondary" aria-label="Add my time zone">Use my time zone</button>
+      <div class="footer-note" style="margin-left:auto">Tip: Start typing to search cities, then press Enter</div>
+    </div>
+
+    <div id="grid" class="grid" aria-live="polite"></div>
+    <div id="empty" class="empty" style="display:none">No cities added yet. Use the search above to add cities.</div>
+    </div>
+  </div>
+
+  <script>
+    const TZ_LIST = [
+      { label: 'UTC', tz: 'UTC' },
+      { label: 'Los Angeles', tz: 'America/Los_Angeles' },
+      { label: 'Denver', tz: 'America/Denver' },
+      { label: 'Chicago', tz: 'America/Chicago' },
+      { label: 'New York', tz: 'America/New_York' },
+      { label: 'Toronto', tz: 'America/Toronto' },
+      { label: 'Mexico City', tz: 'America/Mexico_City' },
+      { label: 'Bogotá', tz: 'America/Bogota' },
+      { label: 'Lima', tz: 'America/Lima' },
+      { label: 'Santiago', tz: 'America/Santiago' },
+      { label: 'São Paulo', tz: 'America/Sao_Paulo' },
+      { label: 'Buenos Aires', tz: 'America/Argentina/Buenos_Aires' },
+      { label: 'Reykjavík', tz: 'Atlantic/Reykjavik' },
+      { label: 'Dublin', tz: 'Europe/Dublin' },
+      { label: 'Lisbon', tz: 'Europe/Lisbon' },
+      { label: 'London', tz: 'Europe/London' },
+      { label: 'Paris', tz: 'Europe/Paris' },
+      { label: 'Berlin', tz: 'Europe/Berlin' },
+      { label: 'Amsterdam', tz: 'Europe/Amsterdam' },
+      { label: 'Madrid', tz: 'Europe/Madrid' },
+      { label: 'Rome', tz: 'Europe/Rome' },
+      { label: 'Stockholm', tz: 'Europe/Stockholm' },
+      { label: 'Athens', tz: 'Europe/Athens' },
+      { label: 'Istanbul', tz: 'Europe/Istanbul' },
+      { label: 'Cairo', tz: 'Africa/Cairo' },
+      { label: 'Johannesburg', tz: 'Africa/Johannesburg' },
+      { label: 'Nairobi', tz: 'Africa/Nairobi' },
+      { label: 'Dubai', tz: 'Asia/Dubai' },
+      { label: 'Tehran', tz: 'Asia/Tehran' },
+      { label: 'Karachi', tz: 'Asia/Karachi' },
+      { label: 'Delhi', tz: 'Asia/Kolkata' },
+      { label: 'Dhaka', tz: 'Asia/Dhaka' },
+      { label: 'Bangkok', tz: 'Asia/Bangkok' },
+      { label: 'Jakarta', tz: 'Asia/Jakarta' },
+      { label: 'Singapore', tz: 'Asia/Singapore' },
+      { label: 'Hong Kong', tz: 'Asia/Hong_Kong' },
+      { label: 'Taipei', tz: 'Asia/Taipei' },
+      { label: 'Beijing', tz: 'Asia/Shanghai' },
+      { label: 'Seoul', tz: 'Asia/Seoul' },
+      { label: 'Tokyo', tz: 'Asia/Tokyo' },
+      { label: 'Manila', tz: 'Asia/Manila' },
+      { label: 'Perth', tz: 'Australia/Perth' },
+      { label: 'Adelaide', tz: 'Australia/Adelaide' },
+      { label: 'Melbourne', tz: 'Australia/Melbourne' },
+      { label: 'Sydney', tz: 'Australia/Sydney' },
+      { label: 'Auckland', tz: 'Pacific/Auckland' },
+      { label: 'Honolulu', tz: 'Pacific/Honolulu' }
+    ];
+
+    const els = {
+      grid: document.getElementById('grid'),
+      empty: document.getElementById('empty'),
+      hourToggle: document.getElementById('hourToggle'),
+      input: document.getElementById('cityInput'),
+      addBtn: document.getElementById('addBtn'),
+      addLocalBtn: document.getElementById('addLocalBtn'),
+      list: document.getElementById('tzOptions')
+    };
+
+    TZ_LIST.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item.label;
+      opt.textContent = `${item.label} — ${item.tz}`;
+      opt.dataset.tz = item.tz;
+      els.list.appendChild(opt);
+    });
+
+    const storageKey = 'iwc:state:v1';
+    const defaultCities = () => {
+      const localTZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      const localLabel = guessLabel(localTZ);
+      return [
+        { label: localLabel, tz: localTZ },
+        { label: 'London', tz: 'Europe/London' },
+        { label: 'Tokyo', tz: 'Asia/Tokyo' }
+      ];
+    };
+
+    function guessLabel(tz) {
+      const known = TZ_LIST.find(x => x.tz === tz);
+      if (known) return known.label;
+      const seg = tz.split('/').pop() || tz;
+      return seg.replace(/_/g, ' ');
+    }
+
+    let state = (() => {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) return JSON.parse(raw);
+      } catch {}
+      return { cities: defaultCities(), hour12: false };
+    })();
+
+    els.hourToggle.checked = state.hour12;
+
+    function save() {
+      try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch {}
+    }
+
+    function getTimeParts(tz) {
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false,
+        weekday: 'short', month: 'short', day: '2-digit'
+      }).formatToParts(now);
+      const pick = (t) => parts.find(p => p.type === t)?.value || '';
+      const hour = parseInt(pick('hour'), 10);
+      const minute = pick('minute');
+      const second = pick('second');
+      const weekday = pick('weekday');
+      const month = pick('month');
+      const day = pick('day');
+      return { hour, minute, second, weekday, month, day };
+    }
+
+    function toDisplayTime({ hour, minute, second }, hour12) {
+      if (hour12) {
+        const am = hour < 12;
+        const h = hour % 12 || 12;
+        return { time: `${String(h).padStart(2,'0')}:${minute}:${second}`, ampm: am ? 'AM' : 'PM' };
+      }
+      return { time: `${String(hour).padStart(2,'0')}:${minute}:${second}`, ampm: '' };
+    }
+
+    function daypartForHour(h) {
+      if (h >= 22 || h <= 5) return { cls: 'night', icon: '🌙', label: 'Night' };
+      if (h <= 11) return { cls: 'morning', icon: '🌅', label: 'Morning' };
+      if (h <= 17) return { cls: 'afternoon', icon: '🌞', label: 'Afternoon' };
+      return { cls: 'evening', icon: '🌇', label: 'Evening' };
+    }
+
+    function render() {
+      els.grid.innerHTML = '';
+      if (!state.cities.length) {
+        els.empty.style.display = '';
+        return;
+      }
+      els.empty.style.display = 'none';
+      state.cities.forEach((c) => {
+        const parts = getTimeParts(c.tz);
+        const dp = daypartForHour(parts.hour);
+        const disp = toDisplayTime(parts, state.hour12);
+        const card = document.createElement('div');
+        card.className = `city-card ${dp.cls}`;
+        card.dataset.tz = c.tz;
+        card.innerHTML = `
+          <div class="city-header">
+            <div>
+              <div class="city-name">${escapeHtml(c.label)}</div>
+              <div class="city-tz">${escapeHtml(c.tz)} • ${dp.label}</div>
+            </div>
+            <button class="remove" title="Remove ${escapeHtml(c.label)}" aria-label="Remove ${escapeHtml(c.label)}" data-remove="${escapeHtml(c.tz)}">✕</button>
+          </div>
+          <div class="time-row">
+            <span class="icon" aria-hidden="true">${dp.icon}</span>
+            <span class="time" data-time></span>
+            <span class="ampm" data-ampm></span>
+          </div>
+          <div class="date" data-date></div>
+        `;
+        els.grid.appendChild(card);
+      });
+      updateTimes();
+    }
+
+    function updateTimes() {
+      const nodes = Array.from(els.grid.querySelectorAll('.city-card'));
+      nodes.forEach(card => {
+        const tz = card.dataset.tz;
+        const parts = getTimeParts(tz);
+        const dp = daypartForHour(parts.hour);
+        const disp = toDisplayTime(parts, state.hour12);
+        card.classList.remove('morning','afternoon','evening','night');
+        card.classList.add(dp.cls);
+        const timeEl = card.querySelector('[data-time]');
+        const ampmEl = card.querySelector('[data-ampm]');
+        const dateEl = card.querySelector('[data-date]');
+        const iconEl = card.querySelector('.icon');
+        if (timeEl) timeEl.textContent = disp.time;
+        if (ampmEl) ampmEl.textContent = disp.ampm;
+        if (dateEl) dateEl.textContent = `${parts.weekday}, ${parts.month} ${parts.day}`;
+        if (iconEl) iconEl.textContent = dp.icon;
+      });
+    }
+
+    function addCityByLabel(label) {
+      if (!label) return;
+      const opt = Array.from(els.list.options).find(o => o.value.toLowerCase() === label.toLowerCase());
+      if (!opt) return;
+      const tz = opt.dataset.tz;
+      if (state.cities.some(c => c.tz === tz)) return;
+      state.cities.push({ label: opt.value, tz });
+      save();
+      render();
+      els.input.value = '';
+    }
+
+    function addLocal() {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      if (state.cities.some(c => c.tz === tz)) return;
+      state.cities.unshift({ label: guessLabel(tz), tz });
+      save();
+      render();
+    }
+
+    function removeCity(tz) {
+      const idx = state.cities.findIndex(c => c.tz === tz);
+      if (idx !== -1) {
+        state.cities.splice(idx, 1);
+        save();
+        render();
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    function fitToViewport() {
+      const wrap = document.querySelector('.fitwrap');
+      const cont = document.querySelector('.container');
+      if (!wrap || !cont) return;
+      cont.style.transform = 'none';
+      const naturalW = cont.scrollWidth;
+      const naturalH = cont.scrollHeight;
+      const scaleW = wrap.clientWidth / naturalW;
+      const scaleH = wrap.clientHeight / naturalH;
+      const scale = Math.min(1, scaleW, scaleH);
+      cont.style.transform = `scale(${scale})`;
+    }
+
+    els.addBtn.addEventListener('click', () => addCityByLabel(els.input.value.trim()));
+    els.input.addEventListener('keydown', (e) => { if (e.key === 'Enter') addCityByLabel(els.input.value.trim()); });
+    els.addLocalBtn.addEventListener('click', addLocal);
+    els.hourToggle.addEventListener('change', () => { state.hour12 = els.hourToggle.checked; save(); updateTimes(); });
+    els.grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-remove]');
+      if (btn) removeCity(btn.dataset.remove);
+    });
+
+    render();
+    requestAnimationFrame(fitToViewport);
+    let resizeRaf;
+    window.addEventListener('resize', () => { cancelAnimationFrame(resizeRaf); resizeRaf = requestAnimationFrame(fitToViewport); });
+    window.addEventListener('orientationchange', () => { setTimeout(() => requestAnimationFrame(fitToViewport), 0); });
+    const origRender = render;
+    render = function() { origRender(); requestAnimationFrame(fitToViewport); };
+    setInterval(() => { updateTimes(); }, 1000);
+  </script>
+</body>
+</html>

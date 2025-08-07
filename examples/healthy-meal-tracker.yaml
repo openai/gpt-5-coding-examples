@@ -1,0 +1,11 @@
+id: healthy-meal-tracker
+title: Healthy Meal Tracker
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Healthy Meal Tracker
+  - Goal: Log meals and nutrition info.
+  - Features: Ingredient list, calories per meal, daily summary.
+  - The UI should be clean with food icons.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/healthy-meal-tracker.png
+tags:
+  - app

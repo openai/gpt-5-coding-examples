@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Target Click Challenge</title>
+    <style>
+      :root {
+        --bg1: #0f1020;
+        --bg2: #1b1e30;
+        --glass: rgba(255, 255, 255, 0.08);
+        --glass-strong: rgba(255, 255, 255, 0.14);
+        --text: #e8eaf6;
+        --accent: #8af2ff;
+        --good: #7ef29a;
+        --bad: #ff7b7b;
+        /* Safe area insets for mobile devices */
+        --safe-top: env(safe-area-inset-top);
+        --safe-right: env(safe-area-inset-right);
+        --safe-bottom: env(safe-area-inset-bottom);
+        --safe-left: env(safe-area-inset-left);
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        background: radial-gradient(1200px 800px at 10% 10%, #22264a 0%, rgba(34,38,74,0) 60%),
+                    radial-gradient(900px 700px at 90% 20%, #2a3761 0%, rgba(42,55,97,0) 65%),
+                    linear-gradient(135deg, var(--bg1), var(--bg2));
+        overflow: hidden;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      .playfield {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        touch-action: manipulation;
+      }
+
+      .hud {
+        position: fixed;
+        top: calc(12px + env(safe-area-inset-top));
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 16px;
+        justify-content: center;
+        align-items: center;
+        padding: 12px 16px;
+        background: var(--glass);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+        backdrop-filter: blur(8px) saturate(120%);
+        -webkit-backdrop-filter: blur(8px) saturate(120%);
+        pointer-events: none;
+        z-index: 5;
+      }
+      .hud .pill {
+        pointer-events: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--glass-strong);
+        border: 1px solid rgba(255,255,255,0.2);
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      .hud .value { font-variant-numeric: tabular-nums; }
+
+      .brand {
+        pointer-events: none;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+      }
+
+      .start-overlay, .result-overlay {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.35));
+        z-index: 10;
+      }
+      .card {
+        max-width: 560px;
+        width: min(92vw, 560px);
+        background: var(--glass);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 18px;
+        padding: 24px;
+        padding-left: calc(24px + env(safe-area-inset-left));
+        padding-right: calc(24px + env(safe-area-inset-right));
+        box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+        backdrop-filter: blur(10px) saturate(130%);
+        -webkit-backdrop-filter: blur(10px) saturate(130%);
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 6px 0;
+        font-size: clamp(22px, 4.6vw, 32px);
+      }
+      p { margin: 0 0 16px 0; opacity: 0.9; }
+      .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #07121a;
+        background: linear-gradient(180deg, #7ef2ff, #49b4ff);
+        box-shadow: 0 8px 24px rgba(73,180,255,0.4), inset 0 1px 0 rgba(255,255,255,0.8);
+        cursor: pointer;
+        transition: transform 0.06s ease, filter 0.2s ease;
+        min-height: 44px;
+        min-width: 44px;
+      }
+      button:active { transform: translateY(1px) scale(0.99); filter: brightness(0.98); }
+      button.secondary {
+        background: linear-gradient(180deg, #d0d6ff, #a4b0ff);
+      }
+
+      .hidden { display: none; }
+
+      .target {
+        position: absolute;
+        width: var(--size, 76px);
+        height: var(--size, 76px);
+        left: 0; top: 0;
+        border-radius: 50%;
+        transform: translate(var(--x, 0px), var(--y, 0px)) scale(0.8);
+        opacity: 0;
+        animation: pop-in 120ms ease-out forwards, spin 1400ms linear infinite;
+        box-shadow: 0 8px 26px rgba(0,0,0,0.35), inset 0 2px 6px rgba(255,255,255,0.35);
+        will-change: transform, opacity;
+        background:
+          radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95) 0 9%, rgba(255,255,255,0) 10% 100%),
+          conic-gradient(from var(--rot, 0deg), var(--c1), var(--c2), var(--c3), var(--c4), var(--c1));
+      }
+      .target::after {
+        content: "";
+        position: absolute;
+        inset: -18%;
+        border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.5);
+        opacity: 0.35;
+        transform: scale(0.7);
+        animation: pulse 900ms ease-out infinite;
+        pointer-events: none;
+      }
+      .target.fade-out { animation: fade-out 180ms ease-in forwards; }
+
+      @keyframes pop-in { from { opacity: 0; transform: translate(var(--x), var(--y)) scale(0.6); } to { opacity: 1; transform: translate(var(--x), var(--y)) scale(1); } }
+      @keyframes fade-out { from { opacity: 1; transform: translate(var(--x), var(--y)) scale(1); } to { opacity: 0; transform: translate(var(--x), var(--y)) scale(0.85); } }
+      @keyframes pulse { 0% { transform: scale(0.6); opacity: 0.25; } 70% { opacity: 0.08; } 100% { transform: scale(1.1); opacity: 0; } }
+      @keyframes spin { to { filter: hue-rotate(360deg); } }
+
+      .stat { font-size: 15px; opacity: 0.9; }
+      .stat .big { display: block; font-weight: 800; font-size: 28px; margin-top: 4px; color: #ffffff; }
+
+      .footer-note { font-size: 12px; opacity: 0.7; margin-top: 8px; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .target, .target::after { animation: none; }
+      }
+      /* Responsive adjustments */
+      @media (max-width: 640px) {
+        .hud { gap: 8px 12px; padding: 8px 12px; border-radius: 12px; }
+        .hud .pill { padding: 6px 10px; font-size: 14px; }
+        .card { width: min(94vw, 560px); padding: 18px; border-radius: 16px; }
+        .stat .big { font-size: 24px; }
+        h1 { font-size: clamp(20px, 6vw, 28px); }
+      }
+      @media (max-width: 380px) {
+        .hud .brand { display: none; }
+      }
+      .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 6px; }
+      @media (max-width: 360px) { .stats-grid { grid-template-columns: 1fr; } }
+      /* Fun animated background blobs */
+      .bg-fun {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .bg-fun .blob {
+        position: absolute;
+        left: var(--x, 0px);
+        top: var(--y, 0px);
+        width: var(--s, 240px);
+        height: var(--s, 240px);
+        border-radius: 50%;
+        opacity: 0.18;
+        filter: blur(10px) saturate(120%);
+        background: radial-gradient(35% 35% at 30% 30%, hsla(var(--h, 200), 90%, 60%, 0.95) 0 60%, hsla(var(--h, 200), 90%, 60%, 0) 70%);
+        animation: blob-move var(--d, 18s) ease-in-out infinite;
+        will-change: transform;
+      }
+      .bg-fun .blob:nth-child(3n) { opacity: 0.12; filter: blur(14px) saturate(140%); }
+      .bg-fun .blob:nth-child(5n) { opacity: 0.16; filter: blur(8px) saturate(120%); }
+      @keyframes blob-move {
+        0%   { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+        25%  { transform: translate(var(--dx, 40px), calc(var(--dy, -40px) * 0.5)) scale(1.06) rotate(30deg); }
+        50%  { transform: translate(calc(var(--dx, 40px) * -1), var(--dy, -40px)) scale(1.12) rotate(60deg); }
+        75%  { transform: translate(calc(var(--dx, 40px) * 0.6), calc(var(--dy, -40px) * -0.6)) scale(1.05) rotate(30deg); }
+        100% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+      }
+      @media (prefers-reduced-motion: reduce) { .bg-fun .blob { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="bg-fun" aria-hidden="true"></div>
+    <div class="playfield" id="playfield"></div>
+
+    <div class="hud" id="hud">
+      <div class="brand">AIM CHALLENGE</div>
+      <div class="pill">⏱️ <span class="value" id="time">20.0s</span></div>
+      <div class="pill">🎯 <span class="value" id="score">0</span></div>
+      <div class="pill">📈 <span class="value" id="live-acc">100%</span></div>
+    </div>
+
+    <div class="start-overlay" id="start">
+      <div class="card">
+        <h1>Target Click Challenge</h1>
+        <p>Click the colorful animated targets as they appear. Each hit scores a point. Missed clicks reduce your accuracy. You have 20 seconds.</p>
+        <div class="actions">
+          <button id="startBtn">Start</button>
+        </div>
+        <div class="footer-note">Tip: Aim fast, but avoid clicking empty space.</div>
+      </div>
+    </div>
+
+    <div class="result-overlay hidden" id="result">
+      <div class="card">
+        <h1>Time's up!</h1>
+        <div class="stats-grid">
+          <div class="stat">Score<span class="big" id="finalScore">0</span></div>
+          <div class="stat">Accuracy<span class="big" id="finalAcc">0%</span></div>
+          <div class="stat">Hits<span class="big" id="finalHits">0</span></div>
+          <div class="stat">Clicks<span class="big" id="finalClicks">0</span></div>
+        </div>
+        <div class="actions" style="margin-top: 16px;">
+          <button id="retryBtn">Play Again</button>
+          <button class="secondary" id="shareBtn">Share</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function makeFunBackground(){
+        const root = document.querySelector('.bg-fun');
+        if (!root) return;
+        const count = Math.min(12, Math.max(8, Math.floor(Math.hypot(window.innerWidth, window.innerHeight) / 280)));
+        for (let i = 0; i < count; i++) {
+          const span = document.createElement('span');
+          span.className = 'blob';
+          const s = Math.round(160 + Math.random() * 340);
+          const x = Math.round(Math.random() * (window.innerWidth - s));
+          const y = Math.round(Math.random() * (window.innerHeight - s));
+          const h = Math.round(Math.random() * 360);
+          const d = (16 + Math.random() * 14).toFixed(1) + 's';
+          const dx = Math.round((Math.random() * 120 + 40) * (Math.random() < 0.5 ? -1 : 1));
+          const dy = Math.round((Math.random() * 120 + 40) * (Math.random() < 0.5 ? -1 : 1));
+          span.style.setProperty('--s', s + 'px');
+          span.style.setProperty('--x', x + 'px');
+          span.style.setProperty('--y', y + 'px');
+          span.style.setProperty('--h', h.toString());
+          span.style.setProperty('--d', d);
+          span.style.setProperty('--dx', dx + 'px');
+          span.style.setProperty('--dy', dy + 'px');
+          root.appendChild(span);
+        }
+        let t;
+        window.addEventListener('resize', () => {
+          clearTimeout(t);
+          t = setTimeout(() => {
+            root.innerHTML = '';
+            makeFunBackground();
+          }, 200);
+        });
+      })();
+    </script>
+
+    <script>
+      const DURATION = 20000;
+      const field = document.getElementById('playfield');
+      const hud = document.getElementById('hud');
+      const timeEl = document.getElementById('time');
+      const scoreEl = document.getElementById('score');
+      const liveAccEl = document.getElementById('live-acc');
+      const startOverlay = document.getElementById('start');
+      const resultOverlay = document.getElementById('result');
+      const finalScoreEl = document.getElementById('finalScore');
+      const finalAccEl = document.getElementById('finalAcc');
+      const finalHitsEl = document.getElementById('finalHits');
+      const finalClicksEl = document.getElementById('finalClicks');
+
+      let playing = false;
+      let startTime = 0;
+      let rafId = 0;
+      let spawnTimer = 0;
+      let hits = 0;
+      let clicks = 0;
+      const activeTargets = new Set();
+
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+      function randInt(min, max) { return Math.floor(rand(min, max)); }
+      function clamp(v, min, max) { return v < min ? min : v > max ? max : v; }
+
+      function updateHUD(now) {
+        const elapsed = now - startTime;
+        const left = Math.max(0, DURATION - elapsed);
+        timeEl.textContent = (left / 1000).toFixed(1) + 's';
+        scoreEl.textContent = String(hits);
+        const acc = hits === 0 && clicks === 0 ? 100 : Math.round((hits / Math.max(1, clicks)) * 100);
+        liveAccEl.textContent = acc + '%';
+      }
+
+      function loop(now) {
+        if (!playing) return;
+        updateHUD(now);
+        if (now - startTime >= DURATION) {
+          endGame();
+          return;
+        }
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function scheduleSpawn() {
+        const delay = rand(300, 700);
+        spawnTimer = window.setTimeout(() => {
+          if (!playing) return;
+          spawnTarget();
+          scheduleSpawn();
+        }, delay);
+      }
+
+      function spawnTarget() {
+        const shortSide = Math.min(window.innerWidth, window.innerHeight);
+        const minSize = shortSide < 420 ? 68 : 60;
+        const maxSize = shortSide < 420 ? 104 : 96;
+        const size = rand(minSize, maxSize);
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const hudRect = hud.getBoundingClientRect();
+        const margin = 12;
+        const rootCS = getComputedStyle(document.documentElement);
+        const insetTop = parseFloat(rootCS.getPropertyValue('--safe-top')) || 0;
+        const insetRight = parseFloat(rootCS.getPropertyValue('--safe-right')) || 0;
+        const insetBottom = parseFloat(rootCS.getPropertyValue('--safe-bottom')) || 0;
+        const insetLeft = parseFloat(rootCS.getPropertyValue('--safe-left')) || 0;
+
+        const safeTop = Math.max(margin + insetTop, Math.ceil(hudRect.bottom + 14));
+        const minX = margin + insetLeft;
+        const minY = safeTop;
+        const maxX = Math.max(minX, w - size - margin - insetRight);
+        const maxY = Math.max(minY, h - size - margin - insetBottom);
+        const x = rand(minX, maxX);
+        const y = rand(minY, maxY);
+        const el = document.createElement('div');
+        el.className = 'target';
+        el.style.setProperty('--x', x + 'px');
+        el.style.setProperty('--y', y + 'px');
+        el.style.setProperty('--size', size + 'px');
+        const hue = randInt(0, 360);
+        const c1 = `hsl(${hue} 90% 55%)`;
+        const c2 = `hsl(${(hue+90)%360} 90% 55%)`;
+        const c3 = `hsl(${(hue+180)%360} 90% 55%)`;
+        const c4 = `hsl(${(hue+270)%360} 90% 55%)`;
+        el.style.setProperty('--c1', c1);
+        el.style.setProperty('--c2', c2);
+        el.style.setProperty('--c3', c3);
+        el.style.setProperty('--c4', c4);
+        el.style.setProperty('--rot', rand(0, 360) + 'deg');
+
+        let removed = false;
+        const kill = () => {
+          if (removed) return;
+          removed = true;
+          el.classList.add('fade-out');
+          setTimeout(() => { el.remove(); activeTargets.delete(el); }, 180);
+        };
+        const ttl = rand(750, 1100);
+        const to = setTimeout(kill, ttl);
+        el.addEventListener('pointerdown', (e) => {
+          if (!playing) return;
+          e.stopPropagation();
+          clicks += 1;
+          hits += 1;
+          updateHUD(performance.now());
+          clearTimeout(to);
+          kill();
+        }, { passive: true });
+        activeTargets.add(el);
+        field.appendChild(el);
+      }
+
+      field.addEventListener('pointerdown', (e) => {
+        if (!playing) return;
+        const hudRect = hud.getBoundingClientRect();
+        const cx = e.clientX, cy = e.clientY;
+        const insideHud = cx >= hudRect.left && cx <= hudRect.right && cy >= hudRect.top && cy <= hudRect.bottom;
+        if (insideHud) return;
+        clicks += 1;
+        updateHUD(performance.now());
+      });
+
+      function startGame() {
+        startOverlay.classList.add('hidden');
+        resultOverlay.classList.add('hidden');
+        playing = true;
+        startTime = performance.now();
+        hits = 0;
+        clicks = 0;
+        for (const t of Array.from(activeTargets)) { t.remove(); activeTargets.delete(t); }
+        updateHUD(startTime);
+        scheduleSpawn();
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function endGame() {
+        playing = false;
+        clearTimeout(spawnTimer);
+        for (const t of Array.from(activeTargets)) { t.remove(); activeTargets.delete(t); }
+        cancelAnimationFrame(rafId);
+        finalScoreEl.textContent = String(hits);
+        finalHitsEl.textContent = String(hits);
+        finalClicksEl.textContent = String(clicks);
+        const acc = hits === 0 && clicks === 0 ? 0 : Math.round((hits / Math.max(1, clicks)) * 100);
+        finalAccEl.textContent = acc + '%';
+        resultOverlay.classList.remove('hidden');
+      }
+
+      document.getElementById('startBtn').addEventListener('click', startGame);
+      document.getElementById('retryBtn').addEventListener('click', startGame);
+      document.getElementById('shareBtn').addEventListener('click', () => {
+        const score = hits;
+        const acc = hits === 0 && clicks === 0 ? 0 : Math.round((hits / Math.max(1, clicks)) * 100);
+        const text = `I scored ${score} in 20s with ${acc}% accuracy in the Target Click Challenge!`;
+        if (navigator.share) {
+          navigator.share({ title: 'Target Click Challenge', text, url: location.href }).catch(() => {});
+        } else {
+          navigator.clipboard && navigator.clipboard.writeText(text).then(() => {
+            alert('Result copied to clipboard!');
+          }, () => alert(text));
+        }
+      });
+
+      window.addEventListener('blur', () => { if (playing) endGame(); });
+      window.addEventListener('resize', () => { /* layout adjusts on next spawn */ });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Event Feedback Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b0a12;
+      --panel: #131121;
+      --panel-2: #0e0c1a;
+      --card: #0e0c1a;
+      --elev: #121028;
+      --text: #e5e7eb;
+      --muted: #a1a1aa;
+      --accent: #a78bfa;
+      --accent-2: #8b5cf6;
+      --border: #1a1630;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 12% -10%, rgba(74, 222, 128, 0.10), transparent 60%),
+        radial-gradient(1200px 800px at 100% 100%, rgba(59, 130, 246, 0.10), transparent 60%),
+        linear-gradient(180deg, #0b1210, #0a0f16 60%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: radial-gradient(120% 120% at 20% 20%, var(--accent) 0%, var(--accent-2) 45%, transparent 46%),
+                  linear-gradient(160deg, #1a132b, #0b0a12);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 10px 30px rgba(139,92,246,0.25);
+    }
+    h1 { font-size: 20px; margin: 0; letter-spacing: 0.2px; }
+
+    .search-wrap {
+      position: relative;
+      min-width: 280px;
+      flex: 1 1 380px;
+      display: flex;
+      align-items: center;
+    }
+    .search-wrap input[type="search"] {
+      width: 100%;
+      padding: 12px 40px 12px 40px;
+      color: var(--text);
+      background: linear-gradient(180deg, #130f20, #0e0c1a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .search-wrap input::placeholder { color: #8b91a5; }
+    .search-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+    }
+    .search-icon {
+      position: absolute; left: 12px; width: 18px; height: 18px; fill: #8b91a5;
+    }
+    .clear-btn {
+      position: absolute; right: 8px; background: transparent; border: none; color: #9aa0b2; cursor: pointer;
+      width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;
+    }
+    .clear-btn:hover { color: var(--text); background: rgba(148,163,184,0.12); }
+
+    .ai-summary {
+      background: linear-gradient(180deg, #16122a, #100e20);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 16px 12px;
+      margin: 16px 0 18px;
+      box-shadow: 0 20px 50px rgba(2,6,23,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+    .ai-summary .badge {
+      display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text);
+      background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.15);
+      padding: 6px 10px; border-radius: 999px; font-size: 12px; letter-spacing: .2px;
+    }
+    .ai-summary .close {
+      position: absolute; right: 8px; top: 8px; background: transparent; border: none; color: #9aa0b2; cursor: pointer;
+      width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;
+    }
+    .ai-summary .close:hover { color: var(--text); background: rgba(148,163,184,0.12); }
+    .ai-summary p { margin: 10px 0 8px; color: #cbd5e1; }
+    .ai-summary ul { margin: 8px 0 0 18px; color: #cbd5e1; }
+    .ai-summary li { margin: 6px 0; }
+
+    .table-card {
+      background: linear-gradient(180deg, #12102a, #0f0d1f);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    }
+    .table-scroll {
+      overflow: auto;
+      max-height: calc(100vh - 260px);
+      scrollbar-width: thin;
+    }
+    .table-scroll::-webkit-scrollbar { height: 10px; width: 10px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #1b1630; border-radius: 8px; }
+    .table-scroll::-webkit-scrollbar-track { background: #0e0c1a; }
+
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    thead th {
+      position: sticky; top: 0; z-index: 5;
+      background: linear-gradient(180deg, #100e20, #0e0c1a);
+      color: #d1d5db;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: .3px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr:nth-child(even) { background: rgba(148,163,184,0.04); }
+    tbody tr:hover { background: rgba(167,139,250,0.08); }
+    tbody td {
+      padding: 12px 14px;
+      color: #e2e8f0;
+      vertical-align: top;
+      border-bottom: 1px solid rgba(148,163,184,0.08);
+      font-size: 14px;
+    }
+    tbody td.rating {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+    .rating-pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; font-weight: 600; font-size: 12px;
+      background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.15);
+    }
+    .rating-pill.low { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.2); color: #fecaca; }
+    .rating-pill.mid { background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.2); color: #fde68a; }
+    .rating-pill.high { background: rgba(52,211,153,0.08); border-color: rgba(52,211,153,0.25); color: #bbf7d0; }
+
+    .th-sort {
+      cursor: pointer;
+      user-select: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding-right: 6px;
+    }
+    .th-sort .icons { display: inline-grid; grid-auto-flow: column; gap: 2px; opacity: .6; }
+    .th-sort .icons svg { width: 10px; height: 10px; }
+    th.active .icons { opacity: 1; }
+    th.active.asc .icons .up { fill: var(--accent-2); }
+    th.active.desc .icons .down { fill: var(--accent-2); }
+    th .icons .up, th .icons .down { fill: #7c859a; }
+
+    .feedback-cell { max-width: 520px; }
+    .feedback-text {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      position: relative;
+    }
+    .feedback-text.expanded { -webkit-line-clamp: unset; }
+    .show-more {
+      margin-top: 6px; color: var(--accent); background: transparent; border: none; padding: 0; cursor: pointer; font-weight: 600;
+    }
+    .show-more:hover { color: var(--accent-2); text-decoration: underline; }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 720px) {
+      .container { padding: 16px 12px 28px; }
+      header { flex-direction: column; align-items: stretch; gap: 10px; }
+      .title { justify-content: space-between; }
+      h1 { font-size: 18px; }
+      .search-wrap { min-width: 0; flex: 1 1 auto; }
+      .feedback-cell { max-width: none; }
+
+      /* Turn table rows into stacked cards */
+      .table-scroll { max-height: unset; }
+      thead { display: none; }
+      table, tbody, tr, td { display: block; width: 100%; }
+      tbody tr {
+        background: linear-gradient(180deg, #12102a, #0f0d1f);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 12px;
+      }
+      tbody td { border-bottom: none; padding: 8px 0; }
+      tbody td::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 4px;
+        letter-spacing: .2px;
+      }
+      .rating { margin-top: 4px; }
+      .show-more { margin-top: 4px; }
+      .footer { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Event Feedback Dashboard</h1>
+      </div>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a6 6 0 100 12A6 6 0 0010 4zM21 21l-5.2-5.2" stroke="#9aa0b2" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="Search by keyword (event, participant, rating, feedback, date)" autocomplete="off" />
+        <button class="clear-btn" id="clearSearch" title="Clear search" aria-label="Clear search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.3 5.7a1 1 0 010 1.4L13.4 12l4.9 4.9a1 1 0 01-1.4 1.4L12 13.4l-4.9 4.9a1 1 0 01-1.4-1.4l4.9-4.9-4.9-4.9A1 1 0 015.7 5.7L12 12l6.3-6.3a1 1 0 011.4 0z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="ai-summary" id="aiSummary">
+      <button class="close" id="closeSummary" aria-label="Hide summary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.3 5.7a1 1 0 010 1.4L13.4 12l4.9 4.9a1 1 0 01-1.4 1.4L12 13.4l-4.9 4.9a1 1 0 01-1.4-1.4l4.9-4.9-4.9-4.9A1 1 0 015.7 5.7L12 12l6.3-6.3a1 1 0 011.4 0z"/></svg>
+      </button>
+      <span class="badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.09 6.26L20 9.27l-5 3.64L16.18 20 12 16.9 7.82 20 9 12.91l-5-3.64 5.91-1.01L12 2z"/></svg>
+        AI summary
+      </span>
+      <p id="summaryText">Loading summary…</p>
+      <ul id="summaryBullets"></ul>
+    </section>
+
+    <div class="table-card">
+      <div class="table-scroll">
+        <table id="feedbackTable" aria-describedby="summaryText">
+          <thead>
+            <tr>
+              <th data-key="date" class="active desc">
+                <span class="th-sort" role="button" aria-label="Sort by date" tabindex="0">
+                  Date
+                  <span class="icons" aria-hidden="true">
+                    <svg class="up" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+                    <svg class="down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                  </span>
+                </span>
+              </th>
+              <th data-key="event">
+                <span class="th-sort" role="button" aria-label="Sort by event" tabindex="0">
+                  Event
+                  <span class="icons" aria-hidden="true">
+                    <svg class="up" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+                    <svg class="down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                  </span>
+                </span>
+              </th>
+              <th data-key="participant">
+                <span class="th-sort" role="button" aria-label="Sort by participant" tabindex="0">
+                  Participant
+                  <span class="icons" aria-hidden="true">
+                    <svg class="up" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+                    <svg class="down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                  </span>
+                </span>
+              </th>
+              <th data-key="rating">
+                <span class="th-sort" role="button" aria-label="Sort by rating" tabindex="0">
+                  Rating
+                  <span class="icons" aria-hidden="true">
+                    <svg class="up" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+                    <svg class="down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                  </span>
+                </span>
+              </th>
+              <th data-key="feedback">
+                <span class="th-sort" role="button" aria-label="Sort by feedback" tabindex="0">
+                  Feedback
+                  <span class="icons" aria-hidden="true">
+                    <svg class="up" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+                    <svg class="down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                  </span>
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer" id="footerNote"></div>
+  </div>
+
+  <script>
+    function seededRandom(seed) {
+      let s = seed % 2147483647;
+      if (s <= 0) s += 2147483646;
+      return function() { return (s = s * 16807 % 2147483647) / 2147483647; };
+    }
+
+    const rand = seededRandom(Date.now() % 1000000);
+    const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+    const pickWeighted = (pairs) => {
+      const total = pairs.reduce((a, [_, w]) => a + w, 0);
+      let r = rand() * total;
+      for (const [val, w] of pairs) { if ((r -= w) <= 0) return val; }
+      return pairs[pairs.length - 1][0];
+    };
+
+    const events = [
+      "Leadership Summit 2025",
+      "Product Launch Q2",
+      "Customer Success Workshop",
+      "Data & Analytics Forum",
+      "Marketing Strategy Offsite",
+      "Engineering All-Hands",
+      "Sales Kickoff 2025",
+      "HR Compliance Training",
+      "Design Thinking Bootcamp",
+      "Cybersecurity Briefing",
+      "Operations Excellence Day",
+      "Partner Enablement Session"
+    ];
+    const firstNames = [
+      "Ava","Noah","Liam","Emma","Olivia","Ethan","Mia","Sophia","Lucas","Mason","Amelia","Harper","Logan","James","Isabella","Elijah","Charlotte","Benjamin","Aria","Daniel","Nora","Henry","Grace","Chloe","Michael","Zoe","Sebastian","Layla","Jack","Evelyn"
+    ];
+    const lastNames = [
+      "Johnson","Smith","Williams","Brown","Jones","Garcia","Miller","Davis","Rodriguez","Martinez","Hernandez","Lopez","Gonzalez","Wilson","Anderson","Thomas","Taylor","Moore","Jackson","Martin","Lee","Perez","Thompson","White","Harris","Sanchez","Clark","Ramirez","Lewis","Robinson"
+    ];
+    const aspects = [
+      "speakers shared practical insights",
+      "agenda was well-paced and relevant",
+      "venue was comfortable with good acoustics",
+      "networking opportunities were valuable",
+      "Q&A ran long but surfaced useful details",
+      "registration process was quick and organized",
+      "catering was thoughtful with dietary options",
+      "breakout sessions fostered collaboration",
+      "session materials were polished and actionable",
+      "logistics were smooth from start to finish",
+      "timing slipped slightly in the afternoon",
+      "demo segment could be shorter and focused",
+      "panelists represented diverse perspectives",
+      "workshops were hands-on and engaging",
+      "facility Wi‑Fi was stable throughout",
+      "moderation kept discussions on track",
+      "content depth matched the audience",
+      "check-in staff were friendly and efficient",
+      "slides will be helpful for internal share-outs"
+    ];
+    const sentiments = [
+      "Overall, I left with clear next steps.",
+      "I would recommend a slightly longer networking break.",
+      "Great balance between strategy and execution.",
+      "Looking forward to future sessions on this topic.",
+      "Some sessions felt rushed, but content quality was high.",
+      "The event exceeded expectations for a corporate forum.",
+      "A few audio hiccups, otherwise a strong program.",
+      "This will help accelerate team alignment next quarter.",
+      "Nice to meet peers facing similar challenges.",
+      "Would appreciate access to recordings and templates."
+    ];
+
+    function randomDateWithin(daysBack = 120) {
+      const now = new Date();
+      const offset = Math.floor(rand() * daysBack);
+      const d = new Date(now);
+      d.setDate(now.getDate() - offset);
+      d.setHours(Math.floor(rand()*24), Math.floor(rand()*60), 0, 0);
+      return d;
+    }
+
+    function randomFeedback() {
+      const sCount = 2 + Math.floor(rand() * 3);
+      const used = new Set();
+      const sentences = [];
+      for (let i=0; i<sCount; i++) {
+        let asp;
+        let guard = 0;
+        do { asp = pick(aspects); guard++; } while(used.has(asp) && guard < 10);
+        used.add(asp);
+        const prefix = pick([
+          "The ","Overall, the ","I felt the ","From my perspective, the ","In particular, the "
+        ]);
+        const sentence = prefix + asp + ".";
+        sentences.push(sentence.charAt(0).toUpperCase() + sentence.slice(1));
+      }
+      sentences.push(pick(sentiments));
+      return sentences.join(' ');
+    }
+
+    function generateData(n = 30) {
+      const rows = [];
+      for (let i=0;i<n;i++) {
+        const date = randomDateWithin(120);
+        const event = pick(events);
+        const participant = `${pick(firstNames)} ${pick(lastNames)}`;
+        const rating = pickWeighted([[5, 0.38],[4, 0.32],[3, 0.18],[2, 0.08],[1, 0.04]]);
+        const feedback = randomFeedback();
+        rows.push({ id: i+1, date, event, participant, rating, feedback });
+      }
+      if (rows.length >= 3) {
+        rows[1].rating = 2;
+        rows[2].rating = 1;
+      }
+      return rows.sort((a,b) => b.date - a.date);
+    }
+
+    const state = {
+      fullData: generateData(30),
+      viewData: [],
+      sortKey: 'date',
+      sortDir: 'desc',
+      query: ''
+    };
+
+    function formatDate(d) {
+      return new Intl.DateTimeFormat(undefined, { year:'numeric', month:'short', day:'2-digit' }).format(d);
+    }
+
+    function ratingClass(r) {
+      if (r >= 5) return 'high';
+      if (r >= 4) return 'high';
+      if (r === 3) return 'mid';
+      return 'low';
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById('tbody');
+      const frag = document.createDocumentFragment();
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+
+        const tdDate = document.createElement('td');
+        tdDate.dataset.label = 'Date';
+        tdDate.textContent = formatDate(row.date);
+        tr.appendChild(tdDate);
+
+        const tdEvent = document.createElement('td');
+        tdEvent.dataset.label = 'Event';
+        tdEvent.textContent = row.event;
+        tr.appendChild(tdEvent);
+
+        const tdParticipant = document.createElement('td');
+        tdParticipant.dataset.label = 'Participant';
+        tdParticipant.textContent = row.participant;
+        tr.appendChild(tdParticipant);
+
+        const tdRating = document.createElement('td');
+        tdRating.dataset.label = 'Rating';
+        tdRating.className = 'rating';
+        const pill = document.createElement('span');
+        pill.className = `rating-pill ${ratingClass(row.rating)}`;
+        pill.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="opacity:.9"><path d="M12 2l2.09 6.26L20 9.27l-5 3.64L16.18 20 12 16.9 7.82 20 9 12.91l-5-3.64 5.91-1.01L12 2z"/></svg> ${row.rating.toFixed(0)}`;
+        tdRating.appendChild(pill);
+        tr.appendChild(tdRating);
+
+        const tdFeedback = document.createElement('td');
+        tdFeedback.dataset.label = 'Feedback';
+        tdFeedback.className = 'feedback-cell';
+        const textDiv = document.createElement('div');
+        textDiv.className = 'feedback-text';
+        textDiv.textContent = row.feedback;
+        textDiv.title = row.feedback;
+        const moreBtn = document.createElement('button');
+        moreBtn.className = 'show-more';
+        moreBtn.type = 'button';
+        moreBtn.textContent = 'Show more';
+        moreBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const expanded = textDiv.classList.toggle('expanded');
+          moreBtn.textContent = expanded ? 'Show less' : 'Show more';
+        });
+        tdFeedback.appendChild(textDiv);
+        tdFeedback.appendChild(moreBtn);
+        tr.appendChild(tdFeedback);
+
+        frag.appendChild(tr);
+      });
+      tbody.innerHTML = '';
+      tbody.appendChild(frag);
+      const footer = document.getElementById('footerNote');
+      footer.textContent = `${rows.length} of ${state.fullData.length} entries` + (state.query ? ` • filtered by "${state.query}"` : '');
+    }
+
+    function applySort(rows) {
+      const { sortKey, sortDir } = state;
+      const dir = sortDir === 'asc' ? 1 : -1;
+      const sorted = [...rows].sort((a,b) => {
+        let x = a[sortKey], y = b[sortKey];
+        if (sortKey === 'date') { x = a.date.getTime(); y = b.date.getTime(); }
+        if (typeof x === 'string') {
+          return x.localeCompare(y) * dir;
+        } else {
+          return (x > y ? 1 : x < y ? -1 : 0) * dir;
+        }
+      });
+      return sorted;
+    }
+
+    function applyFilter() {
+      const q = state.query.trim().toLowerCase();
+      let rows = state.fullData;
+      if (q) {
+        rows = rows.filter(r => {
+          const hay = `${formatDate(r.date)} ${r.event} ${r.participant} ${r.rating} ${r.feedback}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
+      state.viewData = applySort(rows);
+      renderTable(state.viewData);
+      updateHeaders();
+      updateSummary();
+    }
+
+    function setSort(key) {
+      if (state.sortKey === key) {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortKey = key;
+        state.sortDir = key === 'date' ? 'desc' : 'asc';
+      }
+      applyFilter();
+    }
+
+    function updateHeaders() {
+      const ths = document.querySelectorAll('thead th');
+      ths.forEach(th => {
+        th.classList.remove('active','asc','desc');
+        if (th.dataset.key === state.sortKey) {
+          th.classList.add('active', state.sortDir);
+        }
+      });
+    }
+
+    function updateSummary() {
+      const data = state.viewData;
+      const sum = data.reduce((acc,r) => {
+        acc.total += r.rating;
+        acc.count++;
+        acc.minDate = acc.minDate ? (r.date < acc.minDate ? r.date : acc.minDate) : r.date;
+        acc.maxDate = acc.maxDate ? (r.date > acc.maxDate ? r.date : acc.maxDate) : r.date;
+        acc.dist[r.rating] = (acc.dist[r.rating]||0) + 1;
+        const ev = r.event;
+        acc.events[ev] = (acc.events[ev]||0) + 1;
+        return acc;
+      }, { total:0, count:0, minDate:null, maxDate:null, dist:{}, events:{} });
+      const summary = document.getElementById('summaryText');
+      const bullets = document.getElementById('summaryBullets');
+      bullets.innerHTML = '';
+      if (!sum.count) {
+        summary.textContent = 'No feedback entries match the current filter.';
+        const tip = document.createElement('li');
+        tip.textContent = 'Clear the search to see the full dataset.';
+        bullets.appendChild(tip);
+        return;
+      }
+      const avg = sum.total / sum.count;
+      const topEvent = Object.entries(sum.events).sort((a,b)=>b[1]-a[1])[0];
+      summary.textContent = `Analyzed ${sum.count} feedback entries from ${formatDate(sum.minDate)} to ${formatDate(sum.maxDate)}. Average rating: ${avg.toFixed(1)}.`;
+      const li1 = document.createElement('li');
+      li1.textContent = `Most frequent event in view: ${topEvent ? `${topEvent[0]} (${topEvent[1]} entries)` : 'n/a'}.`;
+      const li2 = document.createElement('li');
+      const d5 = sum.dist[5]||0, d4 = sum.dist[4]||0, d3=sum.dist[3]||0, d2=sum.dist[2]||0, d1=sum.dist[1]||0;
+      li2.textContent = `Rating distribution → 5★: ${d5}, 4★: ${d4}, 3★: ${d3}, 2★: ${d2}, 1★: ${d1}.`;
+      const li3 = document.createElement('li');
+      li3.textContent = 'Tip: click any column header to sort; use the search box to filter by names, events, comments, or ratings.';
+      bullets.appendChild(li1); bullets.appendChild(li2); bullets.appendChild(li3);
+    }
+
+    function init() {
+      const search = document.getElementById('search');
+      search.addEventListener('input', (e) => {
+        state.query = e.target.value;
+        applyFilter();
+      });
+      document.getElementById('clearSearch').addEventListener('click', () => {
+        search.value = '';
+        state.query = '';
+        applyFilter();
+        search.focus();
+      });
+
+      const headerCells = document.querySelectorAll('thead th');
+      headerCells.forEach(th => {
+        const key = th.dataset.key;
+        const clickable = th.querySelector('.th-sort');
+        function activate(){ setSort(key); }
+        clickable.addEventListener('click', activate);
+        clickable.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+        });
+      });
+
+      document.getElementById('closeSummary').addEventListener('click', () => {
+        const el = document.getElementById('aiSummary');
+        el.style.display = 'none';
+      });
+
+      applyFilter();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

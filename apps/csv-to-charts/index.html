@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Data Visualization Playground</title>
+  <meta name="description" content="Upload a CSV file and instantly turn it into beautiful charts. Choose chart type, customize colors, and export as an image." />
+  <style>
+    :root {
+      --bg: #0e1222;
+      --bg-2: #121735;
+      --panel: #171b36cc;
+      --panel-solid: #171b36;
+      --muted: #a3a8c9;
+      --text: #f1f3ff;
+      --accent: #6b76ff;
+      --accent-2: #ff6ea6;
+      --ok: #1dd1a1;
+      --warn: #ffb020;
+      --danger: #ff5964;
+      --radius: 16px;
+      --shadow-1: 0 2px 10px rgba(0,0,0,0.18);
+      --shadow-2: 0 18px 60px rgba(0,0,0,0.35);
+      --glass: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04));
+      --border: 1px solid rgba(255,255,255,0.12);
+      --focus: 0 0 0 2px rgba(107,118,255,0.45), 0 0 0 6px rgba(107,118,255,0.12);
+      --canvas-bg: #0b0f20;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 90% -10%, rgba(34, 197, 94, 0.18), transparent 60%),
+        radial-gradient(1400px 900px at -10% 90%, rgba(59, 130, 246, 0.18), transparent 60%),
+        linear-gradient(180deg, #0d1412, #111a22);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    a { color: inherit; }
+
+    header.hero {
+      position: sticky; top: 0; z-index: 10;
+      background: linear-gradient(135deg, rgba(107,118,255,0.9), rgba(255,110,166,0.9));
+      padding: 18px 14px 16px;
+      box-shadow: var(--shadow-2);
+    }
+    .hero-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+    }
+    .title-wrap { display: flex; align-items: baseline; gap: 10px; }
+    h1.title { margin: 0; font-size: 24px; letter-spacing: 0.3px; }
+    .tagline { margin: 0; opacity: 0.95; font-size: 13px; }
+    .hero-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    button, .btn {
+      background: rgba(255,255,255,0.12);
+      color: #fff; border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 999px; padding: 10px 14px; font-weight: 700; letter-spacing: 0.2px;
+      cursor: pointer; user-select: none;
+      transition: transform 0.05s ease, background 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: var(--shadow-1);
+    }
+    button:hover, .btn:hover { background: rgba(255,255,255,0.18); }
+    button:active, .btn:active { transform: translateY(1px); }
+    .btn-primary { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.45); }
+    .btn-good { background: rgba(29, 209, 161, 0.18); border-color: rgba(29,209,161,0.5); }
+
+    main { max-width: 1200px; margin: 16px auto 40px; padding: 0 12px; }
+    .layout { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 14px; align-items: start; }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+
+    .panel { background: var(--glass); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow-2); }
+    .panel h2 { font-size: 16px; letter-spacing: 0.3px; margin: 0 0 6px; }
+    .panel-body { padding: 12px; display: grid; gap: 12px; }
+
+    .controls .section { padding: 12px; border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.06); }
+    .controls .section h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); letter-spacing: 0.3px; }
+    .row { display: grid; grid-template-columns: 1fr; gap: 8px; align-items: center; }
+    .row.inline { grid-template-columns: 1fr 1fr; }
+    .row.auto { grid-template-columns: auto 1fr; gap: 10px; }
+    label { font-size: 12px; color: var(--muted); }
+    select, input[type="text"], input[type="number"], input[type="color"] { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); color: var(--text); outline: none; }
+    select:focus, input:focus { box-shadow: var(--focus); }
+
+    .dropzone { position: relative; display: grid; place-items: center; padding: 20px; border-radius: 14px; border: 2px dashed rgba(255,255,255,0.22); background: rgba(255,255,255,0.04); text-align: center; }
+    .dropzone.drag { background: rgba(107,118,255,0.15); border-color: rgba(107,118,255,0.65); }
+    .dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .dropzone .dz-label { font-weight: 700; }
+    .small { font-size: 12px; color: var(--muted); }
+
+    .dataset-list { display: grid; gap: 8px; }
+    .dataset-item { display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center; padding: 8px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+    .dataset-item input[type="checkbox"] { transform: translateY(1px); }
+    .dataset-item .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dataset-item .color { width: 40px; height: 34px; padding: 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25); background: transparent; }
+
+    .chart-card { padding: 10px; }
+    .chart-wrap { position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 10px; display: grid; }
+    .chart-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 6px 12px; flex-wrap: wrap; }
+    .chart-toolbar .left, .chart-toolbar .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .chart-area { position: relative; min-height: 360px; display: grid; place-items: center; }
+    canvas { border-radius: 12px; background: var(--canvas-bg); }
+
+    .pill { border-radius: 999px; padding: 4px 10px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); font-size: 12px; }
+    .info { color: var(--muted); font-size: 12px; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .footer-note { color: var(--muted); text-align: center; margin-top: 14px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="title-wrap">
+          <h1 class="title">Data Visualization Playground</h1>
+          <span class="pill">CSV → Charts</span>
+        </div>
+        <p class="tagline">Upload a CSV and turn it into beautiful, customizable charts.</p>
+      </div>
+      <div class="hero-actions">
+        <button id="btnSave" class="btn btn-primary" title="Download chart as PNG">💾 Save as image</button>
+        <button id="btnReset" class="btn" title="Reset state">↺ Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="layout">
+      <aside class="controls panel">
+        <div class="panel-body">
+          <section class="section" id="uploadSection">
+            <h3>1) Upload CSV</h3>
+            <div id="dropzone" class="dropzone" aria-label="CSV dropzone">
+              <input id="fileInput" type="file" accept=".csv,text/csv" />
+              <div>
+                <div class="dz-label">Drop CSV here or click to select</div>
+                <div class="small">First row is treated as header by default</div>
+              </div>
+            </div>
+            <div class="row inline" style="margin-top:8px;">
+              <label><input type="checkbox" id="hasHeader" checked /> Has header row</label>
+              <label>Delimiter
+                <select id="delimiter">
+                  <option value="auto" selected>Auto</option>
+                  <option value=",">Comma (,)</option>
+                  <option value=";">Semicolon (;)</option>
+                  <option value="\t">Tab (\t)</option>
+                  <option value="|">Pipe (|)</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="section" id="mappingSection">
+            <h3>2) Map & choose chart</h3>
+            <div class="row inline">
+              <label>Chart type
+                <select id="chartType">
+                  <option value="bar">Bar</option>
+                  <option value="line" selected>Line</option>
+                  <option value="pie">Pie</option>
+                  <option value="doughnut">Doughnut</option>
+                </select>
+              </label>
+              <label>Label column
+                <select id="labelColumn"></select>
+              </label>
+            </div>
+            <div id="multiDatasetControls" class="row">
+              <label>Datasets (numeric columns)</label>
+              <div id="datasets" class="dataset-list"></div>
+            </div>
+            <div id="singleValueControls" class="row" style="display:none;">
+              <label>Value column
+                <select id="valueColumn"></select>
+              </label>
+              <div class="hint">Pie & Doughnut use a single numeric column.</div>
+            </div>
+          </section>
+
+          <section class="section" id="appearanceSection">
+            <h3>3) Appearance</h3>
+            <div id="perDatasetColors" class="row" style="display:none;">
+              <label>Dataset colors</label>
+              <div id="datasetColors" class="dataset-list"></div>
+            </div>
+            <div id="piePaletteRow" class="row" style="display:none;">
+              <div class="row inline">
+                <label>Palette
+                  <select id="palette">
+                    <option value="vibrant" selected>Vibrant</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="cool">Cool</option>
+                    <option value="warm">Warm</option>
+                    <option value="mono">Monochrome</option>
+                  </select>
+                </label>
+                <label>Base color
+                  <input id="baseColor" type="color" value="#6b76ff" />
+                </label>
+              </div>
+              <div class="row auto">
+                <span class="hint">Colors regenerate when data or options change</span>
+                <button id="btnRegen" class="btn" type="button">↻ Regenerate</button>
+              </div>
+            </div>
+            <div class="row inline">
+              <label>Canvas background
+                <input id="canvasBg" type="color" value="#0b0f20" />
+              </label>
+              <label>Text color
+                <input id="textColor" type="color" value="#f1f3ff" />
+              </label>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <section class="panel chart-card">
+        <div class="chart-wrap">
+          <div class="chart-toolbar">
+            <div class="left">
+              <span id="status" class="small">No data yet. Load a CSV.</span>
+            </div>
+            <div class="right">
+              <span class="pill" id="shapeNote">Line chart</span>
+            </div>
+          </div>
+          <div class="chart-area">
+            <canvas id="chart" aria-label="Data chart" role="img"></canvas>
+          </div>
+        </div>
+        <div class="footer-note">Tip: You can customize dataset colors and export your chart as a PNG image.</div>
+      </section>
+    </div>
+  </main>
+  
+  <script id="defaultCsv" type="text/csv">
+Date,Category,Sales,Profit
+2024-01-31,Product A,1626,269
+2024-02-29,Product A,1959,287
+2024-03-31,Product A,1360,370
+2024-04-30,Product A,1794,289
+2024-05-31,Product A,1630,274
+2024-06-30,Product A,1595,150
+2024-07-31,Product A,1544,463
+2024-08-31,Product A,621,154
+2024-09-30,Product A,966,343
+2024-10-31,Product A,1738,419
+2024-11-30,Product A,830,230
+2024-12-31,Product A,1982,406
+2024-01-31,Product B,587,234
+2024-02-29,Product B,1896,120
+2024-03-31,Product B,1623,428
+2024-04-30,Product B,1371,266
+2024-05-31,Product B,630,373
+2024-06-30,Product B,1832,487
+2024-07-31,Product B,1269,188
+2024-08-31,Product B,843,415
+2024-09-30,Product B,1937,113
+2024-10-31,Product B,1305,341
+2024-11-30,Product B,885,364
+2024-12-31,Product B,1715,445
+2024-01-31,Product C,1455,152
+2024-02-29,Product C,776,485
+2024-03-31,Product C,1684,439
+2024-04-30,Product C,959,191
+2024-05-31,Product C,1837,466
+2024-06-30,Product C,521,363
+2024-07-31,Product C,752,134
+2024-08-31,Product C,1247,305
+2024-09-30,Product C,1356,180
+2024-10-31,Product C,974,149
+2024-11-30,Product C,1582,459
+2024-12-31,Product C,1010,487
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const state = {
+      rawText: '',
+      rows: [],
+      headers: [],
+      hasHeader: true,
+      delimiter: 'auto',
+      labelColumn: 0,
+      chartType: 'line',
+      datasets: [],
+      valueColumn: 1,
+      datasetColors: {},
+      palette: 'vibrant',
+      baseColor: '#6b76ff',
+      canvasBg: '#0b0f20',
+      textColor: '#f1f3ff'
+    };
+
+    
+    let chart = null;
+
+    
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    function setStatus(msg) { $('#status').textContent = msg; }
+    function setShapeNote(msg) { $('#shapeNote').textContent = msg; }
+
+    function parseCSV(text, delim = ',') {
+      const out = [];
+      let row = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let i=0;i<text.length;i++) {
+        const c = text[i];
+        if (c === '"') {
+          if (inQuotes && text[i+1] === '"') { cur += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (c === '\n' && !inQuotes) {
+          row.push(cur); out.push(row); row = []; cur = '';
+        } else if (c === '\r' && !inQuotes) {
+        } else if (c === delim && !inQuotes) {
+          row.push(cur); cur='';
+        } else {
+          cur += c;
+        }
+      }
+      row.push(cur); out.push(row);
+      
+      if (out.length && out[out.length-1].length === 1 && out[out.length-1][0].trim() === '') out.pop();
+      return out;
+    }
+
+    function detectDelimiter(text) {
+      const candidates = [',',';','\t','|'];
+      const lines = text.split(/\r?\n/).slice(0, 10).filter(Boolean);
+      let best = {score: -Infinity, delim: ','};
+      for (const d of candidates) {
+        let cols = [];
+        let stable = true;
+        try {
+          for (const ln of lines) cols.push(parseCSV(ln + '\n', d)[0].length);
+          const max = Math.max(...cols), min = Math.min(...cols);
+          const uniq = new Set(cols).size;
+          const score = (max > 1 ? 5 : 0) + (10 - (max - min)) + (12 - uniq) + (cols.reduce((a,b)=>a+b,0));
+          if (score > best.score) best = { score, delim: d };
+        } catch (e) {}
+      }
+      return best.delim;
+    }
+
+    function isNumeric(v) {
+      if (v == null) return false;
+      const n = Number(String(v).trim().replace(/,/g, ''));
+      return !isNaN(n) && isFinite(n);
+    }
+
+    function toNumber(v) {
+      const n = Number(String(v).trim().replace(/,/g, ''));
+      return isNaN(n) ? NaN : n;
+    }
+
+    function clamp(n, a, b) { return Math.min(Math.max(n, a), b); }
+
+    function hslToHex(h, s, l) {
+      h = h % 360; if (h < 0) h += 360;
+      s /= 100; l /= 100;
+      const c = (1 - Math.abs(2*l - 1)) * s;
+      const x = c * (1 - Math.abs((h/60) % 2 - 1));
+      const m = l - c/2;
+      let r=0,g=0,b=0;
+      if (h < 60) { r=c; g=x; b=0; }
+      else if (h < 120) { r=x; g=c; b=0; }
+      else if (h < 180) { r=0; g=c; b=x; }
+      else if (h < 240) { r=0; g=x; b=c; }
+      else if (h < 300) { r=x; g=0; b=c; }
+      else { r=c; g=0; b=x; }
+      const toHex = (v) => Math.round((v+m)*255).toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
+    function hexToHsl(hex) {
+      hex = hex.replace('#','');
+      if (hex.length === 3) hex = hex.split('').map(x => x+x).join('');
+      const r = parseInt(hex.substring(0,2), 16) / 255;
+      const g = parseInt(hex.substring(2,4), 16) / 255;
+      const b = parseInt(hex.substring(4,6), 16) / 255;
+      const max = Math.max(r,g,b), min = Math.min(r,g,b);
+      let h=0, s=0, l=(max+min)/2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d/(2 - max - min) : d/(max + min);
+        switch(max){
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h *= 60;
+      }
+      return { h, s: s*100, l: l*100 };
+    }
+
+    function alpha(hex, a) {
+      const h = hex.replace('#','');
+      const r = parseInt(h.substring(0,2),16);
+      const g = parseInt(h.substring(2,4),16);
+      const b = parseInt(h.substring(4,6),16);
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
+
+    function generatePalette(n, scheme = 'vibrant', base = '#6b76ff') {
+      n = Math.max(1, n|0);
+      const {h, s, l} = hexToHsl(base);
+      const arr = [];
+      for (let i=0;i<n;i++) {
+        let hh = (h + i * (360 / n)) % 360;
+        let ss = s, ll = l;
+        if (scheme === 'pastel') { ss = clamp(s*0.45, 20, 60); ll = clamp(l*1.2, 55, 80); }
+        else if (scheme === 'cool') { hh = (hh + 180) % 360; ss = clamp(s*0.8, 35, 90); ll = clamp(l, 45, 60); }
+        else if (scheme === 'warm') { hh = (hh + 30) % 360; ss = clamp(s*0.9, 50, 95); ll = clamp(l, 45, 65); }
+        else if (scheme === 'mono') { hh = h; ss = clamp(35 + i*(45/(n||1)), 35, 80); ll = clamp(35 + i*(40/(n||1)), 35, 75); }
+        else { ss = clamp(s*1.1, 55, 95); ll = clamp(l*0.95, 40, 65); }
+        arr.push(hslToHex(hh, ss, ll));
+      }
+      return arr;
+    }
+
+    function niceDefaultColors(count) {
+      return generatePalette(count, 'vibrant', state.baseColor);
+    }
+
+    
+    function rebuildColumnSelectors() {
+      const headers = state.headers.length ? state.headers : state.rows[0].map((_, i) => `Column ${i+1}`);
+      const labelSel = $('#labelColumn');
+      labelSel.innerHTML = headers.map((h, i) => `<option value="${i}">${escapeHtml(h)}</option>`).join('');
+      labelSel.value = String(Math.min(state.labelColumn, headers.length - 1));
+
+      const valueSel = $('#valueColumn');
+      valueSel.innerHTML = headers.map((h, i) => `<option value="${i}">${escapeHtml(h)}</option>`).join('');
+      valueSel.value = String(Math.min(state.valueColumn, headers.length - 1));
+
+      const container = $('#datasets');
+      container.innerHTML = '';
+      const numericCandidates = guessNumericColumns();
+      const defaults = numericCandidates.length ? numericCandidates : headers.map((_,i)=>i).slice(1);
+      if (!state.datasets.length) state.datasets = defaults.slice(0, Math.min(3, defaults.length));
+      const palette = niceDefaultColors(headers.length);
+      for (let i=0;i<headers.length;i++) {
+        if (i === state.labelColumn) continue;
+        const id = `ds_${i}`;
+        const checked = state.datasets.includes(i);
+        if (!(i in state.datasetColors)) state.datasetColors[i] = palette[i % palette.length];
+        const el = document.createElement('div');
+        el.className = 'dataset-item';
+        el.innerHTML = `
+          <input id="${id}" type="checkbox" ${checked?'checked':''} data-col="${i}">
+          <div class="name"><label for="${id}">${escapeHtml(headers[i])}</label></div>
+          <input class="color" type="color" value="${state.datasetColors[i]}" data-color-col="${i}">
+        `;
+        container.appendChild(el);
+      }
+      renderDatasetColorEditors();
+    }
+
+    function renderDatasetColorEditors() {
+      const colorWrap = $('#datasetColors');
+      colorWrap.innerHTML = '';
+      const headers = state.headers.length ? state.headers : state.rows[0].map((_, i) => `Column ${i+1}`);
+      for (const col of state.datasets) {
+        const el = document.createElement('div');
+        el.className = 'dataset-item';
+        el.innerHTML = `
+          <span style="opacity:0.9;">🎨</span>
+          <div class="name">${escapeHtml(headers[col] || `Column ${col+1}`)}</div>
+          <input class="color" type="color" value="${state.datasetColors[col] || '#6b76ff'}" data-ds-color="${col}">
+        `;
+        colorWrap.appendChild(el);
+      }
+      $('#perDatasetColors').style.display = isSingleValueType() ? 'none' : 'block';
+      $('#piePaletteRow').style.display = isSingleValueType() ? 'block' : 'none';
+    }
+
+    function isSingleValueType() { return ['pie','doughnut'].includes(state.chartType); }
+
+    function guessNumericColumns() {
+      const cols = state.rows[0] ? state.rows[0].length : 0;
+      const numeric = [];
+      for (let c=0;c<cols;c++) {
+        if (c === state.labelColumn) continue;
+        let score = 0; let seen = 0;
+        for (let r=0;r<Math.min(20, state.rows.length); r++) {
+          const v = state.rows[r][c];
+          if (v == null || String(v).trim() === '') continue;
+          seen++;
+          if (isNumeric(v)) score++;
+        }
+        if (seen && score/Math.max(1, seen) > 0.6) numeric.push(c);
+      }
+      return numeric;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    
+    const canvasBgPlugin = {
+      id: 'canvasBg',
+      beforeDraw: (chart, args, opts) => {
+        const { ctx, width, height } = chart;
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = opts.color || '#fff';
+        ctx.fillRect(0,0,width,height);
+        ctx.restore();
+      }
+    };
+
+    function buildChartConfig() {
+      const labels = [];
+      const labelIdx = state.labelColumn;
+      
+      const startRow = state.hasHeader ? 1 : 0;
+      for (let r=startRow; r<state.rows.length; r++) labels.push(String(state.rows[r][labelIdx] ?? ''));
+
+      const textColor = state.textColor;
+      const gridColor = 'rgba(255,255,255,0.12)';
+      const borderColor = 'rgba(255,255,255,0.2)';
+
+      let data = { labels, datasets: [] };
+      if (isSingleValueType()) {
+        const col = state.valueColumn;
+        const values = [];
+        const usedLabels = [];
+        for (let r=startRow; r<state.rows.length; r++) {
+          const v = toNumber(state.rows[r][col]);
+          if (!isNaN(v)) { values.push(v); usedLabels.push(labels[r - startRow]); }
+        }
+        const colors = generatePalette(values.length, state.palette, state.baseColor);
+        data.labels = usedLabels;
+        data.datasets.push({
+          label: state.headers[col] || `Column ${col+1}`,
+          data: values,
+          backgroundColor: colors,
+          borderWidth: 1,
+          borderColor: colors.map(c => alpha(c, 0.9)),
+          hoverOffset: 4,
+        });
+      } else {
+        for (const col of state.datasets) {
+          const color = state.datasetColors[col] || '#6b76ff';
+          const series = [];
+          for (let r=startRow; r<state.rows.length; r++) {
+            const v = toNumber(state.rows[r][col]);
+            series.push(isNaN(v) ? null : v);
+          }
+          const transparent = state.chartType === 'line' ? 0.15 : 0.6;
+          data.datasets.push({
+            label: state.headers[col] || `Column ${col+1}`,
+            data: series,
+            backgroundColor: alpha(color, transparent),
+            borderColor: color,
+            pointBackgroundColor: color,
+            pointRadius: state.chartType === 'line' ? 3 : 0,
+            tension: 0.25,
+            fill: state.chartType === 'line',
+            borderWidth: state.chartType === 'line' ? 2 : 1.5,
+          });
+        }
+      }
+
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: textColor } },
+          tooltip: { titleColor: textColor, bodyColor: textColor },
+          canvasBg: { color: state.canvasBg },
+        },
+        scales: isSingleValueType() ? {} : {
+          x: { grid: { color: gridColor }, ticks: { color: textColor } },
+          y: { grid: { color: gridColor }, ticks: { color: textColor } },
+        },
+      };
+
+      return { type: state.chartType, data, options, plugins: [canvasBgPlugin] };
+    }
+
+    function ensureChart() {
+      const ctx = document.getElementById('chart').getContext('2d');
+      if (chart) chart.destroy();
+      const cfg = buildChartConfig();
+      chart = new Chart(ctx, cfg);
+      document.querySelector('canvas').style.background = state.canvasBg;
+      const typeName = state.chartType.charAt(0).toUpperCase() + state.chartType.slice(1);
+      setShapeNote(`${typeName} chart`);
+    }
+
+    
+    async function handleText(text) {
+      state.rawText = text;
+      if (!text || !text.trim()) { setStatus('Empty file'); return; }
+      const delim = state.delimiter === 'auto' ? detectDelimiter(text) : state.delimiter;
+      const rows = parseCSV(text, delim);
+      if (!rows || !rows.length) { setStatus('Could not parse CSV'); return; }
+      state.rows = rows;
+      const firstRow = rows[0] || [];
+      if (state.hasHeader) {
+        state.headers = firstRow.map(String);
+      } else {
+        state.headers = [];
+      }
+      state.labelColumn = 0;
+      state.valueColumn = Math.min(1, (firstRow.length||2)-1);
+      state.datasets = [];
+      state.datasetColors = {};
+      rebuildColumnSelectors();
+      updateVisibilityByType();
+      ensureChart();
+      setStatus(`Loaded ${rows.length - (state.hasHeader?1:0)} rows, ${firstRow.length} columns`);
+    }
+
+    function updateVisibilityByType() {
+      const single = isSingleValueType();
+      $('#multiDatasetControls').style.display = single ? 'none' : 'block';
+      $('#singleValueControls').style.display = single ? 'block' : 'none';
+      $('#perDatasetColors').style.display = single ? 'none' : 'block';
+      $('#piePaletteRow').style.display = single ? 'block' : 'none';
+    }
+
+    
+    const dropzone = $('#dropzone');
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault(); dropzone.classList.remove('drag');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) readFile(file);
+    });
+    $('#fileInput').addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) readFile(file);
+    });
+    function readFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => handleText(String(reader.result||''));
+      reader.readAsText(file);
+    }
+
+    $('#hasHeader').addEventListener('change', (e) => {
+      state.hasHeader = !!e.target.checked;
+      handleText(state.rawText);
+    });
+    $('#delimiter').addEventListener('change', (e) => {
+      state.delimiter = e.target.value;
+      handleText(state.rawText);
+    });
+
+    $('#chartType').addEventListener('change', (e) => {
+      state.chartType = e.target.value;
+      updateVisibilityByType();
+      ensureChart();
+    });
+    $('#labelColumn').addEventListener('change', (e) => {
+      state.labelColumn = parseInt(e.target.value, 10) || 0;
+      state.datasets = state.datasets.filter(c => c !== state.labelColumn);
+      rebuildColumnSelectors();
+      ensureChart();
+    });
+    $('#valueColumn').addEventListener('change', (e) => {
+      state.valueColumn = parseInt(e.target.value, 10) || 1;
+      ensureChart();
+    });
+
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('[data-col]')) {
+        const col = parseInt(e.target.dataset.col, 10);
+        if (e.target.checked) { if (!state.datasets.includes(col)) state.datasets.push(col); }
+        else state.datasets = state.datasets.filter(c => c !== col);
+        renderDatasetColorEditors();
+        ensureChart();
+      }
+      if (e.target.matches('[data-color-col]')) {
+        const col = parseInt(e.target.dataset.colorCol, 10);
+        state.datasetColors[col] = e.target.value;
+        renderDatasetColorEditors();
+        ensureChart();
+      }
+      if (e.target.matches('[data-ds-color]')) {
+        const col = parseInt(e.target.dataset.dsColor, 10);
+        state.datasetColors[col] = e.target.value;
+        ensureChart();
+      }
+      if (e.target.id === 'palette') {
+        state.palette = e.target.value;
+        ensureChart();
+      }
+      if (e.target.id === 'baseColor') {
+        state.baseColor = e.target.value;
+        ensureChart();
+      }
+      if (e.target.id === 'canvasBg') {
+        state.canvasBg = e.target.value;
+        document.querySelector('canvas').style.background = state.canvasBg;
+        ensureChart();
+      }
+      if (e.target.id === 'textColor') {
+        state.textColor = e.target.value;
+        ensureChart();
+      }
+    });
+
+    $('#btnRegen').addEventListener('click', () => ensureChart());
+    $('#btnSave').addEventListener('click', () => {
+      if (!chart) return;
+      const link = document.createElement('a');
+      link.download = `chart-${Date.now()}.png`;
+      link.href = chart.toBase64Image('image/png', 1);
+      document.body.appendChild(link); link.click(); link.remove();
+    });
+    $('#btnReset').addEventListener('click', () => {
+      Object.assign(state, {
+        rawText: '', rows: [], headers: [], hasHeader: true, delimiter: 'auto',
+        labelColumn: 0, chartType: 'line', datasets: [], valueColumn: 1,
+        datasetColors: {}, palette: 'vibrant', baseColor: '#6b76ff', canvasBg: '#0b0f20', textColor: '#f1f3ff'
+      });
+      $('#fileInput').value = '';
+      $('#labelColumn').innerHTML = '';
+      $('#valueColumn').innerHTML = '';
+      $('#datasets').innerHTML = '';
+      $('#datasetColors').innerHTML = '';
+      $('#hasHeader').checked = true;
+      $('#delimiter').value = 'auto';
+      $('#chartType').value = 'line';
+      updateVisibilityByType();
+      const ctx = document.getElementById('chart').getContext('2d');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [] }, options: { plugins: { canvasBg: { color: state.canvasBg } } }, plugins: [canvasBgPlugin] });
+      setStatus('Reset. Load a CSV.');
+      setShapeNote('Line chart');
+    });
+    
+
+    
+    (function init() {
+      const defaultEl = document.getElementById('defaultCsv');
+      const embedded = defaultEl ? String(defaultEl.textContent || '').trim() : '';
+      if (embedded) {
+        handleText(embedded);
+        setStatus('Loaded default dataset. You can replace it by uploading a CSV.');
+      } else {
+        const ctx = document.getElementById('chart').getContext('2d');
+        chart = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [] }, options: { plugins: { canvasBg: { color: state.canvasBg } } }, plugins: [canvasBgPlugin] });
+      }
+    })();
+  </script>
+</body>
+</html>

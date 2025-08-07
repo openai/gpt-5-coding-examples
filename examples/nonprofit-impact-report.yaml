@@ -1,0 +1,11 @@
+id: nonprofit-impact-report
+title: Nonprofit Impact Report
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Nonprofit Impact Report
+  - Goal: Show measurable results of programs.
+  - Features: Infographics, success stories, donation link.
+  - The UI should be inspiring and visually engaging.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/nonprofit-impact-report.png
+tags:
+  - landing

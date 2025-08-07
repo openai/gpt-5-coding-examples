@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Online Academy</title>
+    <meta
+      name="description"
+      content="Promote a variety of online courses in coding, design, marketing and more. Explore syllabi, meet instructors, and enroll."
+    />
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --primary: #2d8cff;
+        --secondary: #ff6b00;
+        --accent: #00e6a7;
+        --purple: #7b61ff;
+        --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        --radius: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        color: var(--text);
+        background: radial-gradient(
+            1200px 800px at 90% -10%,
+            rgba(45, 140, 255, 0.12),
+            transparent 40%
+          ),
+          radial-gradient(
+            900px 600px at -10% 10%,
+            rgba(0, 230, 167, 0.12),
+            transparent 40%
+          ),
+          var(--bg);
+        font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
+          Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        width: min(1200px, 92vw);
+        margin-inline: auto;
+      }
+
+      header.site {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: saturate(1.3) blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+      .logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        background: conic-gradient(
+          from 210deg,
+          var(--primary),
+          var(--purple),
+          var(--secondary),
+          var(--accent),
+          var(--primary)
+        );
+        box-shadow: var(--shadow);
+        font-size: 18px;
+      }
+      .nav a.link {
+        color: var(--muted);
+        padding: 8px 12px;
+        border-radius: 10px;
+      }
+      .nav a.link:hover {
+        color: var(--text);
+        background: rgba(45, 140, 255, 0.08);
+      }
+      .cta {
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+        color: #fff;
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+      }
+      .cta:hover {
+        filter: brightness(1.05);
+        transform: translateY(-1px);
+      }
+
+      .hero {
+        padding: 64px 0 32px;
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 32px;
+        align-items: center;
+      }
+      .hero h1 {
+        font-size: clamp(28px, 4.2vw, 48px);
+        line-height: 1.1;
+        margin: 0 0 14px;
+      }
+      .hero p.lead {
+        color: var(--muted);
+        font-size: clamp(16px, 2.2vw, 20px);
+        margin: 0 0 22px;
+      }
+      .tagline {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff;
+        color: var(--text);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: 8px 12px;
+        border-radius: 999px;
+        margin-bottom: 14px;
+      }
+      .tag-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: linear-gradient(90deg, var(--accent), var(--purple));
+        box-shadow: 0 0 0 6px rgba(0, 230, 167, 0.12);
+      }
+      .hero-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .sub {
+        background: #fff;
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-top: 24px;
+      }
+      .stat {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        text-align: center;
+        box-shadow: var(--shadow);
+      }
+      .stat b {
+        font-size: 22px;
+      }
+      .stat small {
+        display: block;
+        color: var(--muted);
+      }
+
+      .section {
+        padding: 44px 0;
+      }
+      .section h2 {
+        margin: 0 0 12px;
+        font-size: clamp(22px, 3vw, 32px);
+      }
+      .section p.kicker {
+        color: var(--muted);
+        margin: 0 0 18px;
+      }
+
+      .filters {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+      .chip {
+        background: #fff;
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .chip.active {
+        background: linear-gradient(90deg, var(--accent), var(--purple));
+        color: #fff;
+        border-color: transparent;
+      }
+      .search {
+        flex: 1;
+        min-width: 240px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 8px 12px;
+      }
+      .search input {
+        flex: 1;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 18px;
+      }
+      .card {
+        grid-column: span 6;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: var(--shadow);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        color: #0b1324;
+        background: rgba(45, 140, 255, 0.14);
+      }
+      .pill .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--primary);
+      }
+      .card h3 {
+        margin: 0;
+        font-size: 20px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 14px;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .actions {
+        margin-top: auto;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn.primary {
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+        border-color: transparent;
+        color: #fff;
+      }
+      .btn.accent {
+        background: linear-gradient(90deg, var(--accent), var(--purple));
+        border-color: transparent;
+        color: #fff;
+      }
+
+      .section.alt {
+        background: linear-gradient(
+          180deg,
+          rgba(45, 140, 255, 0.07),
+          transparent 40%
+        );
+      }
+
+      .instructors {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 18px;
+      }
+      .instructor {
+        grid-column: span 4;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        box-shadow: var(--shadow);
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 12px;
+        align-items: center;
+      }
+      .avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-weight: 700;
+      }
+      .i-name {
+        margin: 0;
+      }
+      .i-meta {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 2px;
+      }
+      .bio {
+        grid-column: 1 / -1;
+        color: var(--text);
+        margin-top: 6px;
+      }
+      .i-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #0b1324;
+        border: 1px solid var(--border);
+      }
+
+      form.enroll {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        box-shadow: var(--shadow);
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr 1fr;
+      }
+      form.enroll h3 {
+        grid-column: 1 / -1;
+        margin: 0 0 6px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field label {
+        font-weight: 600;
+      }
+      .field input,
+      .field select,
+      .field textarea {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 16px;
+      }
+      .field .hint {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .row-span {
+        grid-column: 1 / -1;
+      }
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .success {
+        display: none;
+        padding: 12px;
+        background: rgba(0, 230, 167, 0.15);
+        color: #065f46;
+        border: 1px solid rgba(0, 230, 167, 0.35);
+        border-radius: 10px;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(2, 6, 23, 0.44);
+        z-index: 100;
+      }
+      .modal.open {
+        display: flex;
+      }
+      .dialog {
+        width: min(760px, 92vw);
+        max-height: 86vh;
+        overflow: auto;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 30px 80px rgba(2, 6, 23, 0.3);
+      }
+      .dialog header {
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+      }
+      .dialog .content {
+        padding: 16px;
+      }
+      .x {
+        background: transparent;
+        border: 0;
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--muted);
+      }
+      .syllabus-list {
+        display: grid;
+        gap: 10px;
+      }
+      .module {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .module h4 {
+        margin: 0 0 6px;
+      }
+      .module small {
+        color: var(--muted);
+      }
+      .dialog .footer {
+        padding: 12px 16px 16px;
+        display: flex;
+        gap: 10px;
+        border-top: 1px solid var(--border);
+      }
+
+      .footer-note {
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+        padding: 18px 0 28px;
+      }
+
+      .skip {
+        position: absolute;
+        left: 8px;
+        top: -40px;
+        padding: 8px 12px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+      .skip:focus {
+        top: 8px;
+      }
+
+      @media (max-width: 950px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+        .card {
+          grid-column: span 12;
+        }
+        .instructor {
+          grid-column: span 6;
+        }
+        form.enroll {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 640px) {
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+        .instructor {
+          grid-column: span 12;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card,
+        .cta {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site">
+      <div class="container nav">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">A</div>
+          <div>
+            <div style="font-weight: 800">Academy</div>
+            <small style="color: var(--muted)">Learn • Build • Grow</small>
+          </div>
+        </div>
+        <nav aria-label="Primary">
+          <a class="link" href="#courses">Courses</a>
+          <a class="link" href="#syllabus">Syllabus</a>
+          <a class="link" href="#instructors">Instructors</a>
+          <a class="link" href="#enroll">Enroll</a>
+          <button
+            class="cta"
+            onclick="document.getElementById('enroll').scrollIntoView({behavior:'smooth'})"
+          >
+            Enroll Now
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <div class="tagline">
+              <span class="tag-dot"></span> Future-ready skills, taught by
+              experts
+            </div>
+            <h1>Online Academy</h1>
+            <p class="lead">
+              Promoting coding, design, marketing and more. Explore real
+              syllabi, meet your instructors, and enroll in minutes.
+            </p>
+            <div class="hero-buttons">
+              <button
+                class="cta"
+                onclick="document.getElementById('courses').scrollIntoView({behavior:'smooth'})"
+              >
+                Browse Courses
+              </button>
+              <button
+                class="sub"
+                onclick="document.getElementById('instructors').scrollIntoView({behavior:'smooth'})"
+              >
+                Meet the Instructors
+              </button>
+            </div>
+            <div class="stats">
+              <div class="stat">
+                <b id="statCourses">8</b><small>Courses</small>
+              </div>
+              <div class="stat"><b>20+</b><small>Hands-on projects</small></div>
+              <div class="stat"><b>4.9★</b><small>Average rating</small></div>
+            </div>
+          </div>
+          <div>
+            <div
+              aria-hidden="true"
+              style="
+                aspect-ratio: 4 / 3;
+                border: 1px solid var(--border);
+                border-radius: 18px;
+                box-shadow: var(--shadow);
+                background: linear-gradient(
+                    135deg,
+                    rgba(45, 140, 255, 0.2),
+                    rgba(0, 230, 167, 0.2)
+                  ),
+                  conic-gradient(
+                    from 160deg,
+                    rgba(255, 107, 0, 0.18),
+                    rgba(123, 97, 255, 0.18),
+                    rgba(45, 140, 255, 0.18),
+                    rgba(0, 230, 167, 0.18),
+                    rgba(255, 107, 0, 0.18)
+                  );
+                display: grid;
+                place-items: center;
+              "
+            >
+              <div
+                style="
+                  display: grid;
+                  gap: 10px;
+                  text-align: center;
+                  width: min(380px, 80%);
+                "
+              >
+                <div style="font-weight: 800; font-size: 22px">
+                  Learn by building
+                </div>
+                <div style="color: var(--muted)">
+                  Short video lessons • Projects • Reviews • Community support
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    gap: 8px;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <span class="tag">HTML/CSS</span>
+                  <span class="tag">JavaScript</span>
+                  <span class="tag">UI/UX</span>
+                  <span class="tag">Figma</span>
+                  <span class="tag">SEO</span>
+                  <span class="tag">Data Viz</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="courses">
+        <div class="container">
+          <h2>Courses</h2>
+          <p class="kicker">
+            Filter by category or search. Select a course to view the full
+            syllabus and enroll.
+          </p>
+          <div class="filters" role="group" aria-label="Course filters">
+            <button class="chip active" data-filter="All">All</button>
+            <button class="chip" data-filter="Coding">Coding</button>
+            <button class="chip" data-filter="Design">Design</button>
+            <button class="chip" data-filter="Marketing">Marketing</button>
+            <button class="chip" data-filter="Data">Data</button>
+            <button class="chip" data-filter="Product">Product</button>
+            <div class="search" role="search">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M21 21l-4.3-4.3"
+                  stroke="#64748b"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7"
+                  stroke="#64748b"
+                  stroke-width="2"
+                />
+              </svg>
+              <input
+                id="search"
+                type="search"
+                placeholder="Search courses, skills, instructor…"
+                aria-label="Search courses"
+              />
+            </div>
+          </div>
+          <div class="grid" id="courseGrid" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="section alt" id="syllabus" aria-label="Sample syllabus">
+        <div class="container">
+          <h2>Sample syllabus preview</h2>
+          <p class="kicker">
+            Pick a course above and click “View Syllabus” to open the full
+            outline. Here’s a typical weekly breakdown:
+          </p>
+          <div class="grid">
+            <div class="card" style="grid-column: span 4">
+              <span class="pill"><span class="dot"></span> Week 1</span>
+              <h3>Foundations</h3>
+              <p>
+                Core concepts, tools setup, and a mini project to apply the
+                basics.
+              </p>
+            </div>
+            <div class="card" style="grid-column: span 4">
+              <span class="pill" style="background: rgba(0, 230, 167, 0.14)"
+                ><span class="dot" style="background: var(--accent)"></span>
+                Week 2</span
+              >
+              <h3>Skill drills</h3>
+              <p>Hands-on practice with guided challenges and peer feedback.</p>
+            </div>
+            <div class="card" style="grid-column: span 4">
+              <span class="pill" style="background: rgba(123, 97, 255, 0.14)"
+                ><span class="dot" style="background: var(--purple)"></span>
+                Week 3</span
+              >
+              <h3>Capstone</h3>
+              <p>
+                Build a polished project for your portfolio with instructor
+                support.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="instructors">
+        <div class="container">
+          <h2>Instructors</h2>
+          <p class="kicker">
+            Veteran practitioners who love to teach. Read a short bio, or view
+            courses they teach.
+          </p>
+          <div class="instructors" id="instructorGrid" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="section alt" id="enroll">
+        <div class="container">
+          <h2>Enrollment</h2>
+          <p class="kicker">
+            Fill out the form to reserve your seat. You’ll receive a
+            confirmation by email.
+          </p>
+          <form class="enroll" id="enrollForm" novalidate>
+            <h3>Enroll now</h3>
+            <div class="field">
+              <label for="fullName">Full name</label>
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                autocomplete="name"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="courseSelect">Preferred course</label>
+              <select id="courseSelect" name="course" required></select>
+            </div>
+            <div class="field">
+              <label for="experience">Experience level</label>
+              <select id="experience" name="experience" required>
+                <option value="">Choose…</option>
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+              </select>
+            </div>
+            <div class="field row-span">
+              <label for="goals">What’s your learning goal?</label>
+              <textarea
+                id="goals"
+                name="goals"
+                rows="4"
+                placeholder="Tell us what you want to achieve…"
+              ></textarea>
+              <div class="hint">
+                Optional, but it helps your instructor tailor feedback.
+              </div>
+            </div>
+            <div
+              class="field"
+              style="
+                grid-column: 1 / -1;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <input id="terms" type="checkbox" required />
+              <label for="terms" style="font-weight: 400"
+                >I agree to the terms and privacy policy</label
+              >
+            </div>
+            <div class="row-span form-actions">
+              <button type="submit" class="btn primary">
+                Submit enrollment
+              </button>
+              <button type="button" class="btn" id="resetForm">Reset</button>
+              <div
+                class="success"
+                id="successMsg"
+                role="status"
+                aria-live="polite"
+              >
+                Thanks! Your enrollment request was received. We’ll email next
+                steps.
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <p class="footer-note">
+        Built for learning with bright accents and accessible design. © Academy
+      </p>
+    </main>
+
+    <div
+      class="modal"
+      id="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+      aria-describedby="modalDesc"
+    >
+      <div class="dialog">
+        <header>
+          <div>
+            <div id="modalTitle" style="font-weight: 800">Title</div>
+            <small id="modalDesc" style="color: var(--muted)"
+              >Description</small
+            >
+          </div>
+          <button class="x" aria-label="Close dialog" onclick="closeModal()">
+            ×
+          </button>
+        </header>
+        <div class="content" id="modalBody"></div>
+        <div class="footer" id="modalFooter"></div>
+      </div>
+    </div>
+
+    <script>
+      const courses = [
+        {
+          id: "coding101",
+          title: "Coding 101: Intro to Programming",
+          category: "Coding",
+          level: "Beginner",
+          duration: "4 weeks",
+          color: "var(--primary)",
+          tagline: "Start with Python and learn problem solving fundamentals.",
+          skills: ["Python", "Logic", "Git"],
+          instructor: "alex",
+          syllabus: [
+            {
+              w: "Week 1",
+              title: "Python basics",
+              desc: "Variables, data types, input/output, control flow.",
+            },
+            {
+              w: "Week 2",
+              title: "Functions & data structures",
+              desc: "Lists, dicts, sets, tuples; function design.",
+            },
+            {
+              w: "Week 3",
+              title: "Working with files",
+              desc: "Read/write files, error handling, modules.",
+            },
+            {
+              w: "Week 4",
+              title: "Mini project",
+              desc: "Build a command‑line app and share your code on GitHub.",
+            },
+          ],
+        },
+        {
+          id: "webstack",
+          title: "Full‑Stack Web with JavaScript",
+          category: "Coding",
+          level: "Intermediate",
+          duration: "6 weeks",
+          color: "var(--secondary)",
+          tagline: "Build and deploy a modern web app from scratch.",
+          skills: ["HTML", "CSS", "JS", "APIs"],
+          instructor: "alex",
+          syllabus: [
+            {
+              w: "Week 1",
+              title: "Modern HTML/CSS",
+              desc: "Layout, responsive design, accessibility.",
+            },
+            {
+              w: "Week 2",
+              title: "JavaScript essentials",
+              desc: "DOM, fetch, modules, state management.",
+            },
+            {
+              w: "Week 3",
+              title: "APIs & persistence",
+              desc: "REST, localStorage, JSON, auth basics.",
+            },
+            {
+              w: "Week 4",
+              title: "Back‑end intro",
+              desc: "Node basics, routing, simple database.",
+            },
+            {
+              w: "Week 5",
+              title: "Deploy & monitor",
+              desc: "Build, deploy, error tracking.",
+            },
+            {
+              w: "Week 6",
+              title: "Capstone",
+              desc: "Ship a live app with a pitch README.",
+            },
+          ],
+        },
+        {
+          id: "uxdesign",
+          title: "UI/UX Design Foundations",
+          category: "Design",
+          level: "Beginner",
+          duration: "4 weeks",
+          color: "var(--purple)",
+          tagline: "Design delightful, accessible interfaces with Figma.",
+          skills: ["Figma", "Wireframing", "Accessibility"],
+          instructor: "maya",
+          syllabus: [
+            {
+              w: "Week 1",
+              title: "Research & discovery",
+              desc: "Personas, journeys, problem statements.",
+            },
+            {
+              w: "Week 2",
+              title: "Wireframes to mockups",
+              desc: "Grids, components, prototyping.",
+            },
+            {
+              w: "Week 3",
+              title: "Design systems",
+              desc: "Tokens, variants, documentation.",
+            },
+            {
+              w: "Week 4",
+              title: "Portfolio project",
+              desc: "Usability test and iterate based on feedback.",
+            },
+          ],
+        },
+        {
+          id: "marketing",
+          title: "Digital Marketing Sprint",
+          category: "Marketing",
+          level: "All levels",
+          duration: "3 weeks",
+          color: "var(--accent)",
+          tagline: "Craft campaigns across SEO, social, and email.",
+          skills: ["SEO", "Content", "Analytics"],
+          instructor: "samir",
+          syllabus: [
+            {
+              w: "Week 1",
+              title: "Audience & messaging",
+              desc: "ICP, positioning, content calendars.",
+            },
+            {
+              w: "Week 2",
+              title: "Channels & creatives",
+              desc: "SEO basics, ads, landing pages.",
+            },
+            {
+              w: "Week 3",
+              title: "Measure & scale",
+              desc: "KPIs, A/B tests, reporting.",
+            },
+          ],
+        },
+        {
+          id: "analytics",
+          title: "Data Analytics Bootcamp",
+          category: "Data",
+          level: "Beginner",
+          duration: "5 weeks",
+          color: "var(--primary)",
+          tagline: "Turn raw data into clear insights and dashboards.",
+          skills: ["SQL", "Spreadsheets", "Data Viz"],
+          instructor: "lina",
+          syllabus: [
+            {
+              w: "Week 1",
+              title: "Spreadsheet mastery",
+              desc: "Functions, cleaning, pivot tables.",
+            },
+            {
+              w: "Week 2",
+              title: "SQL basics",
+              desc: "SELECT, JOINs, aggregations.",
+            },
+            {
+              w: "Week 3",
+              title: "SQL for analytics",
+              desc: "CTEs, window functions, performance.",
+            },
+            {
+              w: "Week 4",
+              title: "Dashboards",
+              desc: "Charts that tell stories, best practices.",
+            },
+            {
+              w: "Week 5",
+              title: "Case study",
+              desc: "End‑to‑end analysis presentation.",
+            },
+          ],
+        },
+        {
+          id: "product",
+          title: "Product Management Essentials",
+          category: "Product",
+          level: "Intermediate",
+          duration: "4 weeks",
+          color: "var(--secondary)",
+          tagline: "From discovery to delivery with stakeholder alignment.",
+          skills: ["Roadmaps", "User stories", "Prioritization"],
+          instructor: "maya",
+          syllabus: [
+            {
+              w: "Week 1",
+              title: "Product discovery",
+              desc: "User interviews, problem framing.",
+            },
+            {
+              w: "Week 2",
+              title: "MVP & prioritization",
+              desc: "ICE, RICE, story mapping.",
+            },
+            {
+              w: "Week 3",
+              title: "Delivery",
+              desc: "Backlog, sprints, acceptance criteria.",
+            },
+            {
+              w: "Week 4",
+              title: "Launch & learn",
+              desc: "Metrics, feedback loops.",
+            },
+          ],
+        },
+        {
+          id: "branddesign",
+          title: "Brand Design Studio",
+          category: "Design",
+          level: "All levels",
+          duration: "3 weeks",
+          color: "var(--accent)",
+          tagline: "Craft a cohesive brand identity from logo to system.",
+          skills: ["Identity", "Typography", "Color"],
+          instructor: "maya",
+          syllabus: [
+            {
+              w: "Week 1",
+              title: "Research & strategy",
+              desc: "Brand goals, audience, moodboards.",
+            },
+            {
+              w: "Week 2",
+              title: "Identity creation",
+              desc: "Logo explorations, typographic system.",
+            },
+            {
+              w: "Week 3",
+              title: "Brand system",
+              desc: "Guidelines, applications, presentation.",
+            },
+          ],
+        },
+        {
+          id: "growth",
+          title: "Growth Marketing Experiments",
+          category: "Marketing",
+          level: "Advanced",
+          duration: "4 weeks",
+          color: "var(--purple)",
+          tagline: "Design experiments to uncover sustainable growth.",
+          skills: ["Experimentation", "Funnels", "CRO"],
+          instructor: "samir",
+          syllabus: [
+            {
+              w: "Week 1",
+              title: "Model & metrics",
+              desc: "Growth loops, north star metric.",
+            },
+            {
+              w: "Week 2",
+              title: "Experiment design",
+              desc: "Hypothesis, sampling, instrumentation.",
+            },
+            {
+              w: "Week 3",
+              title: "Run & analyze",
+              desc: "Stat sig, learnings, prioritization.",
+            },
+            {
+              w: "Week 4",
+              title: "Playbook",
+              desc: "Scaling wins, sharing outcomes.",
+            },
+          ],
+        },
+      ];
+
+      const instructors = [
+        {
+          id: "alex",
+          name: "Alex Rivera",
+          role: "Senior Software Engineer",
+          color: "linear-gradient(135deg, #2d8cff, #00e6a7)",
+          bio: "Alex has taught 3,000+ learners to code and ships production apps across JS and Python stacks. Passionate about approachable explanations and project‑based learning.",
+          tags: ["JavaScript", "Python", "APIs"],
+        },
+        {
+          id: "maya",
+          name: "Maya Chen",
+          role: "Lead Product Designer",
+          color: "linear-gradient(135deg, #7b61ff, #2d8cff)",
+          bio: "Maya builds inclusive design systems and mentors career‑switchers into their first UX roles. Ex‑agency, ex‑startup, still loves Figma shortcuts.",
+          tags: ["UI/UX", "Design Systems", "Accessibility"],
+        },
+        {
+          id: "amira",
+          name: "Amira Mirza",
+          role: "Growth Marketer",
+          color: "linear-gradient(135deg, #ff6b00, #00e6a7)",
+          bio: "Amira has led growth for SaaS and marketplaces. Her playbooks blend narrative, analytics, and rapid experimentation to uncover traction.",
+          tags: ["SEO", "CRO", "Content"],
+        },
+        {
+          id: "lina",
+          name: "Dr. Lina Gómez",
+          role: "Data Scientist",
+          color: "linear-gradient(135deg, #00e6a7, #7b61ff)",
+          bio: "Lina translates complex data into crisp decisions. PhD in Statistics, worked across healthcare and fintech, and loves teaching SQL and visualization.",
+          tags: ["SQL", "Stats", "Data Viz"],
+        },
+      ];
+
+      const state = {
+        filter: "All",
+        search: "",
+      };
+
+      function $(s, scope = document) {
+        return scope.querySelector(s);
+      }
+      function $all(s, scope = document) {
+        return Array.from(scope.querySelectorAll(s));
+      }
+
+      function courseCard(c) {
+        const skills = c.skills
+          .map((x) => `<span class="tag">${x}</span>`)
+          .join("");
+        const i = instructors.find((x) => x.id === c.instructor);
+        return `
+        <article class="card" data-category="${
+          c.category
+        }" data-title="${c.title.toLowerCase()}" data-instructor="${
+          i?.name?.toLowerCase() || ""
+        }" aria-label="${c.title}">
+          <span class="pill" style="background: rgba(0,0,0,0.04)"><span class="dot" style="background:${
+            c.color
+          }"></span> ${c.category}</span>
+          <h3>${c.title}</h3>
+          <p style="margin:0; color: var(--muted)">${c.tagline}</p>
+          <div class="meta">
+            <span>Level: <b style="color:var(--text)">${c.level}</b></span>
+            <span>Duration: <b style="color:var(--text)">${
+              c.duration
+            }</b></span>
+            <span>Instructor: <b style="color:var(--text)">${
+              i?.name || ""
+            }</b></span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">${skills}</div>
+          <div class="actions">
+            <button class="btn accent" data-action="syllabus" data-id="${
+              c.id
+            }">View syllabus</button>
+            <button class="btn" data-action="instructor" data-instructor="${
+              i?.id || ""
+            }">Instructor bio</button>
+            <button class="btn primary" data-action="enroll" data-id="${
+              c.id
+            }">Enroll</button>
+          </div>
+        </article>
+      `;
+      }
+
+      function renderCourses() {
+        const grid = $("#courseGrid");
+        const q = state.search.trim().toLowerCase();
+        const filtered = courses.filter(
+          (c) =>
+            (state.filter === "All" || c.category === state.filter) &&
+            (!q ||
+              c.title.toLowerCase().includes(q) ||
+              c.skills.join(" ").toLowerCase().includes(q) ||
+              instructors
+                .find((i) => i.id === c.instructor)
+                ?.name.toLowerCase()
+                .includes(q))
+        );
+        grid.innerHTML = filtered.map(courseCard).join("");
+        $("#statCourses").textContent = courses.length.toString();
+      }
+
+      function renderInstructors() {
+        const grid = $("#instructorGrid");
+        grid.innerHTML = instructors
+          .map(
+            (i) => `
+        <article class="instructor">
+          <div class="avatar" style="background:${i.color}">${i.name
+              .split(" ")
+              .map((x) => x[0])
+              .slice(0, 2)
+              .join("")}</div>
+          <div>
+            <h3 class="i-name">${i.name}</h3>
+            <div class="i-meta">${i.role}</div>
+          </div>
+          <p class="bio">${i.bio}</p>
+          <div class="i-tags">${i.tags
+            .map((t) => `<span class="tag">${t}</span>`)
+            .join("")}</div>
+          <div style="grid-column: 1 / -1; display:flex; gap:10px; margin-top:8px;">
+            <button class="btn" data-action="instructor" data-instructor="${
+              i.id
+            }">Read bio</button>
+            <button class="btn accent" data-action="view-courses" data-instructor="${
+              i.id
+            }">View courses</button>
+          </div>
+        </article>
+      `
+          )
+          .join("");
+      }
+
+      function syllabusDialog(course) {
+        const body = `
+        <div class="syllabus-list">
+          ${course.syllabus
+            .map(
+              (m) => `
+            <div class="module">
+              <h4>${m.w}: ${m.title}</h4>
+              <small>${m.desc}</small>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      `;
+        const footer = `
+        <button class="btn" onclick="closeModal()">Close</button>
+        <button class="btn primary" onclick="prefillAndScroll('${course.id}')">Enroll in ${course.title}</button>
+      `;
+        openModal(
+          `Syllabus: ${course.title}`,
+          `${course.level} • ${course.duration} • ${course.category}`,
+          body,
+          footer
+        );
+      }
+
+      function instructorDialog(inst) {
+        const teaches = courses
+          .filter((c) => c.instructor === inst.id)
+          .map((c) => `<li>${c.title}</li>`)
+          .join("");
+        const body = `
+        <div style="display:grid; grid-template-columns: 70px 1fr; gap: 12px; align-items:center;">
+          <div class="avatar" style="background:${inst.color}">${inst.name
+          .split(" ")
+          .map((x) => x[0])
+          .slice(0, 2)
+          .join("")}</div>
+          <div>
+            <div style="font-weight:700">${inst.role}</div>
+            <div style="color:var(--muted)">${inst.tags.join(" • ")}</div>
+          </div>
+        </div>
+        <p style="margin-top:12px">${inst.bio}</p>
+        <div style="margin-top:8px"><b>Courses taught</b><ul>${teaches}</ul></div>
+      `;
+        const footer = `<button class="btn" onclick="closeModal()">Close</button>`;
+        openModal(inst.name, "Instructor bio", body, footer);
+      }
+
+      function openModal(title, desc, bodyHTML, footerHTML) {
+        $("#modalTitle").textContent = title;
+        $("#modalDesc").textContent = desc;
+        $("#modalBody").innerHTML = bodyHTML;
+        $("#modalFooter").innerHTML = footerHTML || "";
+        const m = $("#modal");
+        m.classList.add("open");
+        const focusable = m.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        function trap(e) {
+          if (e.key === "Tab") {
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          } else if (e.key === "Escape") {
+            closeModal();
+          }
+        }
+        m.addEventListener("keydown", trap);
+        m.dataset.trap = "1";
+        setTimeout(() => first?.focus(), 0);
+      }
+
+      function closeModal() {
+        const m = $("#modal");
+        m.classList.remove("open");
+        if (m.dataset.trap) m.replaceWith(m.cloneNode(true));
+        document.body.focus();
+      }
+
+      function prefillAndScroll(courseId) {
+        const c = courses.find((x) => x.id === courseId);
+        if (c) {
+          $("#courseSelect").value = c.id;
+          closeModal();
+          const el = $("#enroll");
+          el.scrollIntoView({ behavior: "smooth" });
+          setTimeout(() => $("#fullName").focus(), 350);
+        }
+      }
+
+      function hydrateCourseSelect() {
+        const select = $("#courseSelect");
+        select.innerHTML =
+          '<option value="">Choose…</option>' +
+          courses
+            .map((c) => `<option value="${c.id}">${c.title}</option>`)
+            .join("");
+      }
+
+      function attachHandlers() {
+        $("#courseGrid").addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+          const action = btn.dataset.action;
+          if (action === "syllabus") {
+            const id = btn.dataset.id;
+            const c = courses.find((x) => x.id === id);
+            if (c) syllabusDialog(c);
+          } else if (action === "instructor") {
+            const id = btn.dataset.instructor;
+            const i = instructors.find((x) => x.id === id);
+            if (i) instructorDialog(i);
+          } else if (action === "enroll") {
+            const id = btn.dataset.id;
+            prefillAndScroll(id);
+          }
+        });
+
+        $("#instructorGrid").addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+          const action = btn.dataset.action;
+          const id = btn.dataset.instructor;
+          const i = instructors.find((x) => x.id === id);
+          if (action === "instructor" && i) {
+            instructorDialog(i);
+          }
+          if (action === "view-courses" && i) {
+            state.search = i.name.toLowerCase();
+            $("#search").value = i.name;
+            state.filter = "All";
+            $all(".chip").forEach((ch) =>
+              ch.classList.toggle("active", ch.dataset.filter === "All")
+            );
+            renderCourses();
+            $("#courses").scrollIntoView({ behavior: "smooth" });
+          }
+        });
+
+        $all(".chip").forEach((chip) => {
+          chip.addEventListener("click", () => {
+            $all(".chip").forEach((c) => c.classList.remove("active"));
+            chip.classList.add("active");
+            state.filter = chip.dataset.filter;
+            renderCourses();
+          });
+        });
+
+        $("#search").addEventListener("input", (e) => {
+          state.search = e.target.value;
+          renderCourses();
+        });
+
+        $("#enrollForm").addEventListener("submit", (e) => {
+          e.preventDefault();
+          const form = e.target;
+          const data = Object.fromEntries(new FormData(form).entries());
+          const required = ["fullName", "email", "course", "experience"];
+          for (const r of required) {
+            if (!data[r]) {
+              alert("Please complete the form.");
+              return;
+            }
+          }
+          if (!$("#terms").checked) {
+            alert("Please agree to the terms.");
+            return;
+          }
+          const btn = form.querySelector('button[type="submit"]');
+          const prev = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = "Submitting…";
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = prev;
+            $("#successMsg").style.display = "block";
+            try {
+              localStorage.setItem("enrollment", JSON.stringify(data));
+            } catch {}
+          }, 650);
+        });
+
+        $("#resetForm").addEventListener("click", () => {
+          $("#enrollForm").reset();
+          $("#successMsg").style.display = "none";
+        });
+      }
+
+      renderInstructors();
+      hydrateCourseSelect();
+      renderCourses();
+      attachHandlers();
+    </script>
+  </body>
+</html>

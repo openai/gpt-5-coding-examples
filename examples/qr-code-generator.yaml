@@ -1,0 +1,11 @@
+id: qr-code-generator
+title: QR Code Generator
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Custom QR Code Generator
+  - Goal: Generate QR codes from text or URLs.
+  - Features: Color customization, download PNG.
+  - The UI should be minimal with a large preview.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/qr-code-generator.png
+tags:
+  - tool

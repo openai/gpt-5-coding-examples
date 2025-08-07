@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Company Acronym List</title>
+  <meta name="description" content="Search, learn, and quiz yourself on internal company acronyms." />
+  <style>
+    :root{
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --accent: #0ea5e9;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+      --chip-bg: #f1f5f9;
+      --chip-bd: #e5e7eb;
+      --input-bd: #e5e7eb;
+      --sticky: #f0f3fa;
+    }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: linear-gradient(180deg, var(--bg), #ffffff 120%);
+    }
+    .container{ max-width: 1100px; margin: 0 auto; padding: 24px; }
+    header{ display:grid; grid-template-columns: 1fr auto; gap: 16px; align-items:center; margin-bottom: 16px; }
+    .title{ display:flex; align-items:center; gap:12px; }
+    .title h1{ margin:0; font-size: 28px; letter-spacing: .2px; }
+    .subtitle{ margin:6px 0 0 40px; color:var(--muted); }
+    .toolbar{ display:flex; gap:8px; flex-wrap: wrap; justify-content: flex-end; }
+    button, input[type="search"], select{
+      border: 1px solid var(--input-bd);
+      background: #fff;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    button{ cursor:pointer; box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
+    button.primary{ background: var(--primary); color: #fff; border-color: var(--primary); }
+    button.ghost{ background: #fff; }
+    button:disabled{ opacity: .6; cursor:not-allowed; }
+    .panel{ background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+    .filters{ display:flex; flex-wrap: wrap; gap: 10px; align-items:center; }
+    .search-wrap{ flex: 1 1 260px; min-width: 220px; display:flex; align-items:center; gap:8px; }
+    .search-wrap input{ width: 100%; }
+    .chips{ display:flex; gap:8px; flex-wrap: wrap; }
+    .chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius: 999px; background: var(--chip-bg); border:1px solid var(--chip-bd); color:#334155; font-size:12px; cursor:pointer; user-select:none; }
+    .chip.active{ background: #e0edff; border-color: #c7d2fe; color:#1e3a8a; }
+    .chip .count{ color: var(--muted); font-variant-numeric: tabular-nums; }
+    .meta-row{ display:flex; align-items:center; justify-content: space-between; gap: 12px; margin: 10px 0 0 0; color: var(--muted); font-size: 12px; }
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+    .card{ border:1px solid #e5e7eb; border-radius: 12px; padding: 12px; background:#fff; display:flex; flex-direction: column; gap:8px; }
+    .acronym{ display:flex; align-items:center; justify-content:space-between; gap: 10px; }
+    .acronym .code{ font-weight: 800; letter-spacing: .5px; font-size: 16px; }
+    .acronym .term{ color: var(--muted); font-size: 13px; }
+    .definition{ font-size: 14px; line-height: 1.4; }
+    .tagline{ display:flex; gap:6px; flex-wrap: wrap; }
+    .tag{ font-size: 11px; padding:4px 8px; background:#f8fafc; border:1px solid #e5e7eb; border-radius: 999px; color:#334155; }
+    .tabs{ display:flex; gap:6px; flex-wrap: wrap; margin-top: 8px; }
+    .tab{ padding:8px 12px; border-radius: 999px; border:1px solid var(--chip-bd); background:#fff; cursor:pointer; font-size: 13px; }
+    .tab.active{ background: var(--primary); border-color: var(--primary); color:#fff; }
+    .hidden{ display:none !important; }
+    .footer{ margin-top: 12px; color: var(--muted); font-size: 12px; text-align:center; }
+
+    /* Quiz */
+    .quiz-wrap{ display:grid; grid-template-columns: 1fr; gap: 12px; }
+    .quiz-hero{ display:flex; flex-direction:column; gap:10px; }
+    .quiz-stats{ display:flex; gap:10px; flex-wrap: wrap; }
+    .stat{ background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; min-width: 120px; }
+    .question{ background:#fff; border:1px solid #e5e7eb; border-radius: 12px; padding: 14px; }
+    .q-head{ display:flex; align-items:center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .q-body{ font-size: 20px; font-weight: 700; letter-spacing: .3px; }
+    .choices{ display:grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+    .choice{ border:1px solid #e5e7eb; border-radius: 10px; background:#fff; padding:10px; text-align:left; cursor:pointer; }
+    .choice.correct{ border-color: #22c55e; background: #ecfdf5; }
+    .choice.wrong{ border-color: #ef4444; background:#fef2f2; }
+    .q-footer{ display:flex; align-items:center; justify-content: space-between; margin-top: 10px; }
+    .muted{ color: var(--muted); }
+
+    @media (min-width: 920px){
+      .quiz-wrap{ grid-template-columns: 1.2fr .8fr; }
+    }
+  </style>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232563eb'/%3E%3Cpath fill='white' d='M16 40h32v8H16zM18 16h28a2 2 0 0 1 2 2v16H16V18a2 2 0 0 1 2-2z'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <div class="title">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2" fill="#2563eb"/><path d="M6 10h12v2H6zM8 14h8v2H8z" fill="#93c5fd"/></svg>
+          <h1>Company Acronym List</h1>
+        </div>
+        <p class="subtitle">Search, browse, and quiz yourself on internal acronyms across teams, projects, and processes.</p>
+      </div>
+      <div class="toolbar">
+        <button class="tab active" id="tabList" aria-pressed="true">Acronym List</button>
+        <button class="tab" id="tabQuiz" aria-pressed="false">Quiz Mode</button>
+      </div>
+    </header>
+
+    <section id="listView" class="panel" aria-label="Acronym list view">
+      <div class="filters">
+        <div class="search-wrap" style="flex: 1 1 420px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 1 0 13a6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9a4.5 4.5 0 0 0 0-9Zm6.78 9.36l3.18 3.18-1.42 1.42-3.18-3.18 1.42-1.42Z" fill="#64748b"/></svg>
+          <input id="searchInput" type="search" placeholder="Search acronym, term, or definition" aria-label="Search acronyms" />
+        </div>
+        <div class="chips" id="categoryChips" aria-label="Category filters"></div>
+        <button class="ghost" id="clearFiltersBtn" title="Clear all filters">Clear</button>
+      </div>
+      <div class="meta-row">
+        <div id="resultCount">0 results</div>
+        <div>
+          <label class="muted" for="sortSelect">Sort by</label>
+          <select id="sortSelect" aria-label="Sort results">
+            <option value="acronym">Acronym (A–Z)</option>
+            <option value="term">Term (A–Z)</option>
+          </select>
+        </div>
+      </div>
+      <div id="cardGrid" class="grid" role="list"></div>
+      <p class="footer">Tip: Filter by categories to narrow your list, then switch to Quiz mode to test yourself on just those acronyms.</p>
+    </section>
+
+    <section id="quizView" class="panel hidden" aria-label="Quiz mode">
+      <div class="quiz-wrap">
+        <div class="quiz-hero">
+          <div class="filters">
+            <div class="search-wrap" style="flex: 1 1 420px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 1 0 13a6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9a4.5 4.5 0 0 0 0-9Zm6.78 9.36l3.18 3.18-1.42 1.42-3.18-3.18 1.42-1.42Z" fill="#64748b"/></svg>
+              <input id="quizSearchInput" type="search" placeholder="Search within pool (optional)" aria-label="Search quiz pool" />
+            </div>
+            <div class="chips" id="quizCategoryChips" aria-label="Category filters for quiz"></div>
+            <button class="ghost" id="quizClearFiltersBtn" title="Clear filters">Clear</button>
+          </div>
+          <div class="meta-row">
+            <div id="poolCount" class="muted">Pool: 0 items</div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <label for="directionSelect" class="muted">Direction</label>
+              <select id="directionSelect" aria-label="Question direction">
+                <option value="a2d">Acronym → Definition</option>
+                <option value="d2a">Definition → Acronym</option>
+                <option value="mix">Mixed</option>
+              </select>
+              <label for="countSelect" class="muted">Questions</label>
+              <select id="countSelect" aria-label="Number of questions">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+                <option value="all">All in pool</option>
+              </select>
+              <button class="primary" id="startQuizBtn">Start Quiz</button>
+            </div>
+          </div>
+
+          <div class="quiz-stats" id="liveStats" aria-live="polite"></div>
+
+          <div id="questionBox" class="question" hidden>
+            <div class="q-head">
+              <div><strong id="qProgress">1/10</strong> <span class="muted" id="qTypeLabel">Acronym → Definition</span></div>
+              <div class="muted" id="timerBox" hidden>Time: <span id="timer">0</span>s</div>
+            </div>
+            <div class="q-body" id="qPrompt"></div>
+            <div class="choices" id="qChoices"></div>
+            <div class="q-footer">
+              <div id="qFeedback" class="muted"></div>
+              <div style="display:flex; gap:8px;">
+                <button id="showAnswerBtn" class="ghost" hidden>Show answer</button>
+                <button id="nextBtn" class="primary" disabled>Next</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="resultsBox" class="question" hidden></div>
+        </div>
+
+        <aside>
+          <div class="panel" style="padding:12px;">
+            <h3 style="margin:0 0 6px 0; font-size:16px;">Your study set</h3>
+            <p class="muted" style="margin:0 0 8px 0; font-size:12px;">Quiz pulls from the current filtered list.</p>
+            <div id="studyList" style="max-height: 55vh; overflow:auto; border:1px solid #e5e7eb; border-radius: 10px; padding:8px; background:#fff;"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (s, el=document) => el.querySelector(s);
+    const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+    const STORAGE_KEY = 'company_acronyms_v1';
+
+    const DEFAULT_ITEMS = [
+      {a:'OKR', t:'Objectives and Key Results', d:'Goal-setting framework for aligning priorities and measuring outcomes.', c:['processes','business']},
+      {a:'KPI', t:'Key Performance Indicator', d:'A measurable value that indicates how effectively objectives are being achieved.', c:['processes','business']},
+      {a:'SLA', t:'Service Level Agreement', d:'A commitment on service quality, uptime, or response times between teams or vendors.', c:['processes','support']},
+      {a:'SOP', t:'Standard Operating Procedure', d:'A documented set of step-by-step instructions to carry out routine operations.', c:['processes','operations']},
+      {a:'ETA', t:'Estimated Time of Arrival', d:'The expected completion or delivery time for a task or item.', c:['projects','operations']},
+      {a:'EOD', t:'End of Day', d:'A deadline indicating completion by the end of the business day.', c:['processes','projects']},
+      {a:'PRD', t:'Product Requirements Document', d:'A document that defines a product’s purpose, features, and constraints.', c:['projects','product']},
+      {a:'MVP', t:'Minimum Viable Product', d:'A version of a product with just enough features to be used and tested by early customers.', c:['projects','product']},
+      {a:'POC', t:'Proof of Concept', d:'A small implementation to validate feasibility before full execution.', c:['projects','engineering']},
+      {a:'ROI', t:'Return on Investment', d:'A profitability ratio that compares gain or loss relative to cost.', c:['business','finance']},
+      {a:'NPS', t:'Net Promoter Score', d:'A metric that measures customer loyalty by asking how likely they are to recommend.', c:['business','support']},
+      {a:'CSAT', t:'Customer Satisfaction', d:'A measure of customer satisfaction, typically collected via surveys.', c:['business','support']},
+      {a:'API', t:'Application Programming Interface', d:'A set of rules for how software components interact.', c:['engineering','product']},
+      {a:'SDK', t:'Software Development Kit', d:'A collection of tools, libraries, and docs for building software on a platform.', c:['engineering','product']},
+      {a:'SSO', t:'Single Sign-On', d:'A system that allows users to authenticate once and access multiple applications.', c:['engineering','security']},
+      {a:'DBA', t:'Database Administrator', d:'A role responsible for the installation, configuration, and maintenance of databases.', c:['teams','engineering']},
+      {a:'QA', t:'Quality Assurance', d:'Practices and processes for ensuring product quality and preventing defects.', c:['teams','engineering']},
+      {a:'PM', t:'Product Manager', d:'Role accountable for product strategy, roadmap, and outcomes.', c:['teams','product']},
+      {a:'SRE', t:'Site Reliability Engineering', d:'Engineering discipline focused on reliability and scalability of systems.', c:['teams','engineering']},
+      {a:'CS', t:'Customer Support', d:'Team that assists customers with issues and questions.', c:['teams','support']},
+      {a:'HR', t:'Human Resources', d:'Team managing hiring, compensation, and employee relations.', c:['teams','operations']},
+      {a:'GTM', t:'Go-To-Market', d:'The plan and activities to bring a product to market.', c:['business','marketing']},
+      {a:'ARR', t:'Annual Recurring Revenue', d:'Yearly value of recurring revenue from subscriptions.', c:['business','finance']},
+      {a:'MRR', t:'Monthly Recurring Revenue', d:'Monthly value of recurring revenue from subscriptions.', c:['business','finance']},
+      {a:'LTV', t:'Customer Lifetime Value', d:'A prediction of the net profit from the entire relationship with a customer.', c:['business','finance']},
+      {a:'CAC', t:'Customer Acquisition Cost', d:'Total cost to acquire a new customer.', c:['business','marketing']},
+      {a:'CHURN', t:'Churn Rate', d:'The percentage of customers who stop using a product over a time period.', c:['business','finance']}
+    ];
+
+    function load(){
+      try{ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return null; return JSON.parse(raw); }catch{ return null; }
+    }
+    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+    let state = load() || { items: DEFAULT_ITEMS, search:'', categories:[], sort:'acronym', view:'list', quiz:{ search:'', categories:[], direction:'a2d', count:'10', running:false } };
+
+    function uniq(arr){ return Array.from(new Set(arr)); }
+    function allCategories(items){ return uniq(items.flatMap(x => x.c)).sort((a,b)=>a.localeCompare(b)); }
+    function matches(item, search){
+      if(!search) return true;
+      const s = search.trim().toLowerCase();
+      return item.a.toLowerCase().includes(s) || item.t.toLowerCase().includes(s) || item.d.toLowerCase().includes(s) || item.c.some(x=>x.toLowerCase().includes(s));
+    }
+    function inCats(item, cats){ if(!cats || cats.length===0) return true; return item.c.some(x => cats.includes(x)); }
+    function filtered(items, search, cats){ return items.filter(i => matches(i, search) && inCats(i, cats)); }
+
+    function renderChips(targetEl, cats, active){
+      targetEl.innerHTML = '';
+      const sorted = cats.sort((a,b)=>a.localeCompare(b));
+      for(const cat of sorted){
+        const count = state.items.filter(i => i.c.includes(cat)).length;
+        const btn = document.createElement('button');
+        btn.className = 'chip' + (active.includes(cat) ? ' active' : '');
+        btn.type = 'button';
+        btn.setAttribute('data-cat', cat);
+        btn.innerHTML = `<span>${escapeHtml(cat)}</span> <span class="count">${count}</span>`;
+        btn.addEventListener('click', () => {
+          const list = active.includes(cat) ? active.filter(x=>x!==cat) : [...active, cat];
+          if(targetEl.id === 'categoryChips') state.categories = list; else state.quiz.categories = list;
+          save();
+          update();
+        });
+        targetEl.appendChild(btn);
+      }
+    }
+
+    function renderList(){
+      const pool = filtered(state.items, state.search, state.categories);
+      const grid = $('#cardGrid');
+      let items = [...pool];
+      items.sort((a,b)=>{
+        return state.sort==='term' ? a.t.localeCompare(b.t) : a.a.localeCompare(b.a);
+      });
+      grid.innerHTML = items.map(it => `
+        <article class="card" role="listitem">
+          <div class="acronym">
+            <div class="code">${escapeHtml(it.a)}</div>
+            <div class="term" title="${escapeHtml(it.t)}">${escapeHtml(it.t)}</div>
+          </div>
+          <div class="definition">${escapeHtml(it.d)}</div>
+          <div class="tagline">${it.c.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}</div>
+        </article>
+      `).join('');
+      $('#resultCount').textContent = `${pool.length} result${pool.length===1?'':'s'}`;
+    }
+
+    function renderStudyList(){
+      const pool = currentQuizPool();
+      const box = $('#studyList');
+      box.innerHTML = pool.map(it => `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 8px; border-bottom:1px solid #f1f5f9;">
+          <div style="font-weight:700;">${escapeHtml(it.a)}</div>
+          <div style="color:#64748b; font-size:12px;">${escapeHtml(it.t)}</div>
+        </div>
+      `).join('');
+      $('#poolCount').textContent = `Pool: ${pool.length} item${pool.length===1?'':'s'}`;
+    }
+
+    function update(){
+      renderChips($('#categoryChips'), allCategories(state.items), state.categories);
+      renderList();
+      renderChips($('#quizCategoryChips'), allCategories(state.items), state.quiz.categories);
+      renderStudyList();
+      $('#searchInput').value = state.search;
+      $('#quizSearchInput').value = state.quiz.search;
+      $('#sortSelect').value = state.sort;
+      $('#directionSelect').value = state.quiz.direction;
+      $('#countSelect').value = state.quiz.count;
+      save();
+    }
+
+    // Quiz logic
+    function currentQuizPool(){
+      return filtered(state.items, state.quiz.search, state.quiz.categories);
+    }
+    function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+    function sample(arr, n, exclude){
+      const pool = exclude ? arr.filter(x=>x!==exclude) : arr.slice();
+      return shuffle(pool).slice(0, n);
+    }
+    function makeQuestions(pool, direction, count){
+      const list = shuffle(pool);
+      const total = count === 'all' ? list.length : Math.min(Number(count), list.length);
+      const qs = [];
+      for(let i=0; i<total; i++){
+        const item = list[i];
+        const kind = direction==='mix' ? (Math.random()<0.5?'a2d':'d2a') : direction;
+        const distractors = sample(pool, 3, item);
+        const choices = shuffle([item, ...distractors]);
+        const correctIndex = choices.indexOf(item);
+        const prompt = kind==='a2d' ? item.a : item.d;
+        const choiceText = choices.map(c => kind==='a2d' ? c.d : c.a);
+        qs.push({ item, kind, prompt, choiceText, correctIndex });
+      }
+      return qs;
+    }
+
+    let quiz = { questions:[], index:0, correct:0, wrong:0, startTs:0, elapsed:0 };
+
+    function startQuiz(){
+      const pool = currentQuizPool();
+      if(pool.length < 4){ alert('Need at least 4 items in the pool to generate multiple-choice questions. Add more filters or clear them.'); return; }
+      quiz = { questions: makeQuestions(pool, state.quiz.direction, state.quiz.count), index: 0, correct: 0, wrong: 0, startTs: Date.now(), elapsed:0 };
+      state.view='quiz'; state.quiz.running = true; save();
+      $('#resultsBox').hidden = true;
+      $('#questionBox').hidden = false;
+      $('#nextBtn').disabled = true;
+      $('#showAnswerBtn').hidden = true;
+      renderQuestion();
+      renderLiveStats();
+    }
+
+    function renderLiveStats(){
+      const total = quiz.questions.length || 0;
+      const completed = Math.min(quiz.index, total);
+      const s = $('#liveStats');
+      s.innerHTML = `
+        <div class="stat"><div class="muted">Correct</div><div><strong style="color:var(--ok)">${quiz.correct}</strong></div></div>
+        <div class="stat"><div class="muted">Wrong</div><div><strong style="color:var(--danger)">${quiz.wrong}</strong></div></div>
+        <div class="stat"><div class="muted">Progress</div><div><strong>${completed}</strong> / ${total}</div></div>
+      `;
+    }
+
+    function renderQuestion(){
+      const q = quiz.questions[quiz.index];
+      if(!q){ finishQuiz(); return; }
+      $('#qProgress').textContent = `${quiz.index+1}/${quiz.questions.length}`;
+      $('#qTypeLabel').textContent = q.kind==='a2d' ? 'Acronym → Definition' : 'Definition → Acronym';
+      $('#qPrompt').textContent = q.prompt;
+      $('#qFeedback').textContent = '';
+      const box = $('#qChoices');
+      box.innerHTML = '';
+      q.choiceText.forEach((txt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.type = 'button';
+        btn.textContent = txt;
+        btn.addEventListener('click', () => selectChoice(idx));
+        box.appendChild(btn);
+      });
+      $('#nextBtn').disabled = true;
+      $('#showAnswerBtn').hidden = false;
+    }
+
+    function selectChoice(idx){
+      const q = quiz.questions[quiz.index];
+      const buttons = $$('#qChoices .choice');
+      buttons.forEach(b => b.disabled = true);
+      if(idx === q.correctIndex){
+        buttons[idx].classList.add('correct');
+        $('#qFeedback').textContent = `Correct: ${q.item.a} — ${q.item.t}`;
+        quiz.correct++;
+      }else{
+        buttons[idx].classList.add('wrong');
+        buttons[q.correctIndex].classList.add('correct');
+        $('#qFeedback').textContent = `Answer: ${q.item.a} — ${q.item.t}`;
+        quiz.wrong++;
+      }
+      $('#nextBtn').disabled = false;
+      $('#showAnswerBtn').hidden = true;
+      renderLiveStats();
+    }
+
+    function showAnswer(){ selectChoice(-1); }
+
+    function nextQuestion(){
+      quiz.index++;
+      if(quiz.index >= quiz.questions.length){ finishQuiz(); return; }
+      renderQuestion();
+    }
+
+    function finishQuiz(){
+      state.quiz.running = false; save();
+      $('#questionBox').hidden = true;
+      const total = quiz.questions.length;
+      const pct = total ? Math.round((quiz.correct/total)*100) : 0;
+      $('#resultsBox').hidden = false;
+      $('#resultsBox').innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <div><strong>Results</strong></div>
+          <div class="muted">${quiz.correct} correct / ${total} (${pct}%)</div>
+        </div>
+        <div style="margin-top:8px; display:grid; gap:6px;">
+          ${quiz.questions.map((q,i)=>{
+            const correct = q.choiceText[q.correctIndex];
+            const label = q.kind==='a2d' ? `${q.item.a} →` : 'Definition →';
+            return `<div style=\"border:1px solid #e5e7eb; border-radius:8px; padding:8px; background:#fff;\">
+              <div style=\"font-size:13px; color:#64748b;\">Q${i+1} ${q.kind==='a2d'?escapeHtml(q.item.a):'Definition'}:</div>
+              <div style=\"font-weight:700;\">${escapeHtml(q.prompt)}</div>
+              <div style=\"margin-top:4px;\"><span class=\"muted\">Answer:</span> ${escapeHtml(q.item.a)} — ${escapeHtml(q.item.t)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+          <button id="restartQuizBtn" class="primary">Restart</button>
+        </div>
+      `;
+      $('#restartQuizBtn').addEventListener('click', startQuiz);
+      renderLiveStats();
+    }
+
+    function bind(){
+      // Tabs
+      $('#tabList').addEventListener('click', () => { state.view='list'; updateView(); });
+      $('#tabQuiz').addEventListener('click', () => { state.view='quiz'; updateView(); });
+
+      // List controls
+      $('#searchInput').addEventListener('input', (e)=>{ state.search = e.target.value; save(); renderList(); renderStudyList(); });
+      $('#sortSelect').addEventListener('change', (e)=>{ state.sort = e.target.value; save(); renderList(); });
+      $('#clearFiltersBtn').addEventListener('click', ()=>{ state.categories=[]; state.search=''; save(); update(); });
+
+      // Quiz controls
+      $('#quizSearchInput').addEventListener('input', (e)=>{ state.quiz.search = e.target.value; save(); renderStudyList(); });
+      $('#quizClearFiltersBtn').addEventListener('click', ()=>{ state.quiz.categories=[]; state.quiz.search=''; save(); update(); });
+      $('#directionSelect').addEventListener('change', (e)=>{ state.quiz.direction = e.target.value; save(); });
+      $('#countSelect').addEventListener('change', (e)=>{ state.quiz.count = e.target.value; save(); });
+      $('#startQuizBtn').addEventListener('click', startQuiz);
+      $('#nextBtn').addEventListener('click', nextQuestion);
+      $('#showAnswerBtn').addEventListener('click', showAnswer);
+    }
+
+    function updateView(){
+      const listActive = state.view==='list';
+      $('#listView').classList.toggle('hidden', !listActive);
+      $('#quizView').classList.toggle('hidden', listActive);
+      $('#tabList').classList.toggle('active', listActive);
+      $('#tabQuiz').classList.toggle('active', !listActive);
+      $('#tabList').setAttribute('aria-pressed', String(listActive));
+      $('#tabQuiz').setAttribute('aria-pressed', String(!listActive));
+      save();
+    }
+
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function init(){
+      bind();
+      update();
+      updateView();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
+

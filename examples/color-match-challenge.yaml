@@ -1,0 +1,10 @@
+id: color-match-challenge
+title: Color Match Challenge
+prompt: |
+  Create a single-page app in a single HTML file for a fast-paced “color match” game.
+  - Show a word (e.g., “RED”) in a random font color — player must click the correct color button (not the word meaning).
+  - Keep score based on correct answers within 30 seconds.
+  - Use large typography, color-coded buttons, and smooth button press animations.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/color-match-challenge.png
+tags:
+  - game

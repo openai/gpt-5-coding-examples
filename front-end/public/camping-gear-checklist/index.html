@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Camping Gear Checklist</title>
+  <meta name="description" content="Track camping gear with a checklist, weight calculator, and saved lists." />
+  <style>
+    :root {
+      --bg: #0f1a13;
+      --bg-alt: #132218;
+      --panel: #1c2b22;
+      --accent: #7ac27f;
+      --accent-2: #a67c52;
+      --text: #e7f2ea;
+      --muted: #c9d8cd;
+      --danger: #e57373;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 14px;
+    }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: linear-gradient(180deg, #0b1410 0%, #0f1a13 40%, #0a120d 100%);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .mountains::before,
+    .mountains::after {
+      content: "";
+      position: fixed;
+      left: -10vw;
+      right: -10vw;
+      height: 40vh;
+      bottom: 0;
+      background: radial-gradient(1200px 200px at 10% 100%, #0d1b14 40%, transparent 60%),
+                  radial-gradient(900px 240px at 60% 100%, #0d1b14 40%, transparent 60%),
+                  radial-gradient(1100px 220px at 110% 100%, #0b1712 40%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(1px);
+    }
+    .mountains::after {
+      bottom: -4vh;
+      opacity: 0.65;
+      filter: blur(2px);
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      /* Align header content width with main container by removing horizontal padding */
+      padding: 28px 0 10px;
+    }
+    /* Constrain the header's inner content to the same max width and side padding as .container */
+    header .title { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: conic-gradient(from 200deg, #7ac27f, #a6d49f, #7ac27f);
+      box-shadow: 0 6px 18px rgba(122, 194, 127, 0.35), inset 0 0 16px rgba(255,255,255,0.2);
+      display: grid; place-items: center;
+      color: #0f1a13;
+      font-weight: 900;
+    }
+    h1 { margin: 0; font-size: 28px; letter-spacing: 0.5px; }
+    .subtitle { color: var(--muted); margin-top: 6px; font-size: 14px; }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      padding: 10px 20px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+      margin: 8px 0 18px;
+    }
+    @media (max-width: 900px) {
+      .toolbar { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: linear-gradient(180deg, var(--panel), #17241d);
+      border: 1px solid #24382d;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .row > * { flex: 1 1 auto; }
+
+    label.small { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+    input[type="text"], input[type="number"], select {
+      background: #0f1a13;
+      color: var(--text);
+      border: 1px solid #2a3d32;
+      border-radius: 10px;
+      padding: 10px 11px;
+      outline: none;
+      transition: border 120ms ease, box-shadow 120ms ease;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(122, 194, 127, 0.2);
+    }
+    button, .btn {
+      background: linear-gradient(180deg, #85d28a, #6ab673);
+      color: #07240f;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 90ms ease, filter 90ms ease;
+      box-shadow: 0 6px 18px rgba(122,194,127,0.35);
+    }
+    button:active { transform: translateY(1px) scale(0.99); }
+    .btn-secondary {
+      background: linear-gradient(180deg, #caa27a, #a67c52);
+      color: #1b1107;
+      box-shadow: 0 6px 18px rgba(166,124,82,0.35);
+    }
+    .btn-ghost {
+      background: transparent; border: 1px solid #2a3d32; color: var(--text);
+      box-shadow: none;
+    }
+    .btn-danger {
+      background: linear-gradient(180deg, #f08a7f, #e57373);
+      color: #2a0e0e;
+      box-shadow: 0 6px 18px rgba(229,115,115,0.35);
+    }
+
+    .summary {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;
+    }
+    @media (max-width: 600px) { .summary { grid-template-columns: 1fr; } }
+    .card {
+      background: #0f1a13;
+      border: 1px dashed #2b4033;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .card .value { font-size: 22px; font-weight: 800; margin-top: 4px; }
+
+    .list-panel { margin-top: 16px; }
+    .list-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
+
+    .category {
+      margin-top: 16px;
+      border: 1px solid #283d31;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .category-header {
+      background: linear-gradient(180deg, #1c2b22 0%, #16241d 100%);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 12px;
+    }
+    .category-title { font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+    .category-title .emoji { filter: saturate(1.1); }
+
+    .items { padding: 6px; }
+    .item {
+      display: grid;
+      grid-template-columns: 28px 1.5fr 0.8fr 0.8fr 0.9fr 36px;
+      gap: 8px; align-items: center;
+      background: #0f1a13;
+      border: 1px solid #24382d;
+      border-radius: 10px;
+      padding: 8px;
+      margin: 6px 0;
+    }
+    @media (max-width: 800px) {
+      .item { grid-template-columns: 28px 1fr 0.8fr 0.8fr; }
+      .item .total, .item .delete { display: none; }
+    }
+    .item input[type="text"] { width: 100%; }
+    .item input[type="number"] { width: 100%; }
+    .item .total { text-align: right; font-weight: 700; color: var(--accent); }
+    .delete { text-align: center; }
+    .delete button { width: 32px; height: 32px; border-radius: 8px; }
+    .checkbox { display: grid; place-items: center; }
+    .checkbox input { width: 18px; height: 18px; }
+
+    .footer-note { color: var(--muted); opacity: 0.8; font-size: 12px; margin-top: 12px; }
+    .spacer { height: 12px; }
+  </style>
+</head>
+<body class="mountains">
+  <header>
+    <div class="title">
+      <div class="logo" aria-hidden="true">⛺</div>
+      <div>
+        <h1>Camping Gear Checklist</h1>
+        <div class="subtitle">Track gear for camping trips. Check items, compute weight, and save/load lists.</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <section class="toolbar">
+      <div class="panel">
+        <div class="row" style="margin-bottom: 8px;">
+          <div style="min-width: 200px; flex: 2 1 300px;">
+            <label class="small" for="item-name">Item name</label>
+            <input id="item-name" type="text" placeholder="e.g., Tent stakes" />
+          </div>
+          <div>
+            <label class="small" for="item-qty">Qty</label>
+            <input id="item-qty" type="number" min="1" step="1" value="1" />
+          </div>
+          <div>
+            <label class="small" for="item-weight">Unit weight (g)</label>
+            <input id="item-weight" type="number" min="0" step="0.1" placeholder="e.g., 12" />
+          </div>
+          <div>
+            <label class="small" for="item-cat">Category</label>
+            <select id="item-cat"></select>
+          </div>
+          <div style="align-self: end;">
+            <button id="add-item">Add Item</button>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn-secondary" id="load-presets">Load common gear</button>
+          <button class="btn-ghost" id="clear-all">New list</button>
+          <span style="flex: 1 1 auto"></span>
+          <label class="small" for="unit-toggle">Display unit</label>
+          <select id="unit-toggle" style="max-width: 160px;">
+            <option value="g">Grams (g)</option>
+            <option value="oz">Ounces (oz)</option>
+          </select>
+          <button class="btn-ghost" id="check-all">Check all</button>
+          <button class="btn-ghost" id="uncheck-all">Uncheck all</button>
+        </div>
+        <div class="summary">
+          <div class="card">
+            <div class="label">Total items</div>
+            <div class="value" id="summary-total-items">0</div>
+          </div>
+          <div class="card">
+            <div class="label">Packed items</div>
+            <div class="value" id="summary-packed-items">0</div>
+          </div>
+          <div class="card">
+            <div class="label">Packed weight</div>
+            <div class="value" id="summary-total-weight">0 g</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="row" style="margin-bottom: 8px;">
+          <div style="min-width: 220px;">
+            <label for="save-name" class="small">Save current list as</label>
+            <input id="save-name" type="text" placeholder="Trip name (e.g., Yosemite May)" />
+          </div>
+          <div style="align-self: end;">
+            <button id="save-list">Save</button>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label class="small" for="saved-lists">Saved lists</label>
+            <select id="saved-lists"></select>
+          </div>
+          <div style="align-self: end; display: flex; gap: 8px;">
+            <button id="load-list" class="btn-secondary">Load</button>
+            <button id="delete-list" class="btn-danger">Delete</button>
+          </div>
+        </div>
+        <div class="footer-note">Saved locally in your browser. No sign-in required.</div>
+      </div>
+    </section>
+
+    <section class="panel list-panel">
+      <div class="list-controls">
+        <div style="font-weight: 800; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px;">
+          <span>🧭</span> Your Gear List
+        </div>
+      </div>
+      <div id="categories"></div>
+      <div class="spacer"></div>
+    </section>
+  </div>
+
+  <script>
+    ;(() => {
+      const el = sel => document.querySelector(sel)
+      const els = sel => Array.from(document.querySelectorAll(sel))
+
+      const UNIT = { G: 'g', OZ: 'oz', RATE: 28.349523125 }
+
+      const DEFAULT_CATEGORIES = [
+        { id: 'shelter', name: 'Shelter', emoji: '🏕️' },
+        { id: 'sleep', name: 'Sleep', emoji: '🛌' },
+        { id: 'cooking', name: 'Cooking', emoji: '🍳' },
+        { id: 'clothing', name: 'Clothing', emoji: '🧥' },
+        { id: 'essentials', name: 'Essentials', emoji: '🧭' },
+        { id: 'misc', name: 'Misc', emoji: '🎒' },
+      ]
+
+      const PRESET_ITEMS = [
+        { name: 'Tent (2P)', qty: 1, weight_g: 1800, category: 'shelter' },
+        { name: 'Tent stakes', qty: 6, weight_g: 12, category: 'shelter' },
+        { name: 'Groundsheet', qty: 1, weight_g: 220, category: 'shelter' },
+        { name: 'Sleeping bag (20°F)', qty: 1, weight_g: 1100, category: 'sleep' },
+        { name: 'Sleeping pad', qty: 1, weight_g: 450, category: 'sleep' },
+        { name: 'Pillow (inflatable)', qty: 1, weight_g: 80, category: 'sleep' },
+        { name: 'Stove', qty: 1, weight_g: 90, category: 'cooking' },
+        { name: 'Pot 750ml', qty: 1, weight_g: 120, category: 'cooking' },
+        { name: 'Fuel canister (small)', qty: 1, weight_g: 200, category: 'cooking' },
+        { name: 'Spoon', qty: 1, weight_g: 15, category: 'cooking' },
+        { name: 'Water filter', qty: 1, weight_g: 80, category: 'essentials' },
+        { name: 'Headlamp', qty: 1, weight_g: 60, category: 'essentials' },
+        { name: 'First aid kit', qty: 1, weight_g: 180, category: 'essentials' },
+        { name: 'Rain jacket', qty: 1, weight_g: 280, category: 'clothing' },
+        { name: 'Insulating layer', qty: 1, weight_g: 350, category: 'clothing' },
+        { name: 'Socks', qty: 2, weight_g: 45, category: 'clothing' },
+        { name: 'Knife', qty: 1, weight_g: 45, category: 'misc' },
+        { name: 'Toiletries', qty: 1, weight_g: 180, category: 'misc' },
+      ]
+
+      const state = {
+        items: [], // {id, name, qty, weight_g, category, checked}
+        unit: UNIT.G,
+      }
+
+      const dom = {
+        categories: el('#categories'),
+        itemName: el('#item-name'),
+        itemQty: el('#item-qty'),
+        itemWeight: el('#item-weight'),
+        itemCat: el('#item-cat'),
+        addItem: el('#add-item'),
+        loadPresets: el('#load-presets'),
+        clearAll: el('#clear-all'),
+        unitToggle: el('#unit-toggle'),
+        checkAll: el('#check-all'),
+        uncheckAll: el('#uncheck-all'),
+        saveName: el('#save-name'),
+        saveList: el('#save-list'),
+        savedLists: el('#saved-lists'),
+        loadList: el('#load-list'),
+        deleteList: el('#delete-list'),
+        sumTotalItems: el('#summary-total-items'),
+        sumPackedItems: el('#summary-packed-items'),
+        sumTotalWeight: el('#summary-total-weight'),
+      }
+
+      const LS_KEY_CURRENT = 'campingGearChecklist:current'
+      const LS_KEY_SAVED = 'campingGearChecklist:saved'
+
+      function saveCurrent() {
+        localStorage.setItem(LS_KEY_CURRENT, JSON.stringify({ items: state.items, unit: state.unit }))
+      }
+      function loadCurrent() {
+        try {
+          const data = JSON.parse(localStorage.getItem(LS_KEY_CURRENT) || 'null')
+          if (data && Array.isArray(data.items)) {
+            state.items = migrateItems(data.items)
+            state.unit = data.unit === UNIT.OZ ? UNIT.OZ : UNIT.G
+          }
+        } catch { /* ignore */ }
+      }
+      function getSavedLists() {
+        try {
+          const data = JSON.parse(localStorage.getItem(LS_KEY_SAVED) || '{}')
+          return data && typeof data === 'object' ? data : {}
+        } catch { return {} }
+      }
+      function setSavedLists(obj) {
+        localStorage.setItem(LS_KEY_SAVED, JSON.stringify(obj))
+      }
+      function migrateItems(items) {
+        return items.map((it, i) => ({
+          id: it.id || `it_${Date.now()}_${i}`,
+          name: it.name || 'Item',
+          qty: typeof it.qty === 'number' ? it.qty : 1,
+          weight_g: typeof it.weight_g === 'number' ? it.weight_g : 0,
+          category: it.category || 'misc',
+          checked: !!it.checked,
+        }))
+      }
+
+      function toDisplay(grams) {
+        if (state.unit === UNIT.G) return `${round(grams, 1)} g`
+        return `${round(grams / UNIT.RATE, 2)} oz`
+      }
+      function parseDisplayToGrams(value) {
+        return Number(value) || 0
+      }
+      function round(n, digits = 1) {
+        const f = Math.pow(10, digits)
+        return Math.round((n + Number.EPSILON) * f) / f
+      }
+      function uid() { return Math.random().toString(36).slice(2, 9) }
+
+      function initCategorySelect() {
+        dom.itemCat.innerHTML = ''
+        for (const cat of DEFAULT_CATEGORIES) {
+          const opt = document.createElement('option')
+          opt.value = cat.id
+          opt.textContent = `${cat.name}`
+          dom.itemCat.appendChild(opt)
+        }
+      }
+
+      function render() {
+        // Group by category id
+        const groups = {}
+        for (const cat of DEFAULT_CATEGORIES) groups[cat.id] = []
+        for (const it of state.items) {
+          if (!groups[it.category]) groups[it.category] = []
+          groups[it.category].push(it)
+        }
+
+        dom.categories.innerHTML = ''
+        for (const cat of DEFAULT_CATEGORIES) {
+          const wrapper = document.createElement('div')
+          wrapper.className = 'category'
+          wrapper.innerHTML = `
+            <div class="category-header">
+              <div class="category-title"><span class="emoji">${cat.emoji}</span> ${cat.name}</div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-ghost" data-cat-add="${cat.id}">Add</button>
+              </div>
+            </div>
+            <div class="items" data-cat="${cat.id}"></div>
+          `
+          dom.categories.appendChild(wrapper)
+
+          const itemsEl = wrapper.querySelector('.items')
+          const items = groups[cat.id] || []
+          for (const item of items) {
+            const row = document.createElement('div')
+            row.className = 'item'
+            row.dataset.id = item.id
+            const total = item.qty * item.weight_g
+            row.innerHTML = `
+              <div class="checkbox"><input type="checkbox" ${item.checked ? 'checked' : ''} data-action="toggle" /></div>
+              <div><input type="text" value="${escapeHtml(item.name)}" data-field="name" aria-label="Item name"></div>
+              <div><input type="number" min="0" step="1" value="${item.qty}" data-field="qty" aria-label="Quantity"></div>
+              <div><input type="number" min="0" step="0.1" value="${state.unit === UNIT.G ? round(item.weight_g, 1) : round(item.weight_g / UNIT.RATE, 2)}" data-field="weight" aria-label="Unit weight"></div>
+              <div class="total">${toDisplay(total)}</div>
+              <div class="delete"><button class="btn-ghost" data-action="delete" title="Remove">✕</button></div>
+            `
+            itemsEl.appendChild(row)
+          }
+        }
+
+        const totalItems = state.items.length
+        const packedItems = state.items.filter(i => i.checked).length
+        const packedWeightG = state.items.filter(i => i.checked).reduce((s, i) => s + i.qty * i.weight_g, 0)
+        dom.sumTotalItems.textContent = String(totalItems)
+        dom.sumPackedItems.textContent = String(packedItems)
+        dom.sumTotalWeight.textContent = toDisplay(packedWeightG)
+
+        refreshSavedListsDropdown()
+
+        saveCurrent()
+      }
+
+      function refreshSavedListsDropdown() {
+        const saved = getSavedLists()
+        const names = Object.keys(saved).sort((a, b) => a.localeCompare(b))
+        dom.savedLists.innerHTML = ''
+        for (const name of names) {
+          const opt = document.createElement('option')
+          opt.value = name
+          opt.textContent = name
+          dom.savedLists.appendChild(opt)
+        }
+      }
+
+      dom.categories.addEventListener('input', (e) => {
+        const row = e.target.closest('.item')
+        if (!row) return
+        const id = row.dataset.id
+        const item = state.items.find(i => i.id === id)
+        if (!item) return
+
+        const field = e.target.getAttribute('data-field')
+        if (field === 'name') {
+          item.name = e.target.value
+        } else if (field === 'qty') {
+          item.qty = Math.max(0, Math.floor(Number(e.target.value) || 0))
+        } else if (field === 'weight') {
+          const val = Number(e.target.value) || 0
+          item.weight_g = state.unit === UNIT.G ? val : val * UNIT.RATE
+        }
+        render()
+      })
+      dom.categories.addEventListener('click', (e) => {
+        // Add in category header
+        const addCat = e.target.closest('[data-cat-add]')
+        if (addCat) {
+          const catId = addCat.getAttribute('data-cat-add')
+          addItem({ name: 'New item', qty: 1, weight_g: 0, category: catId })
+          return
+        }
+
+        const row = e.target.closest('.item')
+        if (!row) return
+        const id = row.dataset.id
+        const item = state.items.find(i => i.id === id)
+        if (!item) return
+
+        if (e.target.matches('[data-action="delete"]')) {
+          state.items = state.items.filter(i => i.id !== id)
+          render()
+          return
+        }
+      })
+      dom.categories.addEventListener('change', (e) => {
+        const row = e.target.closest('.item')
+        if (!row) return
+        const id = row.dataset.id
+        const item = state.items.find(i => i.id === id)
+        if (!item) return
+        if (e.target.matches('[data-action="toggle"]')) {
+          item.checked = !!e.target.checked
+          render()
+        }
+      })
+
+      dom.addItem.addEventListener('click', () => {
+        const name = dom.itemName.value.trim() || 'New item'
+        const qty = Math.max(1, Math.floor(Number(dom.itemQty.value) || 1))
+        const weightInput = Number(dom.itemWeight.value) || 0
+        const weight_g = state.unit === UNIT.G ? weightInput : weightInput * UNIT.RATE
+        const category = dom.itemCat.value || 'misc'
+        addItem({ name, qty, weight_g, category })
+        dom.itemName.value = ''
+        dom.itemQty.value = '1'
+        dom.itemWeight.value = ''
+        dom.itemName.focus()
+      })
+      function addItem({ name, qty, weight_g, category, checked = false }) {
+        state.items.push({ id: uid(), name, qty, weight_g, category, checked })
+        render()
+      }
+
+      dom.loadPresets.addEventListener('click', () => {
+        if (!state.items.length || confirm('Add common gear to your current list?')) {
+          for (const it of PRESET_ITEMS) addItem({ ...it })
+        }
+      })
+      dom.clearAll.addEventListener('click', () => {
+        if (confirm('Start a new, empty list? This will clear current items.')) {
+          state.items = []
+          render()
+        }
+      })
+      dom.unitToggle.addEventListener('change', () => {
+        state.unit = dom.unitToggle.value === UNIT.OZ ? UNIT.OZ : UNIT.G
+        render()
+      })
+      dom.checkAll.addEventListener('click', () => {
+        state.items.forEach(i => i.checked = true)
+        render()
+      })
+      dom.uncheckAll.addEventListener('click', () => {
+        state.items.forEach(i => i.checked = false)
+        render()
+      })
+
+      dom.saveList.addEventListener('click', () => {
+        const name = dom.saveName.value.trim()
+        if (!name) { alert('Enter a name to save this list.'); return }
+        const saved = getSavedLists()
+        if (saved[name] && !confirm('A list with this name already exists. Overwrite?')) return
+        saved[name] = { items: state.items, createdAt: Date.now() }
+        setSavedLists(saved)
+        dom.saveName.value = ''
+        refreshSavedListsDropdown()
+        dom.savedLists.value = name
+        alert('List saved.')
+      })
+      dom.loadList.addEventListener('click', () => {
+        const name = dom.savedLists.value
+        if (!name) { alert('No saved list selected.'); return }
+        const saved = getSavedLists()
+        const data = saved[name]
+        if (!data) { alert('List not found.'); return }
+        state.items = migrateItems(data.items || [])
+        render()
+      })
+      dom.deleteList.addEventListener('click', () => {
+        const name = dom.savedLists.value
+        if (!name) { alert('No saved list selected.'); return }
+        if (!confirm(`Delete saved list "${name}"?`)) return
+        const saved = getSavedLists()
+        delete saved[name]
+        setSavedLists(saved)
+        refreshSavedListsDropdown()
+      })
+
+      dom.itemName.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') dom.addItem.click()
+      })
+
+      function escapeHtml(s) {
+        return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]))
+      }
+
+      initCategorySelect()
+      loadCurrent()
+      dom.unitToggle.value = state.unit
+      if (state.items.length === 0) {
+        for (const it of [
+          { name: 'Backpack', qty: 1, weight_g: 1200, category: 'misc' },
+          { name: 'Water bottle', qty: 2, weight_g: 60, category: 'essentials' },
+        ]) state.items.push({ id: uid(), checked: false, ...it })
+      }
+      render()
+    })()
+  </script>
+</body>
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Typing Rain</title>
+    <style>
+      :root {
+        --sky1: #0b1023;
+        --sky2: #0e1633;
+        --panel: #0b1120;
+        --border: #1f2937;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #22d3ee;
+        --ok: #34d399;
+        --danger: #f87171;
+        --shadow: rgba(0,0,0,0.5);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+
+      body {
+        background: radial-gradient(1200px 800px at 20% 0%, #0a0f22 0%, var(--sky1) 45%), linear-gradient(180deg, var(--sky2), #0a0f20 60%);
+        overflow: hidden;
+      }
+
+      .topbar {
+        position: fixed; left: 0; right: 0; top: 0;
+        display: flex; gap: 12px; align-items: center;
+        padding: 12px 14px; z-index: 30;
+        background: linear-gradient(180deg, rgba(2,6,23,0.75), rgba(2,6,23,0.4) 60%, rgba(2,6,23,0));
+        backdrop-filter: blur(2px);
+      }
+      .title { font-weight: 900; letter-spacing: .4px; margin-right: 8px; }
+      .btn {
+        appearance: none; border: 1px solid var(--border); color: var(--text);
+        background: linear-gradient(180deg, #182131, #0a1222);
+        padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer;
+        box-shadow: 0 10px 20px -12px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.05);
+      }
+      .btn-accent { border-color: #165e72; background: linear-gradient(180deg, #165e72, #0b3345); }
+      .btn-ghost { background: transparent; }
+      .statbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-left: auto; }
+      .chip { background: #0a1322; border: 1px solid var(--border); padding: 8px 10px; border-radius: 12px; font-weight: 700; color: #dbeafe; }
+      .chip small { font-weight: 600; color: var(--muted); margin-right: 6px; }
+
+      .canvas-wrap { position: fixed; inset: 0; }
+      canvas { display: block; width: 100vw; height: 100vh; }
+
+      .hud {
+        position: fixed; left: 12px; bottom: 12px; right: 12px; z-index: 25;
+        display: grid; grid-template-columns: 1fr; gap: 10px;
+      }
+      .panel {
+        background: linear-gradient(180deg, var(--panel), #070b16);
+        border: 1px solid var(--border);
+        border-radius: 14px; padding: 12px 14px; box-shadow: 0 24px 60px -30px var(--shadow);
+      }
+      .legend { color: var(--muted); font-size: 12px; }
+
+      .overlay {
+        position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 40;
+        background: rgba(2,6,23,0.6); backdrop-filter: blur(2px);
+      }
+      .dialog { background: #0b1120; border: 1px solid var(--border); border-radius: 16px; padding: 20px; width: min(520px, 94vw); box-shadow: 0 24px 60px -30px var(--shadow); }
+      .dialog h2 { margin: 0 0 8px; }
+      .dialog .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 10px; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .grid .chip { text-align: center; }
+
+      .countdown { position: fixed; inset: 0; display: none; place-items: center; z-index: 50; color: #fff; font-size: 120px; font-weight: 900; text-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+      @media (max-width: 760px) { .countdown { font-size: 88px; } }
+
+      #hiddenInput { position: fixed; opacity: 0; pointer-events: none; width: 1px; height: 1px; left: -1000px; }
+    </style>
+  </head>
+  <body>
+    <div class="topbar" role="toolbar">
+      <div class="title">Typing Rain</div>
+      <button id="startBtn" class="btn btn-accent" aria-label="Start or restart">Start</button>
+      <button id="pauseBtn" class="btn btn-ghost" aria-label="Pause or resume">Pause</button>
+      <div class="statbar">
+        <div class="chip"><small>Score</small><span id="score">0</span></div>
+        <div class="chip"><small>Level</small><span id="level">1</span></div>
+        <div class="chip"><small>Accuracy</small><span id="accuracy">100%</span></div>
+        <div class="chip"><small>Lives</small><span id="lives">3</span></div>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="game"></canvas>
+    </div>
+
+    <div class="hud">
+      <div class="panel legend">
+        Type the falling words before they reach the skyline. First key chooses a target. Backspace to correct. Game speeds up over time.
+        Click or tap anywhere to focus the game. Good luck!
+      </div>
+    </div>
+
+    <div id="gameOver" class="overlay" role="dialog" aria-label="Game over dialog">
+      <div class="dialog">
+        <h2>Game Over</h2>
+        <div class="grid">
+          <div class="chip"><div style="color:var(--muted); font-size:12px;">Score</div><div id="goScore" style="font-size:22px; font-weight:800;">0</div></div>
+          <div class="chip"><div style="color:var(--muted); font-size:12px;">Accuracy</div><div id="goAcc" style="font-size:22px; font-weight:800;">0%</div></div>
+          <div class="chip"><div style="color:var(--muted); font-size:12px;">Best</div><div id="goBest" style="font-size:22px; font-weight:800;">0</div></div>
+        </div>
+        <div class="row">
+          <button id="closeBtn" class="btn">Close</button>
+          <button id="againBtn" class="btn btn-accent">Play Again</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="countdown" class="countdown">3</div>
+
+    <textarea id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+
+    <script>
+      (function() {
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const hiddenInput = document.getElementById('hiddenInput');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const scoreEl = document.getElementById('score');
+        const levelEl = document.getElementById('level');
+        const accEl = document.getElementById('accuracy');
+        const livesEl = document.getElementById('lives');
+        const over = document.getElementById('gameOver');
+        const goScore = document.getElementById('goScore');
+        const goAcc = document.getElementById('goAcc');
+        const goBest = document.getElementById('goBest');
+        const closeBtn = document.getElementById('closeBtn');
+        const againBtn = document.getElementById('againBtn');
+        const countdownEl = document.getElementById('countdown');
+
+        function resize() {
+          const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+          const w = window.innerWidth, h = window.innerHeight;
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+          canvas.style.width = w + 'px';
+          canvas.style.height = h + 'px';
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        const WORDS = (() => {
+          const base = `rain cloud storm drizzle thunder lightning wind breeze gust
+city street neon shadow night skyline tower bridge metro taxi crowd
+code type key board screen pixel render frame logic array object string
+river ocean lake wave tide ripple current flow drift
+music rhythm bass beat tempo melody harmony synth piano guitar drum
+planet star moon comet orbit space rocket galaxy
+coffee tea sugar cocoa milk bread rice pasta pizza sushi taco curry
+bright dark light shade glow shimmer sparkle
+swift rapid slow steady quick brisk calm
+north south east west urban rural cyber
+focus brave bold vivid crisp quiet silent loud
+silver golden copper chrome steel stone glass wood
+energy power spark flash flare flame frost
+sky rain city code type cloud storm night neon`;
+          return base.split(/\s+/).filter(Boolean);
+        })();
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+        function randint(min, max) { return Math.floor(rand(min, max + 1)); }
+
+        const state = {
+          running: false,
+          paused: false,
+          lastTime: 0,
+          elapsed: 0,
+          score: 0,
+          level: 1,
+          lives: 3,
+          correctChars: 0,
+          totalTyped: 0,
+          spawnCooldown: 0,
+          words: [],
+          buffer: '',
+          targetId: null,
+          rainLines: [],
+        };
+
+        function accuracy() {
+          const acc = state.totalTyped > 0 ? (state.correctChars / state.totalTyped) * 100 : 100;
+          return Math.max(0, Math.min(100, acc));
+        }
+
+        function updateHUD() {
+          scoreEl.textContent = state.score;
+          levelEl.textContent = state.level;
+          accEl.textContent = accuracy().toFixed(0) + '%';
+          livesEl.textContent = state.lives;
+        }
+
+        function resetGame() {
+          state.running = false; state.paused = false;
+          state.lastTime = 0; state.elapsed = 0;
+          state.score = 0; state.level = 1; state.lives = 3;
+          state.correctChars = 0; state.totalTyped = 0;
+          state.spawnCooldown = 0; state.words.length = 0;
+          state.buffer = ''; state.targetId = null;
+          state.rainLines.length = 0;
+          for (let i = 0; i < 80; i++) spawnRainLine(true);
+          updateHUD();
+          render(0);
+        }
+
+        function startGame() {
+          resetGame();
+          startCountdown(() => {
+            state.running = true;
+            state.lastTime = performance.now();
+            hiddenInput.focus({ preventScroll: true });
+            loop();
+          });
+        }
+
+        function togglePause() {
+          if (!state.running) return;
+          state.paused = !state.paused;
+          pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
+          if (!state.paused) { state.lastTime = performance.now(); loop(); }
+        }
+
+        function gameOver() {
+          state.running = false;
+          over.style.display = 'flex';
+          const acc = accuracy();
+          goScore.textContent = state.score;
+          goAcc.textContent = acc.toFixed(0) + '%';
+          const bestKey = 'typing_rain_best_v1';
+          let best = 0;
+          try {
+            best = parseInt(localStorage.getItem(bestKey) || '0', 10) || 0;
+            if (state.score > best) { best = state.score; localStorage.setItem(bestKey, String(best)); }
+          } catch {}
+          goBest.textContent = String(best);
+        }
+
+        function baseFallSpeed() { return 45 + (state.level - 1) * 12; }
+        // Spawn words a bit less frequently to reduce on-screen density
+        function spawnInterval() { return Math.max(650 - (state.level - 1) * 30, 400); }
+        // Limit the maximum number of simultaneous words on screen, slowly increasing with level
+        function maxWordsOnScreen() { return 4 + Math.floor((state.level - 1) / 4); }
+        function levelUpIfNeeded() {
+          const newLevel = 1 + Math.floor(state.score / 100);
+          if (newLevel !== state.level) { state.level = newLevel; updateHUD(); }
+        }
+
+        function spawnWord() {
+          const text = WORDS[randint(0, WORDS.length - 1)];
+          const margin = 40;
+          const W = canvas.clientWidth;
+          let x = rand(margin, Math.max(margin + 60, W - margin - 60));
+          const y = -rand(20, 120);
+          let width = 0;
+          const speed = baseFallSpeed() * rand(0.9, 1.2);
+          const id = cryptoRandomId();
+          state.words.push({ id, text, x, y, speed, typed: 0, width });
+        }
+
+        function cryptoRandomId() { return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); }
+
+        function spawnRainLine(initial=false) {
+          const W = canvas.clientWidth, H = canvas.clientHeight;
+          const x = rand(0, W);
+          const y = initial ? rand(0, H) : -rand(0, H*0.2);
+          const len = rand(8, 24);
+          const spd = rand(240, 440);
+          state.rainLines.push({ x, y, len, spd });
+        }
+
+        function setTargetByBuffer() {
+          if (!state.buffer) { state.targetId = null; return; }
+          let best = null, bestY = -Infinity;
+          for (const w of state.words) {
+            if (w.text.startsWith(state.buffer)) {
+              if (w.y > bestY) { best = w; bestY = w.y; }
+            }
+          }
+          state.targetId = best ? best.id : null;
+        }
+
+        function handleChar(ch) {
+          if (!state.running || state.paused) return;
+          if (!ch || ch.length !== 1) return;
+          state.totalTyped++;
+          const next = (state.buffer + ch).toLowerCase();
+          let target = state.words.find(w => w.id === state.targetId);
+          if (target && target.text.toLowerCase().startsWith(next)) {
+            state.buffer = next;
+            state.correctChars++;
+            target.typed = next.length;
+            if (target.typed >= target.text.length) completeWord(target);
+            updateHUD();
+            return;
+          }
+          let candidate = null, bestY = -Infinity;
+          for (const w of state.words) {
+            if (w.text.toLowerCase().startsWith(next) && w.y > bestY) { candidate = w; bestY = w.y; }
+          }
+          if (candidate) {
+            state.buffer = next; state.correctChars++;
+            state.targetId = candidate.id; candidate.typed = next.length;
+            if (candidate.typed >= candidate.text.length) completeWord(candidate);
+          } else {
+            flashMiss();
+          }
+          updateHUD();
+        }
+
+        function handleBackspace() {
+          if (!state.running || state.paused) return;
+          if (!state.buffer) return;
+          state.buffer = state.buffer.slice(0, -1);
+          const target = state.words.find(w => w.id === state.targetId);
+          if (target) target.typed = Math.min(target.typed, state.buffer.length);
+          setTargetByBuffer();
+          updateHUD();
+        }
+
+        function completeWord(word) {
+          state.score += Math.round(word.text.length * (1 + (state.level - 1) * 0.15));
+          levelUpIfNeeded();
+          const idx = state.words.findIndex(w => w.id === word.id);
+          if (idx >= 0) state.words.splice(idx, 1);
+          state.buffer = '';
+          state.targetId = null;
+        }
+
+        let missFlashT = 0;
+        function flashMiss() { missFlashT = 160; }
+
+        function loop() {
+          if (!state.running) return;
+          const now = performance.now();
+          const dt = Math.min(50, now - state.lastTime);
+          state.lastTime = now;
+          if (!state.paused) update(dt);
+          render(dt);
+          if (!state.paused) requestAnimationFrame(loop); else requestAnimationFrame(() => render(0));
+        }
+
+        function update(dt) {
+          state.spawnCooldown -= dt;
+          const interval = spawnInterval();
+          if (state.spawnCooldown <= 0) {
+            if (state.words.length < maxWordsOnScreen()) {
+              spawnWord();
+              state.spawnCooldown += interval;
+            } else {
+              // Try again shortly if we hit the limit
+              state.spawnCooldown = 120;
+            }
+          }
+
+          const H = canvas.clientHeight;
+          for (let i = state.words.length - 1; i >= 0; i--) {
+            const w = state.words[i];
+            w.y += (w.speed + state.level * 2) * (dt / 1000);
+            if (w.y > H - 80) {
+              state.words.splice(i, 1);
+              state.lives -= 1;
+              state.buffer = '';
+              state.targetId = null;
+              if (state.lives <= 0) { updateHUD(); gameOver(); return; }
+            }
+          }
+
+          missFlashT = Math.max(0, missFlashT - dt);
+          for (let i = state.rainLines.length - 1; i >= 0; i--) {
+            const r = state.rainLines[i];
+            r.y += r.spd * (dt / 1000);
+            r.x += r.spd * 0.06 * (dt / 1000);
+            if (r.y - r.len > H) { state.rainLines.splice(i, 1); }
+          }
+          while (state.rainLines.length < 90) spawnRainLine();
+          updateHUD();
+        }
+
+        function drawBackground(ctx, w, h) {
+          const g = ctx.createRadialGradient(w*0.3, h*0.05, 10, w*0.3, h*0.05, Math.max(w, h));
+          g.addColorStop(0, 'rgba(56,189,248,0.08)');
+          g.addColorStop(1, 'rgba(56,189,248,0)');
+          ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+          drawSkyline(ctx, h - 90, '#0a1426');
+          drawSkyline(ctx, h - 70, '#0a162a');
+          drawSkyline(ctx, h - 50, '#0a182e');
+        }
+
+        function drawSkyline(ctx, baseline, color) {
+          const w = canvas.clientWidth;
+          ctx.fillStyle = color;
+          let x = 0;
+          const minW = 24, maxW = 64, minH = 20, maxH = 120;
+          while (x < w) {
+            const bw = Math.floor(minW + (Math.sin((x + baseline) * 0.13) * 0.5 + 0.5) * (maxW - minW));
+            const bh = Math.floor(minH + (Math.sin((x + baseline) * 0.07) * 0.5 + 0.5) * (maxH - minH));
+            ctx.fillRect(x, baseline - bh, bw, bh);
+            if (bw > 40) {
+              ctx.fillStyle = 'rgba(255,255,200,0.06)';
+              for (let wx = x + 6; wx < x + bw - 6; wx += 8) {
+                for (let wy = baseline - bh + 6; wy < baseline - 6; wy += 10) {
+                  if (((wx + wy) % 17) < 3) ctx.fillRect(wx, wy, 2, 4);
+                }
+              }
+              ctx.fillStyle = color;
+            }
+            x += bw + 4;
+          }
+          ctx.fillRect(0, baseline, w, canvas.clientHeight - baseline);
+        }
+
+        function drawRaindrops() {
+          ctx.strokeStyle = 'rgba(148,163,184,0.25)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (const r of state.rainLines) {
+            ctx.moveTo(r.x, r.y - r.len);
+            ctx.lineTo(r.x, r.y);
+          }
+          ctx.stroke();
+        }
+
+        function drawWords() {
+          ctx.textBaseline = 'middle';
+          for (const w of state.words) {
+            const text = w.text;
+            // Make words larger overall and compute bubble size dynamically
+            const fsize = Math.max(26, Math.min(42, 20 + text.length * 0.6));
+            ctx.font = `700 ${fsize}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial`;
+            const padX = 14, padY = 10;
+            const tw = ctx.measureText(text).width;
+            w.width = tw + padX * 2;
+            const x = w.x - w.width/2;
+            const y = w.y;
+
+            const boxH = Math.ceil(fsize + padY * 2);
+            const r = Math.min(16, boxH / 2 - 2);
+            ctx.save();
+            ctx.globalAlpha = 0.95;
+            const grd = ctx.createLinearGradient(0, y-20, 0, y+20);
+            grd.addColorStop(0, 'rgba(28, 56, 88, 0.9)');
+            grd.addColorStop(1, 'rgba(10, 22, 40, 0.9)');
+            roundRect(ctx, x, y - boxH/2, w.width, boxH, r);
+            ctx.fillStyle = grd; ctx.fill();
+            ctx.strokeStyle = 'rgba(34,211,238,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.beginPath(); ctx.arc(x + w.width - 18, y - 6, 4, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fill();
+            ctx.restore();
+
+            const typed = w.typed || 0;
+            const full = text;
+            const curIsTarget = w.id === state.targetId && state.buffer.length > 0;
+            const startX = x + padX;
+            ctx.fillStyle = '#dbeafe';
+            ctx.fillText(full, startX, y + 1);
+            if (typed > 0) {
+              const typedStr = full.slice(0, typed);
+              ctx.save();
+              ctx.beginPath(); ctx.rect(startX - 2, y - fsize/2 - 2, ctx.measureText(typedStr).width + 6, fsize + 6); ctx.clip();
+              ctx.fillStyle = '#34d399';
+              ctx.fillText(full, startX, y + 1);
+              ctx.restore();
+            }
+            if (curIsTarget && typed < full.length && ((Date.now() / 500) % 1) < 0.7) {
+              const caretX = startX + ctx.measureText(full.slice(0, typed)).width + 1;
+              ctx.fillStyle = '#22d3ee';
+              ctx.fillRect(caretX, y - fsize/2, 2, fsize);
+            }
+          }
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+          const rr = Math.min(r, Math.min(w, h) / 2);
+          ctx.beginPath();
+          ctx.moveTo(x + rr, y);
+          ctx.arcTo(x + w, y, x + w, y + h, rr);
+          ctx.arcTo(x + w, y + h, x, y + h, rr);
+          ctx.arcTo(x, y + h, x, y, rr);
+          ctx.arcTo(x, y, x + w, y, rr);
+          ctx.closePath();
+        }
+
+        function render(dt) {
+          const W = canvas.clientWidth, H = canvas.clientHeight;
+          ctx.clearRect(0, 0, W, H);
+
+          drawBackground(ctx, W, H);
+
+          if (missFlashT > 0) {
+            ctx.fillStyle = `rgba(34,211,238,${Math.min(0.25, missFlashT/200)})`;
+            ctx.fillRect(0, 0, W, H);
+          }
+
+          drawRaindrops();
+          drawWords();
+
+          ctx.fillStyle = 'rgba(34,211,238,0.15)';
+          ctx.fillRect(0, H - 80, W, 2);
+
+          if (state.buffer) {
+            ctx.font = '700 16px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+            ctx.fillStyle = 'rgba(148,163,184,0.9)';
+            ctx.fillText('Input: ' + state.buffer, 14, H - 52);
+          }
+          if (state.paused) {
+            ctx.fillStyle = 'rgba(2,6,23,0.6)'; ctx.fillRect(0,0,W,H);
+            ctx.fillStyle = '#fff'; ctx.font = '900 46px ui-sans-serif, system-ui';
+            ctx.fillText('Paused', 24, 64);
+          }
+        }
+
+        function startCountdown(done) {
+          const seq = ['3','2','1','Go!'];
+          let i = 0;
+          countdownEl.style.display = 'grid';
+          countdownEl.textContent = seq[i];
+          const id = setInterval(() => {
+            i++;
+            if (i >= seq.length) { clearInterval(id); countdownEl.style.display = 'none'; done && done(); return; }
+            countdownEl.textContent = seq[i];
+          }, 700);
+        }
+
+        function requestStart() {
+          if (over.style.display === 'flex') over.style.display = 'none';
+          if (!state.running) startGame();
+        }
+
+        startBtn.addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', togglePause);
+        againBtn.addEventListener('click', () => { over.style.display = 'none'; startGame(); });
+        closeBtn.addEventListener('click', () => { over.style.display = 'none'; });
+        window.addEventListener('pointerdown', () => hiddenInput.focus());
+
+        // Allow starting the game with Enter or Space from anywhere
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+            if (!state.running || over.style.display === 'flex') {
+              e.preventDefault();
+              requestStart();
+            }
+          }
+        });
+
+        hiddenInput.addEventListener('keydown', (e) => {
+          // Start with Enter/Space even if the hidden input has focus
+          if (!state.running && (e.key === 'Enter' || e.key === ' ' || e.code === 'Space')) {
+            e.preventDefault();
+            requestStart();
+            return;
+          }
+          if (e.key === 'Backspace') { e.preventDefault(); handleBackspace(); return; }
+          if (e.key === 'Escape') { togglePause(); return; }
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            handleChar(e.key);
+          }
+        });
+        hiddenInput.addEventListener('input', () => {
+          const v = hiddenInput.value;
+          if (v) {
+            for (const ch of v) handleChar(ch);
+            hiddenInput.value = '';
+          }
+        });
+
+        resetGame();
+      })();
+    </script>
+  </body>
+  </html>

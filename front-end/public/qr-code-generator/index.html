@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Custom QR Code Generator</title>
+    <meta name="description" content="Generate custom QR codes from text or URLs. Pick colors and download as PNG." />
+    <style>
+      :root {
+        --bg: #0b0c10;
+        --card: #111319;
+        --muted: #8b95a7;
+        --text: #e7ecf3;
+        --accent: #4f8cff;
+        --accent-2: #2dd4bf;
+        --border: rgba(255, 255, 255, 0.08);
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 800px at 85% -10%, rgba(79,140,255,0.08), transparent),
+          radial-gradient(900px 700px at -10% 120%, rgba(45,212,191,0.07), transparent),
+          var(--bg);
+        color: var(--text);
+        font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+      .wrap {
+        min-height: 100%;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 16px;
+        padding: 20px clamp(14px, 4vw, 32px) 28px;
+        place-items: center;
+      }
+      header {
+        width: min(980px, 100%);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .title {
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        font-size: clamp(18px, 2.6vw, 22px);
+        color: var(--text);
+      }
+      .subtitle { color: var(--muted); font-size: 12px; }
+
+      .app {
+        width: min(980px, 100%);
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+
+      .preview-card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: clamp(16px, 4vw, 24px);
+        display: grid;
+        gap: 14px;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+      }
+      .preview-area {
+        display: grid;
+        place-items: center;
+        padding: clamp(12px, 3vw, 18px);
+      }
+      #qr {
+        width: min(72vmin, 720px);
+        display: grid;
+        place-items: center;
+      }
+      #qr > canvas, #qr > img { width: 100%; height: auto; image-rendering: pixelated; }
+
+      .controls {
+        display: grid;
+        gap: 12px;
+      }
+      .row {
+        display: grid;
+        gap: 10px;
+      }
+      .input, .picker, .button {
+        background: var(--card);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+      }
+      .input::placeholder { color: #99a2b3; opacity: .9; }
+      .input:focus { outline: 2px solid rgba(79,140,255,.45); border-color: rgba(79,140,255,.45); }
+
+      .grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .picker {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px;
+      }
+      .picker label { color: var(--muted); font-size: 12px; }
+      .picker input[type="color"] { width: 38px; height: 28px; border: none; background: transparent; padding: 0; cursor: pointer; }
+
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      .button {
+        cursor: pointer;
+        user-select: none;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        background: linear-gradient(180deg, rgba(79,140,255,0.18), rgba(79,140,255,0.08));
+        border-color: rgba(79,140,255,0.35);
+        transition: filter .15s ease, transform .06s ease;
+      }
+      .button.secondary { background: var(--card); border-color: var(--border); color: var(--muted); font-weight: 500; }
+      .button:hover { filter: brightness(1.06); }
+      .button:active { transform: translateY(1px); }
+
+      footer { color: var(--muted); font-size: 12px; }
+
+      @media (min-width: 880px) {
+        .app { grid-template-columns: 1.2fr .8fr; align-items: start; }
+        .preview-card { height: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <div class="title">Custom QR Code Generator</div>
+          <div class="subtitle">Generate a QR from any text or URL. Pick colors and download as PNG.</div>
+        </div>
+      </header>
+
+      <main class="app" role="application" aria-label="Custom QR Code Generator">
+        <section class="preview-card" aria-live="polite">
+          <div class="preview-area">
+            <div id="qr" aria-label="QR preview" title="QR preview"></div>
+          </div>
+        </section>
+
+        <section class="controls" aria-label="Controls">
+          <div class="row">
+            <input id="text" class="input" type="text" spellcheck="false" placeholder="Type text or paste a URL…" />
+          </div>
+          <div class="grid">
+            <div class="picker">
+              <label for="dark">Foreground</label>
+              <input id="dark" type="color" value="#111111" />
+            </div>
+            <div class="picker">
+              <label for="light">Background</label>
+              <input id="light" type="color" value="#ffffff" />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="download" class="button" type="button">Download PNG</button>
+            <button id="invert" class="button secondary" type="button" title="Swap foreground/background">Swap colors</button>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        Tip: the QR preview scales with your screen for a crisp export.
+      </footer>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+      (function () {
+        const elQR = document.getElementById('qr');
+        const elText = document.getElementById('text');
+        const elDark = document.getElementById('dark');
+        const elLight = document.getElementById('light');
+        const btnDownload = document.getElementById('download');
+        const btnInvert = document.getElementById('invert');
+
+        const state = {
+          text: location.hash ? decodeURIComponent(location.hash.slice(1)) : 'https://example.com',
+          dark: '#111111',
+          light: '#ffffff',
+          size: 320,
+          qr: null,
+        };
+
+        function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
+        function computeSize() {
+          const vmin = Math.min(window.innerWidth, window.innerHeight);
+          const s = Math.floor(vmin * 0.72);
+          return clamp(s, 220, 720);
+        }
+
+        function clearQR() { elQR.innerHTML = ''; }
+
+        function render() {
+          if (typeof QRCode === 'undefined') {
+            clearQR();
+            const msg = document.createElement('div');
+            msg.style.color = '#f3b';
+            msg.style.font = '600 14px/1.5 system-ui, sans-serif';
+            msg.textContent = 'QR library failed to load (offline?). Try again with internet access.';
+            elQR.appendChild(msg);
+            return;
+          }
+          clearQR();
+          state.size = computeSize();
+          state.qr = new QRCode(elQR, {
+            text: state.text || ' ',
+            width: state.size,
+            height: state.size,
+            colorDark: state.dark,
+            colorLight: state.light,
+            correctLevel: QRCode.CorrectLevel.M,
+          });
+        }
+
+        function debounce(fn, ms) {
+          let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), ms); };
+        }
+
+        const updateText = debounce(() => {
+          state.text = elText.value.trim();
+          const hash = state.text ? '#' + encodeURIComponent(state.text) : '';
+          if (location.hash !== hash) history.replaceState(null, '', hash);
+          render();
+        }, 220);
+
+        function updateColors() {
+          state.dark = elDark.value;
+          state.light = elLight.value;
+          render();
+        }
+
+        function getCanvasFromPreview() {
+          const c = elQR.querySelector('canvas');
+          if (c) return c;
+          const img = elQR.querySelector('img');
+          if (img) {
+            const canvas = document.createElement('canvas');
+            const s = state.size;
+            canvas.width = s; canvas.height = s;
+            const ctx = canvas.getContext('2d');
+            try { ctx.drawImage(img, 0, 0, s, s); } catch (_) {}
+            return canvas;
+          }
+          return null;
+        }
+
+        function downloadPNG() {
+          const c = getCanvasFromPreview();
+          if (!c) return;
+          const url = c.toDataURL('image/png');
+          const a = document.createElement('a');
+          const base = (state.text || 'qr').replace(/\s+/g, '-').replace(/[^\w\-]/g, '').slice(0, 40) || 'qr';
+          a.href = url;
+          a.download = base + '.png';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+
+        function swapColors() {
+          const d = elDark.value; elDark.value = elLight.value; elLight.value = d; updateColors();
+        }
+
+        elText.addEventListener('input', updateText);
+        elDark.addEventListener('input', updateColors);
+        elLight.addEventListener('input', updateColors);
+        btnDownload.addEventListener('click', downloadPNG);
+        btnInvert.addEventListener('click', swapColors);
+        window.addEventListener('resize', debounce(render, 120));
+
+        elText.value = state.text;
+        elDark.value = state.dark;
+        elLight.value = state.light;
+        render();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Online Whiteboard</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #111111;
+        --muted: #6b7280;
+        --accent: #2563eb;
+        --panel: rgba(255, 255, 255, 0.9);
+        --shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        --radius: 12px;
+      }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+          Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overscroll-behavior: none;
+      }
+
+      #board {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: #fff;
+        touch-action: none;
+        cursor: crosshair;
+      }
+
+      .toolbar {
+        position: fixed;
+        top: env(safe-area-inset-top, 12px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--panel);
+        backdrop-filter: saturate(140%) blur(8px);
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: var(--radius);
+        padding: 10px 12px;
+        box-shadow: var(--shadow);
+        user-select: none;
+        -webkit-user-select: none;
+        z-index: 10;
+        max-width: min(96vw, 1100px);
+        overflow: auto;
+      }
+
+      .brand {
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: .2px;
+        color: var(--muted);
+        padding-right: 6px;
+        white-space: nowrap;
+      }
+
+      .group { display: flex; align-items: center; gap: 8px; }
+      .divider { width: 1px; height: 24px; background: rgba(0,0,0,0.08); }
+
+      button.tool {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.08);
+        background: #fff;
+        color: #111;
+        padding: 0;
+        cursor: pointer;
+        transition: transform .05s ease, background .15s ease, box-shadow .15s ease;
+        box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+      }
+      button.tool:active { transform: scale(0.98); }
+      button.tool.active { outline: 2px solid var(--accent); }
+      button.tool svg { width: 20px; height: 20px; }
+
+      .swatch {
+        width: 24px; height: 24px; border-radius: 50%;
+        border: 1px solid rgba(0,0,0,0.15);
+        cursor: pointer; display: inline-block;
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,0.6);
+      }
+
+      .color-row { display:flex; align-items:center; gap: 6px; }
+      .color-picker { width: 36px; height: 36px; padding: 0; border: none; background: none; }
+      .color-picker input[type="color"] {
+        appearance: none; -webkit-appearance: none;
+        width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2);
+        padding: 0; background: none; cursor: pointer;
+      }
+      .color-picker input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+      .color-picker input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
+
+      .size {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 0 2px;
+      }
+      .size input[type="range"] {
+        width: 140px;
+      }
+      .size .dot {
+        width: 18px; height: 18px; border-radius: 50%;
+        background: var(--fg);
+        border: 1px solid rgba(0,0,0,0.15);
+      }
+      .label { font-size: 12px; color: var(--muted); }
+
+      .action {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.08);
+        background: #fff;
+        cursor: pointer;
+      }
+      .action.primary { background: var(--accent); color: #fff; border-color: rgba(0,0,0,0.05); }
+
+      @media (max-width: 640px) {
+        .brand { display: none; }
+        .size input[type="range"] { width: 110px; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="board" aria-label="Online Whiteboard" title="Draw on the canvas. Use P for Pen, E for Eraser."></canvas>
+
+    <div class="toolbar" role="toolbar" aria-label="Whiteboard tools">
+      <div class="brand">Online Whiteboard</div>
+
+      <div class="group" aria-label="Tools">
+        <button id="penBtn" class="tool" title="Pen (P)" aria-pressed="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+          </svg>
+        </button>
+        <button id="eraserBtn" class="tool" title="Eraser (E)" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12l7-7a2.828 2.828 0 0 1 4 0l7 7-7 7H7L3 12z"/>
+            <path d="M14 19H7"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="divider" aria-hidden="true"></div>
+
+      <div class="group" aria-label="Colors">
+        <div class="color-row">
+          <span class="swatch" data-color="#111111" style="background:#111111" title="Black"></span>
+          <span class="swatch" data-color="#ef4444" style="background:#ef4444" title="Red"></span>
+          <span class="swatch" data-color="#10b981" style="background:#10b981" title="Green"></span>
+          <span class="swatch" data-color="#3b82f6" style="background:#3b82f6" title="Blue"></span>
+          <span class="swatch" data-color="#f59e0b" style="background:#f59e0b" title="Orange"></span>
+          <span class="swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Purple"></span>
+          <span class="swatch" data-color="#0ea5e9" style="background:#0ea5e9" title="Sky"></span>
+          <span class="swatch" data-color="#6b7280" style="background:#6b7280" title="Gray"></span>
+        </div>
+        <label class="color-picker" title="Custom color">
+          <input id="colorInput" type="color" value="#111111" aria-label="Pick a color" />
+        </label>
+      </div>
+
+      <div class="divider" aria-hidden="true"></div>
+
+      <div class="group size" aria-label="Brush size">
+        <span class="label">Size</span>
+        <input id="size" type="range" min="1" max="60" value="6" />
+        <span id="sizeVal" class="label" aria-live="polite">6</span>
+        <span id="sizeDot" class="dot" aria-hidden="true"></span>
+      </div>
+
+      <div class="group" aria-label="Pressure">
+        <label class="label" for="pressure">Pressure</label>
+        <input id="pressure" type="checkbox" title="Enable pen pressure" />
+      </div>
+
+      <div class="divider" aria-hidden="true"></div>
+
+      <div class="group" aria-label="Actions">
+        <button id="clearBtn" class="action" title="Clear canvas">Clear</button>
+        <button id="saveBtn" class="action primary" title="Save image (PNG)">Save PNG</button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
+
+        const state = {
+          tool: 'pen',
+          color: '#111111',
+          size: 6,
+          pressure: false,
+          drawing: false,
+          lastX: 0,
+          lastY: 0,
+          isEmpty: true,
+          dpr: Math.max(1, window.devicePixelRatio || 1),
+        };
+
+        const penBtn = document.getElementById('penBtn');
+        const eraserBtn = document.getElementById('eraserBtn');
+        const sizeRange = document.getElementById('size');
+        const sizeVal = document.getElementById('sizeVal');
+        const sizeDot = document.getElementById('sizeDot');
+        const colorInput = document.getElementById('colorInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const pressureToggle = document.getElementById('pressure');
+
+        function updateActiveTool() {
+          const set = (btn, active) => {
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+          };
+          set(penBtn, state.tool === 'pen');
+          set(eraserBtn, state.tool === 'eraser');
+          canvas.style.cursor = state.tool === 'eraser' ? 'cell' : 'crosshair';
+        }
+
+        function updateSizeUI() {
+          sizeVal.textContent = String(state.size);
+          sizeDot.style.width = sizeDot.style.height = Math.max(6, state.size) + 'px';
+        }
+
+        function setTool(tool) {
+          state.tool = tool;
+          updateActiveTool();
+        }
+
+        function setColor(color) {
+          state.color = color;
+          colorInput.value = color;
+          if (state.tool !== 'pen') setTool('pen');
+        }
+
+        function getPointFromEvent(e) {
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX - rect.left);
+          const y = (e.clientY - rect.top);
+          return { x, y };
+        }
+
+        function beginStroke(e) {
+          e.preventDefault();
+          const p = getPointFromEvent(e);
+          state.drawing = true;
+          state.lastX = p.x; state.lastY = p.y;
+
+          canvas.setPointerCapture?.(e.pointerId);
+
+          ctx.save();
+          ctx.lineJoin = 'round';
+          ctx.lineCap = 'round';
+
+          if (state.tool === 'eraser') {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = '#000';
+            ctx.globalAlpha = 1;
+          } else {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = state.color;
+            ctx.globalAlpha = 1;
+          }
+
+          const pressure = state.pressure && e.pressure ? (0.1 + 0.9 * e.pressure) : 1;
+          ctx.lineWidth = Math.max(0.5, state.size * pressure);
+
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+        }
+
+        function continueStroke(e) {
+          if (!state.drawing) return;
+          const p = getPointFromEvent(e);
+
+          const pressure = state.pressure && e.pressure ? (0.1 + 0.9 * e.pressure) : 1;
+          ctx.lineWidth = Math.max(0.5, state.size * pressure);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+          state.lastX = p.x; state.lastY = p.y;
+          state.isEmpty = false;
+        }
+
+        function endStroke(e) {
+          if (!state.drawing) return;
+          state.drawing = false;
+          ctx.closePath();
+          ctx.restore();
+          canvas.releasePointerCapture?.(e.pointerId);
+        }
+
+        function ensureHiDPIAndPreserve() {
+          const cssW = Math.max(1, Math.floor(window.innerWidth));
+          const cssH = Math.max(1, Math.floor(window.innerHeight));
+          const newDpr = Math.max(1, window.devicePixelRatio || 1);
+
+          const old = document.createElement('canvas');
+          old.width = canvas.width; old.height = canvas.height;
+          const oldCtx = old.getContext('2d');
+          if (old.width && old.height) oldCtx.drawImage(canvas, 0, 0);
+
+          canvas.width = Math.max(1, Math.floor(cssW * newDpr));
+          canvas.height = Math.max(1, Math.floor(cssH * newDpr));
+          canvas.style.width = cssW + 'px';
+          canvas.style.height = cssH + 'px';
+
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          if (old.width && old.height) {
+            ctx.drawImage(old, 0, 0, old.width, old.height, 0, 0, canvas.width, canvas.height);
+          }
+          ctx.setTransform(newDpr, 0, 0, newDpr, 0, 0);
+
+          state.dpr = newDpr;
+        }
+
+        function savePNG() {
+          const exportCanvas = document.createElement('canvas');
+          exportCanvas.width = canvas.width;
+          exportCanvas.height = canvas.height;
+          const ex = exportCanvas.getContext('2d');
+          ex.fillStyle = '#ffffff';
+          ex.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+          ex.drawImage(canvas, 0, 0);
+
+          const fileName = `whiteboard-${new Date().toISOString().replace(/[:T]/g, '-').split('.')[0]}.png`;
+          if (exportCanvas.toBlob) {
+            exportCanvas.toBlob(function (blob) {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = fileName; a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }, 'image/png');
+          } else {
+            const dataURL = exportCanvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = dataURL; a.download = fileName; a.click();
+          }
+        }
+
+        function clearCanvas() {
+          if (!state.isEmpty) {
+            const ok = confirm('Clear the canvas? This cannot be undone.');
+            if (!ok) return;
+          }
+          ctx.save();
+          ctx.setTransform(1,0,0,1,0,0);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.restore();
+          ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+          state.isEmpty = true;
+        }
+
+        canvas.addEventListener('pointerdown', beginStroke);
+        canvas.addEventListener('pointermove', continueStroke);
+        window.addEventListener('pointerup', endStroke);
+        window.addEventListener('pointercancel', endStroke);
+
+        window.addEventListener('resize', ensureHiDPIAndPreserve);
+        ensureHiDPIAndPreserve();
+
+        penBtn.addEventListener('click', () => setTool('pen'));
+        eraserBtn.addEventListener('click', () => setTool('eraser'));
+        updateActiveTool();
+
+        document.querySelectorAll('.swatch').forEach(el => {
+          el.addEventListener('click', () => setColor(el.getAttribute('data-color')));
+        });
+        colorInput.addEventListener('input', (e) => setColor(e.target.value));
+
+        sizeRange.addEventListener('input', (e) => {
+          state.size = Number(e.target.value) || 1;
+          updateSizeUI();
+        });
+        updateSizeUI();
+
+        pressureToggle.addEventListener('change', () => {
+          state.pressure = pressureToggle.checked;
+        });
+
+        clearBtn.addEventListener('click', clearCanvas);
+        saveBtn.addEventListener('click', savePNG);
+
+        window.addEventListener('keydown', (e) => {
+          if (e.target && (/input|textarea|select/i).test(e.target.tagName)) return;
+          if (e.key === 'p' || e.key === 'P') setTool('pen');
+          if (e.key === 'e' || e.key === 'E') setTool('eraser');
+          if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            savePNG();
+          }
+        });
+
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+      })();
+    </script>
+  </body>
+  </html>

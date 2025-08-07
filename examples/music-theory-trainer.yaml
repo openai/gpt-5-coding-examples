@@ -1,0 +1,11 @@
+id: music-theory-trainer
+title: Music Theory Trainer
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Music Theory Trainer
+  - Goal: Teach notes, scales, and chords.
+  - Features: Interactive piano, ear training exercises.
+  - The UI should be music-themed, interactive, and fun.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/music-theory-trainer.png
+tags:
+  - app

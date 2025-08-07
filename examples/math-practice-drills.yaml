@@ -1,0 +1,11 @@
+id: math-practice-drills
+title: Math Practice Drills
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Math Practice Drills
+  - Goal: Improve speed and accuracy with math problems.
+  - Features: Timed quizzes, difficulty settings, score tracker.
+  - The UI should be minimal with large, readable text.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/math-practice-drills.png
+tags:
+  - app

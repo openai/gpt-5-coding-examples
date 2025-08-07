@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Online Poll Board</title>
+  <meta name="description" content="Vote on fun topics and see live results. Mock voting stored locally." />
+  <style>
+    :root {
+      --bg-1: #f7fbff;
+      --bg-2: #fff7fb;
+      --panel: #ffffff;
+      --ink: #27314d;
+      --muted: #5f6b8a;
+      --border: #e7ecf5;
+      --accent: #6c7cff;
+      --accent-2: #5dd4c6;
+      --accent-3: #ffb36b;
+      --good: #34c759;
+      --shadow: 0 10px 30px rgba(39, 49, 77, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--ink);
+      background: radial-gradient(1200px 600px at 20% 10%, var(--bg-2) 0%, transparent 55%),
+                  radial-gradient(1000px 600px at 90% 0%, #f4fff8 0%, transparent 55%),
+                  linear-gradient(180deg, var(--bg-1), #fdfdff 55%);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 16px 64px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo {
+      width: 40px; height: 40px; border-radius: 12px;
+      position: relative; overflow: hidden;
+      background:
+        radial-gradient(120% 120% at 20% 30%, var(--accent) 0%, transparent 48%),
+        radial-gradient(120% 120% at 80% 70%, var(--accent-2) 0%, transparent 48%),
+        linear-gradient(145deg, #eaf1ff, #fff);
+      box-shadow: inset 0 0 0 1px rgba(39,49,77,0.06), 0 12px 30px rgba(108,124,255,0.18);
+    }
+    h1 { font-size: 22px; margin: 0; letter-spacing: .2px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; border: 1px solid var(--border); border-radius: 999px;
+      padding: 8px 12px; color: var(--muted);
+      box-shadow: var(--shadow);
+    }
+    .btn {
+      appearance: none; border: 1px solid var(--border); background: #fff; color: var(--ink);
+      border-radius: 10px; padding: 10px 12px; cursor: pointer; font-weight: 600;
+      transition: transform .06s ease, box-shadow .2s ease, border-color .2s ease;
+      box-shadow: var(--shadow);
+    }
+    .btn:hover { transform: translateY(-1px); border-color: #d9e1f0; }
+    .btn:active { transform: translateY(0); }
+    .btn.secondary { background: #f7f9ff; }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; margin-top: 16px;
+    }
+    .card {
+      grid-column: span 12;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 14px;
+      box-shadow: var(--shadow);
+      position: relative; overflow: hidden;
+    }
+    .card .ribbon {
+      position: absolute; inset: -60px auto auto -60px; width: 160px; height: 160px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(108,124,255,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .card h2 { font-size: 18px; margin: 0 0 10px; }
+    .meta { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+
+    .options { display: grid; gap: 10px; margin-top: 8px; }
+    .option {
+      position: relative; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+      background: linear-gradient(180deg, #fff, #fbfdff);
+      cursor: pointer;
+      transition: transform .05s ease, box-shadow .2s ease, border-color .2s ease;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 10px 24px rgba(39,49,77,0.06);
+    }
+    .option:hover { transform: translateY(-1px); border-color: #d9e1f0; }
+    .option:active { transform: translateY(0); }
+    .option.selected { border-color: #c9d4ff; box-shadow: 0 0 0 3px rgba(108,124,255,0.15), 0 10px 24px rgba(39,49,77,0.08); }
+
+    .option .row {
+      position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px;
+      padding: 12px 12px;
+    }
+    .label { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+    .label .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .count { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
+    .count.bump { animation: bump .35s ease; }
+    @keyframes bump { 0% { transform: translateY(-10%) scale(1.1); opacity:.6 } 100% { transform: translateY(0) scale(1); opacity:1 } }
+
+    .bar-wrap { position: absolute; left: 0; top: 0; bottom: 0; right: 0; overflow: hidden; }
+    .bar {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
+      transition: width .45s cubic-bezier(.22,.7,.25,1);
+      opacity: 0.18;
+    }
+
+    .footer {
+      margin-top: 18px; color: var(--muted); font-size: 12px; text-align: right;
+    }
+
+    .totals { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .chip { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; background:#f2f6ff; border:1px solid #e0e8ff; }
+
+    @media (min-width: 760px) {
+      .card { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Online Poll Board</h1>
+          <div class="sub">Vote on fun topics and watch results animate. This is a local mock (no server).</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="pill" id="pollCount">Polls: 0</span>
+        <button class="btn secondary" id="shuffleBtn" title="Shuffle sample polls">Shuffle polls</button>
+        <button class="btn" id="resetBtn" title="Reset your local votes">Reset my votes</button>
+      </div>
+    </header>
+
+    <main class="grid" id="grid"></main>
+
+    <div class="footer">Tip: click any option to cast or switch your vote. Percent bars and counts animate smoothly.</div>
+  </div>
+
+  <script>
+    const COLORS = [
+      { dot: '#6c7cff', bar: '#6c7cff' },
+      { dot: '#5dd4c6', bar: '#5dd4c6' },
+      { dot: '#ffb36b', bar: '#ffb36b' },
+      { dot: '#ff7aa2', bar: '#ff7aa2' },
+      { dot: '#9ad96b', bar: '#9ad96b' },
+      { dot: '#8f8cff', bar: '#8f8cff' },
+    ];
+
+    const basePolls = [
+      {
+        id: 'p1',
+        question: 'Which season do you enjoy the most?',
+        meta: 'Nature & Lifestyle',
+        options: [ 'Spring 🌸', 'Summer ☀️', 'Autumn 🍂', 'Winter ❄️' ],
+      },
+      {
+        id: 'p2',
+        question: 'Preferred work style?',
+        meta: 'Productivity',
+        options: [ 'Deep focus 🔕', 'Collaborative 🤝', 'Hybrid 🔁' ],
+      },
+      {
+        id: 'p3',
+        question: 'Best movie snack?',
+        meta: 'Snacks',
+        options: [ 'Popcorn 🍿', 'Chocolate 🍫', 'Nachos 🧀', 'Fruit 🍓' ],
+      },
+      {
+        id: 'p4',
+        question: 'Morning beverage of choice?',
+        meta: 'Daily Rituals',
+        options: [ 'Coffee ☕️', 'Tea 🫖', 'Water 💧', 'Juice 🧃' ],
+      },
+      {
+        id: 'p5',
+        question: 'Dream travel vibe?',
+        meta: 'Travel',
+        options: [ 'Beaches 🏝️', 'Mountains 🏔️', 'City lights 🌆', 'Road trip 🚐' ],
+      }
+    ];
+
+    function seededRandom(seed) {
+      let s = seed % 2147483647; if (s <= 0) s += 2147483646;
+      return function() { return (s = s * 16807 % 2147483647) / 2147483647; };
+    }
+    const rand = seededRandom(Date.now() % 1000000);
+
+    function initialCountsFor(optionsLen) {
+      // Seed some friendly starting totals so the bars have shape.
+      const counts = new Array(optionsLen).fill(0).map(() => 3 + Math.floor(rand()*12));
+      // Ensure not all equal for nicer visuals
+      counts[Math.floor(rand()*optionsLen)] += Math.floor(rand()*6);
+      return counts;
+    }
+
+    const storage = {
+      load() {
+        try {
+          return JSON.parse(localStorage.getItem('pollBoardState') || 'null');
+        } catch { return null; }
+      },
+      save(state) { localStorage.setItem('pollBoardState', JSON.stringify(state)); }
+    };
+
+    function buildState() {
+      const saved = storage.load();
+      const polls = basePolls.map((p, idx) => {
+        const counts = saved?.counts?.[p.id] ?? initialCountsFor(p.options.length);
+        const colors = p.options.map((_, i) => COLORS[i % COLORS.length]);
+        return { ...p, counts, colors };
+      });
+      const votes = saved?.votes || {}; // map pollId -> optionIndex
+      return { polls, votes };
+    }
+
+    let state = buildState();
+
+    function persist() {
+      const counts = Object.fromEntries(state.polls.map(p => [p.id, p.counts]));
+      storage.save({ counts, votes: state.votes });
+    }
+
+    function totalVotes(counts) { return counts.reduce((a,b)=>a+b,0); }
+    function percent(part, whole) { return whole ? Math.round((part/whole)*100) : 0; }
+
+    function animateNumber(el, to) {
+      const from = Number(el.dataset.val || '0');
+      if (from === to) return;
+      const diff = to - from;
+      const dur = Math.min(800, 180 + Math.abs(diff) * 20);
+      const start = performance.now();
+      function frame(now) {
+        const t = Math.min(1, (now - start) / dur);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const val = Math.round(from + diff * eased);
+        if (val !== Number(el.textContent)) { el.textContent = val; }
+        if (t < 1) requestAnimationFrame(frame); else el.dataset.val = String(to);
+      }
+      el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+      requestAnimationFrame(frame);
+    }
+
+    function render() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      document.getElementById('pollCount').textContent = `Polls: ${state.polls.length}`;
+      state.polls.forEach((poll, pIndex) => {
+        const card = document.createElement('section'); card.className = 'card'; card.setAttribute('data-id', poll.id);
+        card.innerHTML = `
+          <div class="ribbon" aria-hidden="true"></div>
+          <div class="meta">${poll.meta}</div>
+          <h2>${poll.question}</h2>
+          <div class="totals"><span class="chip">Total votes: <strong id="total-${poll.id}"></strong></span></div>
+          <div class="options" role="group" aria-label="${poll.question}"></div>
+        `;
+        const optionsWrap = card.querySelector('.options');
+        const tot = totalVotes(poll.counts);
+        card.querySelector(`#total-${poll.id}`).textContent = String(tot);
+        poll.options.forEach((label, i) => {
+          const opt = document.createElement('button');
+          opt.className = 'option';
+          opt.type = 'button';
+          opt.setAttribute('data-index', String(i));
+          const chosen = state.votes[poll.id] === i;
+          if (chosen) opt.classList.add('selected');
+          const pct = percent(poll.counts[i], tot);
+          const col = poll.colors[i];
+          opt.innerHTML = `
+            <div class="bar-wrap" aria-hidden="true">
+              <div class="bar" style="background:${col.bar}; width:${pct}%"></div>
+            </div>
+            <div class="row">
+              <div class="label"><span class="dot" style="background:${col.dot}"></span><span>${label}</span></div>
+              <div class="count" data-val="${poll.counts[i]}">${poll.counts[i]}</div>
+            </div>
+          `;
+          opt.addEventListener('click', () => castVote(poll.id, i));
+          optionsWrap.appendChild(opt);
+        });
+        grid.appendChild(card);
+      });
+    }
+
+    function updatePollUI(pollId) {
+      const poll = state.polls.find(p => p.id === pollId);
+      const card = document.querySelector(`.card[data-id="${pollId}"]`);
+      if (!poll || !card) return;
+      const tot = totalVotes(poll.counts);
+      card.querySelector(`#total-${poll.id}`).textContent = String(tot);
+      const opts = card.querySelectorAll('.option');
+      opts.forEach((opt, i) => {
+        opt.classList.toggle('selected', state.votes[pollId] === i);
+        const pct = percent(poll.counts[i], tot);
+        const bar = opt.querySelector('.bar');
+        bar.style.width = pct + '%';
+        const countEl = opt.querySelector('.count');
+        animateNumber(countEl, poll.counts[i]);
+      });
+    }
+
+    function castVote(pollId, optionIndex) {
+      const poll = state.polls.find(p => p.id === pollId);
+      if (!poll) return;
+      const prev = state.votes[pollId];
+      if (prev === optionIndex) return; // no change
+      if (Number.isInteger(prev)) poll.counts[prev] = Math.max(0, poll.counts[prev] - 1);
+      poll.counts[optionIndex] += 1;
+      state.votes[pollId] = optionIndex;
+      persist();
+      updatePollUI(pollId);
+      burst(cardFor(pollId), optionIndex);
+    }
+
+    function cardFor(pollId){ return document.querySelector(`.card[data-id="${pollId}"]`); }
+
+    function burst(card, optionIndex) {
+      if (!card) return;
+      const opt = card.querySelector(`.option[data-index="${optionIndex}"]`);
+      if (!opt) return;
+      const rect = opt.getBoundingClientRect();
+      const origin = { x: rect.left + rect.width * 0.1, y: rect.top + rect.height/2 };
+      const colors = ['#6c7cff','#5dd4c6','#ffb36b','#ff7aa2'];
+      const pieces = 16;
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '0'; container.style.top = '0'; container.style.pointerEvents = 'none';
+      document.body.appendChild(container);
+      for (let i=0;i<pieces;i++) {
+        const s = document.createElement('div');
+        s.style.position = 'absolute';
+        s.style.width = '6px'; s.style.height = '6px'; s.style.borderRadius = '2px';
+        s.style.background = colors[i % colors.length];
+        s.style.left = origin.x + 'px'; s.style.top = origin.y + 'px';
+        const ang = (Math.PI * 2) * (i / pieces) + (Math.random()*0.3);
+        const dist = 30 + Math.random()*28;
+        const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist - Math.random()*20;
+        s.animate([
+          { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px) rotate(${Math.random()*180-90}deg)`, opacity: 0 }
+        ], { duration: 700 + Math.random()*300, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'forwards' });
+        container.appendChild(s);
+      }
+      setTimeout(() => container.remove(), 1200);
+    }
+
+    function shufflePolls() {
+      // Keep counts and votes paired with their polls; just shuffle order visually
+      for (let i = state.polls.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [state.polls[i], state.polls[j]] = [state.polls[j], state.polls[i]];
+      }
+      render();
+    }
+
+    function resetVotes() {
+      state.votes = {};
+      // Return counts to initial seeded values
+      state.polls = state.polls.map(p => ({ ...p, counts: initialCountsFor(p.options.length) }));
+      persist();
+      render();
+    }
+
+    function init() {
+      render();
+      document.getElementById('shuffleBtn').addEventListener('click', shufflePolls);
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        if (confirm('Reset your local votes and sample counts?')) resetVotes();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
+

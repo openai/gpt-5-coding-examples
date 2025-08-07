@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nonprofit Impact Report</title>
+    <meta name="description" content="A single-page, visual impact report showcasing measurable results, success stories, and a clear path to donate." />
+    <style>
+      :root {
+        --bg: #0b1220;
+        --ink: #f7fbff;
+        --muted: #c9d7f0;
+        --brand: #7dd3fc; /* sky-300 */
+        --brand-2: #34d399; /* emerald-400 */
+        --brand-3: #f59e0b; /* amber-500 */
+        --brand-4: #fb7185; /* rose-400 */
+        --panel: rgba(255,255,255,0.06);
+        --border: rgba(255,255,255,0.12);
+        --shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+        --radius: 16px;
+        --ring: 0 0 0 2px rgba(125, 211, 252, 0.25), 0 10px 25px rgba(125, 211, 252, 0.18);
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background:
+          radial-gradient(1200px 800px at 20% -10%, rgba(125, 211, 252, 0.15), transparent 70%),
+          radial-gradient(1000px 700px at 115% 10%, rgba(52, 211, 153, 0.14), transparent 60%),
+          radial-gradient(900px 500px at -10% 80%, rgba(245, 158, 11, 0.12), transparent 60%),
+          var(--bg);
+        line-height: 1.55;
+      }
+      img { max-width: 100%; display: block; }
+      a { color: inherit; text-decoration: none; }
+      .container { width: min(1200px, 92vw); margin: 0 auto; }
+
+      /* Skip link */
+      .skip-link { position: absolute; left: -9999px; top: auto; }
+      .skip-link:focus { left: 12px; top: 12px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 8px; z-index: 1000; }
+
+      /* Top nav */
+      .nav {
+        position: sticky; top: 0; z-index: 40;
+        backdrop-filter: blur(10px) saturate(120%);
+        background: rgba(9, 13, 25, 0.55);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      .nav .inner {
+        display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px; padding: 14px 0;
+      }
+      .brand {
+        display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .2px;
+      }
+      .logo {
+        width: 38px; height: 38px; border-radius: 10px;
+        background: conic-gradient(from 140deg, var(--brand), var(--brand-2) 35%, var(--brand-3) 65%, var(--brand-4));
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,0.06), var(--shadow);
+      }
+      .nav-links { display: flex; gap: 18px; opacity: .92; }
+      .cta {
+        display: inline-flex; align-items: center; gap: 10px; font-weight: 800;
+        color: #0a1220; background: linear-gradient(180deg, var(--brand), #3b82f6);
+        padding: 10px 16px; border-radius: 999px; box-shadow: var(--ring);
+        transition: transform .15s ease, box-shadow .2s ease;
+      }
+      .cta:hover { transform: translateY(-1px); box-shadow: 0 0 0 4px rgba(125,211,252,.18), 0 16px 40px rgba(125,211,252,.22); }
+      .cta.alt { background: linear-gradient(180deg, var(--brand-2), #059669); color: #07121f; }
+
+      /* Hero */
+      header.hero { position: relative; overflow: hidden; }
+      .hero .wrap { padding: 64px 0 38px; display:grid; grid-template-columns: 1.1fr 0.9fr; gap: 26px; align-items: center; }
+      .hero h1 { font-size: clamp(32px, 5.2vw, 64px); line-height: 1.06; margin: 0 0 10px; letter-spacing: .2px; }
+      .hero p { color: var(--muted); margin: 0 0 20px; font-size: clamp(16px, 2.2vw, 20px); }
+      .pills { display:flex; gap:10px; flex-wrap:wrap; margin: 16px 0 24px; }
+      .pill { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 999px; font-size: 13px; }
+      .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+      .card { background: rgba(14, 21, 37, 0.74); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+      .metrics { display:grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 16px; }
+      .metric { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; text-align: center; }
+      .metric b { font-size: 20px; color: var(--brand); display:block; }
+
+      /* Sections */
+      section { padding: 70px 0; }
+      .section-title { font-size: clamp(26px, 3.2vw, 38px); margin: 0 0 8px; }
+      .section-sub { color: var(--muted); margin: 6px 0 24px; }
+
+      /* Year selector */
+      .year-picker { display:flex; align-items:center; gap: 8px; flex-wrap: wrap; }
+      .chip { padding: 8px 12px; border-radius: 999px; border:1px solid var(--border); background: rgba(255,255,255,0.06); cursor: pointer; user-select: none; }
+      .chip[aria-pressed="true"] { background: linear-gradient(180deg, rgba(125,211,252,0.22), rgba(59,130,246,0.22)); border-color: rgba(125,211,252,0.55); }
+
+      /* Infographics grid */
+      .grid-2 { display:grid; grid-template-columns: 1.2fr 0.8fr; gap: 18px; align-items: stretch; }
+      .panel { background: rgba(14,21,37,0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+      .panel h3 { margin: 4px 0 2px; font-size: 18px; }
+      .muted { color: var(--muted); font-size: 14px; }
+
+      /* Donut */
+      .donut {
+        position: relative;
+        width: 240px; height: 240px; border-radius: 50%;
+        margin: 12px auto 10px; flex: 0 0 auto;
+        background: conic-gradient(#7dd3fc 0% 60%, #34d399 60% 85%, #f59e0b 85% 95%, #fb7185 95% 100%);
+        transition: background .5s ease;
+      }
+      .donut::after { content: ""; position: absolute; inset: 28px; border-radius: 50%; background: rgba(9,13,25,0.9); border:1px solid rgba(255,255,255,0.06); }
+      .legend { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+      .leg { display:flex; align-items:center; gap: 10px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.04); border:1px solid var(--border); }
+      .dot { width: 12px; height: 12px; border-radius: 50%; }
+      .leg b { display:block; }
+      .leg small { color: var(--muted); }
+
+      /* Bars */
+      .bars {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: end; height: 220px; padding: 10px 8px 0;
+      }
+      .bar { position: relative; height: var(--h, 20%); background: linear-gradient(180deg, rgba(125,211,252,.35), rgba(59,130,246,.35)); border:1px solid rgba(125,211,252,.45); border-radius: 10px 10px 6px 6px; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.15); transition: height .6s ease; }
+      .bar .label { position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, -6px); background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); padding: 4px 8px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+      .xlabels { display:grid; grid-template-columns: repeat(3,1fr); gap: 12px; text-align: center; margin-top: 6px; color: var(--muted); font-size: 12px; }
+
+      /* Radial progress */
+      .rings { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+      .ring { display:grid; place-items:center; gap: 6px; background: rgba(255,255,255,0.04); border:1px solid var(--border); border-radius: 14px; padding: 14px; }
+      .ring .dial {
+        width: 110px; height: 110px; border-radius: 50%; position: relative;
+        background: conic-gradient(var(--dial-color, #34d399) var(--val, 50%), rgba(255,255,255,0.08) 0);
+        transition: background .5s ease;
+      }
+      .ring .dial::after { content:""; position:absolute; inset: 16px; border-radius: 50%; background: rgba(9,13,25,0.92); border:1px solid rgba(255,255,255,0.06); }
+      .ring b { font-size: 18px; }
+      .ring .pct { font-weight: 800; color: var(--brand-2); }
+
+      /* Stories */
+      .stories { display:grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+      .story { position: relative; overflow: hidden; background: linear-gradient(180deg, rgba(125,211,252,0.14), rgba(59,130,246,0.14)); border:1px solid var(--border); border-radius: var(--radius); }
+      .story .media { height: 160px; background: radial-gradient(600px 260px at 20% 10%, rgba(125, 211, 252, .55), transparent 60%), radial-gradient(800px 300px at 80% 60%, rgba(52, 211, 153, .45), transparent 65%), linear-gradient(130deg, #0e172a, #0b1220); }
+      .story .content { padding: 16px; }
+      .story blockquote { margin: 0; font-size: 16px; }
+      .who { display:flex; align-items:center; gap: 10px; margin-top: 12px; }
+      .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,0.08); display:grid; place-items:center; font-weight: 700; color:#9bdcf7; }
+      details.story-more { margin-top: 10px; background: rgba(255,255,255,0.04); border:1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+      details.story-more summary { cursor: pointer; font-weight: 600; }
+      details.story-more summary::-webkit-details-marker { display: none; }
+
+      /* Donate */
+      .donate {
+        display:grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; align-items: center;
+      }
+      .impact-calc { display:grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 10px 0; }
+      .impact-box { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 12px; border-radius: 12px; text-align:center; }
+      .impact-box b { color: var(--brand-3); font-size: 18px; }
+      .donate-cta { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .donate-cta input[type="number"] { width: 120px; padding: 10px 12px; border-radius: 10px; border:1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); color: var(--ink); outline: none; }
+      .donate-cta input[type="number"]:focus { border-color: rgba(125,211,252,0.6); box-shadow: 0 0 0 3px rgba(125,211,252,0.15); }
+      .btn { display:inline-flex; align-items:center; gap:8px; padding: 12px 16px; border-radius: 999px; border:1px solid rgba(255,255,255,0.15); background: linear-gradient(180deg, var(--brand-2), #059669); color:#07121f; font-weight: 800; box-shadow: var(--ring); }
+      .btn.sec { background: transparent; color: var(--ink); border-color: rgba(255,255,255,0.22); box-shadow: none; }
+
+      footer { border-top: 1px solid rgba(255,255,255,0.08); padding: 30px 0 60px; color: var(--muted); }
+
+      /* Responsive */
+      @media (max-width: 980px) {
+        .hero .wrap, .grid-2, .donate { grid-template-columns: 1fr; }
+        .metrics { grid-template-columns: 1fr 1fr; }
+        .stories { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <nav class="nav" aria-label="Primary">
+      <div class="container inner">
+        <a href="#top" class="brand" aria-label="Nonprofit Impact Report home">
+          <div class="logo" aria-hidden="true"></div>
+          <span>Nonprofit Impact Report</span>
+        </a>
+        <div class="nav-links" aria-hidden="true">
+          <a href="#impact">Impact</a>
+          <a href="#infographics">Infographics</a>
+          <a href="#stories">Success Stories</a>
+        </div>
+        <a class="cta" href="#donate" aria-label="Donate now">💖 Donate</a>
+      </div>
+    </nav>
+
+    <header id="top" class="hero">
+      <div class="container wrap">
+        <div>
+          <h1>Together, we turn generosity into measurable change</h1>
+          <p>
+            This living report highlights the progress donors make possible across education, health, and clean water. Explore the numbers, meet the people, and see how every dollar goes to work.
+          </p>
+          <div class="pills" aria-hidden="true">
+            <div class="pill">Transparent • Measurable • Human</div>
+            <div class="pill">Education • Health • Clean Water</div>
+            <div class="pill">2021–2024</div>
+          </div>
+          <div class="actions">
+            <a class="cta" href="#impact">See the impact</a>
+            <a class="cta alt" href="#donate">Donate now</a>
+          </div>
+          <div class="metrics" role="region" aria-label="Impact highlights">
+            <div class="metric">
+              <b><span class="count" data-key="people">0</span>+</b>
+              <div>People reached</div>
+            </div>
+            <div class="metric">
+              <b><span class="count" data-key="hours">0</span>+</b>
+              <div>Volunteer hours</div>
+            </div>
+            <div class="metric">
+              <b><span class="count" data-key="communities">0</span></b>
+              <div>Communities served</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:grid;gap:12px">
+            <div style="display:flex; align-items:center; gap:10px">
+              <div style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:rgba(125,211,252,.18);border:1px solid rgba(125,211,252,.45);">📈</div>
+              <div>
+                <div style="font-weight:800;">Real-time results</div>
+                <div class="muted">Switch years to see how your support compounds.</div>
+              </div>
+            </div>
+            <div class="year-picker" role="tablist" aria-label="Select a year">
+              <button class="chip" role="tab" aria-pressed="false" data-year="2021">2021</button>
+              <button class="chip" role="tab" aria-pressed="false" data-year="2022">2022</button>
+              <button class="chip" role="tab" aria-pressed="false" data-year="2023">2023</button>
+              <button class="chip" role="tab" aria-pressed="true" data-year="2024">2024</button>
+            </div>
+            <div class="muted">Year selected: <b id="yearLabel">2024</b></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <section id="impact">
+        <div class="container">
+          <h2 class="section-title">Impact at a glance</h2>
+          <p class="section-sub">A snapshot of outcomes made possible by our community of supporters.</p>
+
+          <div class="grid-2">
+            <div class="panel" aria-labelledby="alloc-title">
+              <h3 id="alloc-title">How donations were allocated</h3>
+              <div class="muted">Each dollar is put to work with care. Hover for details.</div>
+              <div style="display:grid; grid-template-columns: 260px 1fr; gap: 10px; align-items:center;">
+                <div>
+                  <div class="donut" id="donut" aria-label="Budget allocation donut chart" title="Donation allocation"></div>
+                </div>
+                <div>
+                  <div class="legend" id="legend" role="list">
+                    <div class="leg" role="listitem"><span class="dot" style="background:#7dd3fc"></span><div><b>Programs</b><small id="leg-programs">—</small></div></div>
+                    <div class="leg" role="listitem"><span class="dot" style="background:#34d399"></span><div><b>Community & Outreach</b><small id="leg-outreach">—</small></div></div>
+                    <div class="leg" role="listitem"><span class="dot" style="background:#f59e0b"></span><div><b>Operations</b><small id="leg-ops">—</small></div></div>
+                    <div class="leg" role="listitem"><span class="dot" style="background:#fb7185"></span><div><b>Administration</b><small id="leg-admin">—</small></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel" aria-labelledby="programs-title">
+              <h3 id="programs-title">People reached by program</h3>
+              <div class="muted">Education, Health, and Clean Water initiatives</div>
+              <div class="bars" aria-hidden="true">
+                <div class="bar" id="bar-education" style="--h: 40%"><div class="label" id="bar-education-val">0</div></div>
+                <div class="bar" id="bar-health" style="--h: 40%"><div class="label" id="bar-health-val">0</div></div>
+                <div class="bar" id="bar-water" style="--h: 40%"><div class="label" id="bar-water-val">0</div></div>
+              </div>
+              <div class="xlabels"><div>Education</div><div>Health</div><div>Clean Water</div></div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top: 16px;" aria-labelledby="outcomes-title">
+            <h3 id="outcomes-title">Outcomes achieved</h3>
+            <div class="muted">Percent of participants achieving key outcomes</div>
+            <div class="rings" role="region" aria-label="Outcome progress">
+              <div class="ring">
+                <div class="dial" id="ring-education" style="--dial-color:#7dd3fc; --val: 0deg"></div>
+                <b>Education Completion</b>
+                <div class="muted"><span class="pct" id="ring-education-val">0%</span> of students completed grade level</div>
+              </div>
+              <div class="ring">
+                <div class="dial" id="ring-water" style="--dial-color:#34d399; --val: 0deg"></div>
+                <b>Clean Water Access</b>
+                <div class="muted"><span class="pct" id="ring-water-val">0%</span> households gained access</div>
+              </div>
+              <div class="ring">
+                <div class="dial" id="ring-health" style="--dial-color:#f59e0b; --val: 0deg"></div>
+                <b>Health Screenings</b>
+                <div class="muted"><span class="pct" id="ring-health-val">0%</span> completed annual screening</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="infographics">
+        <div class="container">
+          <h2 class="section-title">Behind each number is a person</h2>
+          <p class="section-sub">These visuals illustrate scale, but the real power is in lives transformed.</p>
+          <div class="stories">
+            <article class="story">
+              <div class="media" role="img" aria-label="Smiling student with books in hand"></div>
+              <div class="content">
+                <blockquote>“I’m the first in my family to finish secondary school. The after‑school tutoring changed everything.”</blockquote>
+                <div class="who">
+                  <div class="avatar" aria-hidden="true">A</div>
+                  <div>
+                    <b>Asha, 16</b>
+                    <div class="muted">Kisumu County, Education program</div>
+                  </div>
+                </div>
+                <details class="story-more">
+                  <summary>Read more</summary>
+                  <p class="muted">Asha joined our learning center in 2022. With small‑group tutoring and a safe space to study, she raised her grades from 52% to 78% and earned a scholarship for vocational training.</p>
+                </details>
+              </div>
+            </article>
+
+            <article class="story">
+              <div class="media" role="img" aria-label="Water tap flowing in a village"></div>
+              <div class="content">
+                <blockquote>“We used to walk two hours for water. Now the tap is 5 minutes from our home.”</blockquote>
+                <div class="who">
+                  <div class="avatar" aria-hidden="true">S</div>
+                  <div>
+                    <b>Samuel, 41</b>
+                    <div class="muted">Baringo County, Clean water project</div>
+                  </div>
+                </div>
+                <details class="story-more">
+                  <summary>Read more</summary>
+                  <p class="muted">In 2023, community‑led construction brought clean water to 420 households. Girls are spending more time in school, and water‑borne illness reports dropped by 31%.</p>
+                </details>
+              </div>
+            </article>
+
+            <article class="story">
+              <div class="media" role="img" aria-label="Community health worker visiting a family"></div>
+              <div class="content">
+                <blockquote>“The mobile clinic found my high blood pressure early. I now have a care plan and feel hopeful.”</blockquote>
+                <div class="who">
+                  <div class="avatar" aria-hidden="true">M</div>
+                  <div>
+                    <b>Maria, 53</b>
+                    <div class="muted">Nakuru County, Health outreach</div>
+                  </div>
+                </div>
+                <details class="story-more">
+                  <summary>Read more</summary>
+                  <p class="muted">Our screening events connect residents with preventive care and referrals. In 2024 alone, 8,200 people attended with follow‑ups for chronic conditions.</p>
+                </details>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="donate">
+        <div class="container">
+          <h2 class="section-title">Your gift fuels the next milestone</h2>
+          <p class="section-sub">Choose an amount to see an estimate of the impact it can create.</p>
+          <div class="donate panel">
+            <div>
+              <div class="donate-cta">
+                <label for="amount" class="muted">Donation amount (USD)</label>
+                <input id="amount" type="number" min="5" step="5" value="50" aria-label="Donation amount" />
+                <a class="btn" id="donateBtn" href="https://example.org/donate" target="_blank" rel="noopener">Donate securely</a>
+                <a class="btn sec" href="#top">Back to top</a>
+              </div>
+              <div class="impact-calc" role="region" aria-label="Estimated impact of donation">
+                <div class="impact-box"><div>Education hours</div><b id="calc-edu">—</b></div>
+                <div class="impact-box"><div>Health screenings</div><b id="calc-health">—</b></div>
+                <div class="impact-box"><div>Liters of clean water</div><b id="calc-water">—</b></div>
+              </div>
+              <p class="muted">Estimates vary by region. 85–90% of funds go directly to programs each year.</p>
+            </div>
+            <div>
+              <div class="panel" style="background: rgba(255,255,255,0.04);">
+                <h3>Where your support goes</h3>
+                <ul>
+                  <li>Education: tutoring, books, school meals</li>
+                  <li>Health: mobile clinics, vaccinations, referrals</li>
+                  <li>Clean Water: wells, filters, maintenance training</li>
+                </ul>
+                <p class="muted">We publish third‑party audits and share raw data with donors annually.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div>© <span id="yearNow"></span> Nonprofit Impact Report • <a href="#donate">Give today</a></div>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        const data = {
+          2021: {
+            metrics: { people: 8200, hours: 14500, communities: 28 },
+            programs: { Education: 3500, Health: 2700, Water: 2000 },
+            outcomes: { Education: 62, Water: 58, Health: 54 },
+            allocation: { Programs: 68, Outreach: 14, Operations: 11, Admin: 7 },
+          },
+          2022: {
+            metrics: { people: 10400, hours: 18250, communities: 33 },
+            programs: { Education: 4300, Health: 3400, Water: 2700 },
+            outcomes: { Education: 67, Water: 63, Health: 57 },
+            allocation: { Programs: 72, Outreach: 14, Operations: 9, Admin: 5 },
+          },
+          2023: {
+            metrics: { people: 13100, hours: 21400, communities: 39 },
+            programs: { Education: 5200, Health: 4200, Water: 3700 },
+            outcomes: { Education: 73, Water: 69, Health: 61 },
+            allocation: { Programs: 78, Outreach: 12, Operations: 7, Admin: 3 },
+          },
+          2024: {
+            metrics: { people: 16300, hours: 26100, communities: 45 },
+            programs: { Education: 6400, Health: 5200, Water: 4700 },
+            outcomes: { Education: 81, Water: 76, Health: 68 },
+            allocation: { Programs: 82, Outreach: 10, Operations: 6, Admin: 2 },
+          },
+        };
+
+        const yearLabel = document.getElementById('yearLabel');
+        const donut = document.getElementById('donut');
+        const legendEls = {
+          Programs: document.getElementById('leg-programs'),
+          Outreach: document.getElementById('leg-outreach'),
+          Operations: document.getElementById('leg-ops'),
+          Admin: document.getElementById('leg-admin'),
+        };
+        const bars = {
+          Education: { el: document.getElementById('bar-education'), label: document.getElementById('bar-education-val') },
+          Health: { el: document.getElementById('bar-health'), label: document.getElementById('bar-health-val') },
+          Water: { el: document.getElementById('bar-water'), label: document.getElementById('bar-water-val') },
+        };
+        const rings = {
+          Education: { el: document.getElementById('ring-education'), label: document.getElementById('ring-education-val') },
+          Water: { el: document.getElementById('ring-water'), label: document.getElementById('ring-water-val') },
+          Health: { el: document.getElementById('ring-health'), label: document.getElementById('ring-health-val') },
+        };
+        const counts = {
+          people: document.querySelector('.count[data-key="people"]'),
+          hours: document.querySelector('.count[data-key="hours"]'),
+          communities: document.querySelector('.count[data-key="communities"]'),
+        };
+
+        function format(n) {
+          return n.toLocaleString();
+        }
+
+        function animateNumber(el, from, to, ms) {
+          const start = performance.now();
+          const ease = (t) => 1 - Math.pow(1 - t, 3);
+          function frame(now) {
+            const p = Math.min(1, (now - start) / ms);
+            const val = Math.round(from + (to - from) * ease(p));
+            el.textContent = format(val);
+            if (p < 1) requestAnimationFrame(frame);
+          }
+          requestAnimationFrame(frame);
+        }
+
+        function animateDonut(target) {
+          // target is {Programs, Outreach, Operations, Admin} in % sum 100
+          const p1 = target.Programs;
+          const p2 = target.Outreach;
+          const p3 = target.Operations;
+          const p4 = target.Admin;
+          const a1 = p1;
+          const a2 = p1 + p2;
+          const a3 = p1 + p2 + p3;
+          // Build gradient string
+          const bg = `conic-gradient(#7dd3fc 0% ${a1}%, #34d399 ${a1}% ${a2}%, #f59e0b ${a2}% ${a3}%, #fb7185 ${a3}% 100%)`;
+          donut.style.background = bg;
+          legendEls.Programs.textContent = `${p1}%`;
+          legendEls.Outreach.textContent = `${p2}%`;
+          legendEls.Operations.textContent = `${p3}%`;
+          legendEls.Admin.textContent = `${p4}%`;
+        }
+
+        function animateBars(values) {
+          const max = Math.max(values.Education, values.Health, values.Water, 1);
+          for (const key of Object.keys(bars)) {
+            const v = values[key];
+            const h = Math.max(6, Math.round((v / max) * 100));
+            bars[key].el.style.setProperty('--h', h + '%');
+            bars[key].label.textContent = format(v);
+          }
+        }
+
+        function animateRings(values) {
+          for (const key of Object.keys(rings)) {
+            const v = Math.max(0, Math.min(100, values[key]));
+            rings[key].el.style.setProperty('--val', (v * 3.6) + 'deg');
+            rings[key].label.textContent = v + '%';
+          }
+        }
+
+        function updateCounts(m) {
+          const prev = {
+            people: Number((counts.people.textContent || '0').replace(/[^0-9]/g, '')),
+            hours: Number((counts.hours.textContent || '0').replace(/[^0-9]/g, '')),
+            communities: Number((counts.communities.textContent || '0').replace(/[^0-9]/g, '')),
+          };
+          animateNumber(counts.people, prev.people, m.people, 800);
+          animateNumber(counts.hours, prev.hours, m.hours, 800);
+          animateNumber(counts.communities, prev.communities, m.communities, 800);
+        }
+
+        function setYear(year) {
+          const y = String(year);
+          const d = data[y];
+          if (!d) return;
+          yearLabel.textContent = y;
+          updateCounts(d.metrics);
+          animateBars(d.programs);
+          animateRings(d.outcomes);
+          animateDonut(d.allocation);
+          // Update donate estimation multiplier (based on program cost ratios)
+          updateEstimates();
+          // Update active chip
+          document.querySelectorAll('.chip[data-year]').forEach((btn) => {
+            btn.setAttribute('aria-pressed', btn.getAttribute('data-year') === y ? 'true' : 'false');
+          });
+        }
+
+        // Donation estimator
+        const amountInput = document.getElementById('amount');
+        const calc = {
+          edu: document.getElementById('calc-edu'),
+          health: document.getElementById('calc-health'),
+          water: document.getElementById('calc-water'),
+        };
+        function updateEstimates() {
+          const amt = Math.max(5, Number(amountInput.value || 0));
+          // Simple, friendly conversion estimates
+          // $10 ≈ 3 education hours, $25 ≈ 1 screening, $1 ≈ 40L water
+          const eduHours = Math.round((amt / 10) * 3);
+          const screenings = Math.max(1, Math.round(amt / 25));
+          const liters = Math.round(amt * 40);
+          calc.edu.textContent = format(eduHours);
+          calc.health.textContent = format(screenings);
+          calc.water.textContent = format(liters);
+        }
+
+        // Bind year chips
+        document.querySelectorAll('.chip[data-year]').forEach((btn) => {
+          btn.addEventListener('click', () => setYear(btn.getAttribute('data-year')));
+        });
+
+        // Donate button keeps amount as query param
+        const donateBtn = document.getElementById('donateBtn');
+        function updateDonateLink() {
+          const amt = Math.max(5, Number(amountInput.value || 0));
+          donateBtn.href = `https://example.org/donate?amount=${encodeURIComponent(amt)}`;
+        }
+        amountInput.addEventListener('input', () => { updateEstimates(); updateDonateLink(); });
+
+        // Initialize
+        document.getElementById('yearNow').textContent = new Date().getFullYear();
+        setYear(2024);
+        updateDonateLink();
+      })();
+    </script>
+  </body>
+  </html>
+

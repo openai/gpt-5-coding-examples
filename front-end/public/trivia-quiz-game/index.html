@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a1833" />
+    <title>Trivia Quiz</title>
+    <style>
+      :root {
+        --bg: #0a1833;           /* deep navy */
+        --card: #0f1f3d;         /* darker navy card */
+        --muted: #9fb3d1;        /* muted slate-blue */
+        --text: #f3f4f6;         /* off-white text */
+        --accent: #1d4ed8;       /* US blue */
+        --accent2: #dc2626;      /* US red */
+        --correct: #22c55e;      /* green-500 */
+        --incorrect: #ef4444;    /* red-500 */
+        --shadow: 0 10px 25px rgba(0,0,0,.35);
+        --radius: 18px;
+      }
+
+      html, body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 800px at 20% -10%, rgba(220,38,38,.22) 0%, transparent 60%),
+                    radial-gradient(1000px 700px at 120% 10%, rgba(29,78,216,.25) 0%, transparent 60%),
+                    var(--bg);
+        color: var(--text);
+        font: 17px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        display: grid;
+        place-items: center;
+        --page-pad: clamp(12px, 4vw, 24px);
+        padding: var(--page-pad);
+        padding-top: calc(var(--page-pad) + env(safe-area-inset-top));
+        padding-bottom: calc(var(--page-pad) + env(safe-area-inset-bottom));
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+
+      .app {
+        width: min(960px, 100%);
+      }
+
+      .progress-wrap {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        margin-bottom: 18px;
+        background: transparent;
+      }
+
+      .progress {
+        height: 10px;
+        background: rgba(148,163,184,.25);
+        border-radius: 999px;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+      }
+      .progress > .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        transition: width .35s ease;
+      }
+
+      .card {
+        position: relative;
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: clamp(18px, 3vw, 28px);
+      }
+
+      .question-number {
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: .02em;
+        margin-bottom: 6px;
+      }
+
+      .question {
+        font-size: clamp(22px, 3.6vw, 32px);
+        line-height: 1.25;
+        margin: 6px 0 16px;
+      }
+
+      .choices {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .choice {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+        padding: 14px 16px;
+        border: 1px solid rgba(255,255,255,.10);
+        background: rgba(255,255,255,.03);
+        color: var(--text);
+        cursor: pointer;
+        border-radius: 14px;
+        transition: transform .05s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+        box-shadow: 0 2px 0 rgba(0,0,0,.25);
+        font-size: clamp(16px, 2.5vw, 20px);
+      }
+      .choice:hover { background: rgba(255,255,255,.06); }
+      .choice:active { transform: translateY(1px); }
+      .choice[disabled] {
+        opacity: .8;
+        cursor: not-allowed;
+      }
+      .choice .letter {
+        width: 28px; height: 28px;
+        display: grid; place-items: center;
+        border-radius: 8px;
+        background: linear-gradient(180deg, rgba(29,78,216,.25), rgba(220,38,38,.25));
+        color: #e5eefc;
+        font-weight: 700;
+        flex: 0 0 auto;
+        font-size: 14px;
+      }
+
+      .choice.correct { border-color: color-mix(in oklab, var(--correct), white 20%); background: color-mix(in oklab, var(--correct) 16%, transparent); }
+      .choice.incorrect { border-color: color-mix(in oklab, var(--incorrect), white 20%); background: color-mix(in oklab, var(--incorrect) 16%, transparent); }
+      .choice:focus-visible { outline: 3px solid color-mix(in oklab, var(--accent2), white 30%); outline-offset: 2px; }
+
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 14px;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.12);
+        padding: 6px 10px;
+        border-radius: 999px;
+        color: #e6eefc;
+        font-weight: 600;
+      }
+      .hint { opacity: .9; }
+      .btn {
+        background: linear-gradient(180deg, var(--accent), var(--accent2));
+        color: #ffffff;
+        border: 0;
+        border-radius: 12px;
+        font-weight: 800;
+        padding: 10px 14px;
+        cursor: pointer;
+        box-shadow: 0 6px 16px rgba(29,78,216,.25);
+      }
+      .btn:disabled { opacity: .6; cursor: not-allowed; }
+      .btn:focus-visible { outline: 3px solid color-mix(in oklab, var(--accent), white 30%); outline-offset: 2px; }
+
+      .feedback {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+      }
+      .feedback .icon { 
+        width: clamp(84px, 12vw, 140px); 
+        height: auto; 
+        opacity: 0; 
+        transform: scale(.4) rotate(-8deg);
+        filter: drop-shadow(0 16px 24px rgba(0,0,0,.45));
+      }
+      .feedback.show .icon { animation: pop .6s cubic-bezier(.2, 1.2, .2, 1) forwards; }
+      @keyframes pop {
+        0% { opacity: 0; transform: scale(.4) rotate(-8deg); }
+        60% { opacity: 1; transform: scale(1.1) rotate(0deg); }
+        100% { opacity: 1; transform: scale(1) rotate(0deg); }
+      }
+
+      .hidden { display: none; }
+
+      .result h2 { font-size: clamp(24px, 4vw, 34px); margin: 6px 0 6px; }
+      .result p { color: var(--muted); margin: 0 0 14px; }
+
+      /* Subtle entrance animation for questions */
+      .fade-in { animation: fadeIn .35s ease both; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+      .hero {
+        text-align: center;
+        margin: 0 0 18px;
+      }
+      .hero .title {
+        font-size: clamp(26px, 5vw, 44px);
+        line-height: 1.1;
+        margin: 0 0 6px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+      .hero .title .highlight {
+        background: linear-gradient(100deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 10px 28px rgba(29,78,216,.28);
+      }
+      .hero .tagline {
+        color: var(--muted);
+        margin: 0 auto;
+        max-width: 60ch;
+      }
+      
+      @media (prefers-reduced-motion: reduce) {
+        .feedback .icon { animation: none !important; opacity: 1; transform: none; }
+        .progress > .bar { transition: none; }
+        .choice { transition: none; }
+      }
+      @media (max-width: 560px) {
+        .controls { flex-direction: column; align-items: stretch; gap: 10px; text-align: left; }
+        .btn { width: 100%; padding: 14px 16px; }
+        .choice { padding: 16px; min-height: 48px; }
+        .choice .letter { width: 34px; height: 34px; font-size: 15px; }
+        .progress-wrap { top: env(safe-area-inset-top); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="hero" role="banner" aria-label="App header">
+        <h1 class="title">U.S. Civics <span class="highlight">Quiz</span></h1>
+        <p class="tagline">A fast, accessible quiz to test your U.S. civics knowledge — 10 questions, instant feedback, final score.</p>
+      </header>
+      <div class="progress-wrap" aria-hidden="true">
+        <div class="progress" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <section class="card" id="quizCard" aria-live="polite">
+        <div class="question-number" id="qNumber">Question 1 of 10</div>
+        <h2 class="question" id="qText">Loading…</h2>
+        <div class="choices" id="choices" role="group" aria-label="Answer choices"></div>
+
+        <div class="controls">
+          <div class="meta">
+            <span id="helperText" aria-live="polite">Choose the best answer.</span>
+            <span class="badge" id="scoreBadge" aria-live="polite" aria-atomic="true">Score: 0</span>
+            <span class="hint" aria-hidden="true">Keys: 1–4 to answer, Enter to continue</span>
+          </div>
+          <button class="btn" id="nextBtn" disabled>Next</button>
+        </div>
+
+        <div class="feedback" id="feedback" aria-hidden="true"></div>
+      </section>
+
+      <section class="card result hidden" id="resultCard">
+        <h2 id="scoreHeading">Your Score</h2>
+        <p id="scoreText"></p>
+        <button class="btn" id="restartBtn">Play Again</button>
+      </section>
+    </div>
+
+    <script>
+      const QUESTIONS = [
+        {
+          q: "What is the capital of the United States?",
+          choices: ["New York City", "Washington, D.C.", "Philadelphia", "Los Angeles"],
+          answer: "Washington, D.C."
+        },
+        {
+          q: "How many stars are on the U.S. flag?",
+          choices: ["48", "49", "50", "52"],
+          answer: "50"
+        },
+        {
+          q: "Independence Day in the U.S. is celebrated on…",
+          choices: ["June 14", "July 4", "September 17", "November 11"],
+          answer: "July 4"
+        },
+        {
+          q: "How many branches are there in the U.S. government?",
+          choices: ["2", "3", "4", "5"],
+          answer: "3"
+        },
+        {
+          q: "Who leads the executive branch of the federal government?",
+          choices: ["The Chief Justice", "The Speaker of the House", "The President", "The Vice President"],
+          answer: "The President"
+        },
+        {
+          q: "What do we call the first ten amendments to the Constitution?",
+          choices: ["Articles of Confederation", "The Federalist Papers", "The Bill of Rights", "The Preamble"],
+          answer: "The Bill of Rights"
+        },
+        {
+          q: "Which ocean borders the U.S. East Coast?",
+          choices: ["Pacific Ocean", "Indian Ocean", "Arctic Ocean", "Atlantic Ocean"],
+          answer: "Atlantic Ocean"
+        },
+        {
+          q: "What is the national bird of the United States?",
+          choices: ["Bald Eagle", "Peregrine Falcon", "Golden Eagle", "Wild Turkey"],
+          answer: "Bald Eagle"
+        },
+        {
+          q: "Which war was fought between the North and South in the United States?",
+          choices: ["Revolutionary War", "World War I", "The Civil War", "War of 1812"],
+          answer: "The Civil War"
+        },
+        {
+          q: "What are the first three words of the U.S. Constitution?",
+          choices: ["To form Union", "We the People", "In Congress Assembled", "Four score and"],
+          answer: "We the People"
+        }
+      ];
+
+      const $ = (sel) => document.querySelector(sel);
+      const shuffle = (arr) => arr.map(v => [Math.random(), v]).sort((a,b)=>a[0]-b[0]).map(([,v])=>v);
+
+      let order = [];
+      let current = 0;
+      let score = 0;
+      let currentChoices = [];
+      let correctValue = null;
+      let locked = false;
+
+      const progressBar = $('#progressBar');
+      const qNumber = $('#qNumber');
+      const qText = $('#qText');
+      const choicesEl = $('#choices');
+      const feedback = $('#feedback');
+      const nextBtn = $('#nextBtn');
+      const helperText = $('#helperText');
+      const quizCard = $('#quizCard');
+      const resultCard = $('#resultCard');
+      const scoreText = $('#scoreText');
+      const restartBtn = $('#restartBtn');
+      const scoreBadge = $('#scoreBadge');
+
+      function startQuiz() {
+        order = shuffle([...Array(QUESTIONS.length).keys()]);
+        current = 0;
+        score = 0;
+        nextBtn.disabled = true;
+        resultCard.classList.add('hidden');
+        quizCard.classList.remove('hidden');
+        renderQuestion();
+      }
+
+      function setProgress() {
+        const pct = Math.round((current) / QUESTIONS.length * 100);
+        progressBar.style.width = pct + '%';
+        progressBar.parentElement.setAttribute('aria-valuenow', pct.toString());
+      }
+
+      function renderQuestion() {
+        locked = false;
+        feedback.classList.remove('show');
+        feedback.innerHTML = '';
+        nextBtn.disabled = true;
+        helperText.textContent = 'Choose the best answer.';
+        updateScoreBadge();
+
+        setProgress();
+
+        const idx = order[current];
+        const data = QUESTIONS[idx];
+        qNumber.textContent = `Question ${current + 1} of ${QUESTIONS.length}`;
+        qText.textContent = data.q;
+        qText.classList.remove('fade-in');
+        void qText.offsetWidth;
+        qText.classList.add('fade-in');
+
+        const allChoices = data.choices.slice();
+        currentChoices = shuffle(allChoices);
+        correctValue = data.answer;
+
+        choicesEl.innerHTML = '';
+        const letters = ['A','B','C','D','E','F'];
+        currentChoices.forEach((choice, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'choice';
+          btn.setAttribute('type', 'button');
+          btn.setAttribute('aria-label', `Answer ${letters[i]}: ${choice}`);
+          btn.innerHTML = `<span class="letter">${letters[i]}</span> <span class="label">${choice}</span>`;
+          btn.addEventListener('click', () => onChoose(btn, choice));
+          btn.classList.add('fade-in');
+          btn.style.animationDelay = `${i * 40}ms`;
+          choicesEl.appendChild(btn);
+        });
+        nextBtn.textContent = (current === QUESTIONS.length - 1) ? 'Finish' : 'Next';
+      }
+
+      function onChoose(btn, choice) {
+        if (locked) return;
+        locked = true;
+        const isCorrect = choice === correctValue;
+        if (isCorrect) score++;
+        updateScoreBadge();
+
+        [...choicesEl.children].forEach(el => {
+          el.disabled = true;
+          const label = el.querySelector('.label').textContent;
+          if (label === correctValue) el.classList.add('correct');
+          if (label === choice && !isCorrect) el.classList.add('incorrect');
+        });
+
+        showFeedback(isCorrect);
+
+        helperText.textContent = isCorrect ? 'Correct!' : 'Not quite. The correct answer is highlighted.';
+        nextBtn.disabled = false;
+        if (navigator.vibrate) { try { navigator.vibrate(isCorrect ? 12 : [24, 40, 24]); } catch {} }
+
+        clearTimeout(onChoose._t);
+        onChoose._t = setTimeout(() => {
+          if (!document.hidden) nextQuestion();
+        }, 1100);
+      }
+
+      function iconSVG(ok) {
+        return ok
+          ? `<svg class="icon" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+               <defs>
+                 <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+                   <stop offset="0%" stop-color="#22c55e"/>
+                   <stop offset="100%" stop-color="#16a34a"/>
+                 </linearGradient>
+               </defs>
+               <circle cx="60" cy="60" r="52" fill="url(#g1)" opacity=".15" />
+               <path d="M36 62 l16 16 32-40" fill="none" stroke="#22c55e" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+             </svg>`
+          : `<svg class="icon" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+               <defs>
+                 <linearGradient id="g2" x1="0" x2="1" y1="0" y2="1">
+                   <stop offset="0%" stop-color="#ef4444"/>
+                   <stop offset="100%" stop-color="#b91c1c"/>
+                 </linearGradient>
+               </defs>
+               <circle cx="60" cy="60" r="52" fill="url(#g2)" opacity=".15" />
+               <path d="M40 40 L80 80 M80 40 L40 80" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round"/>
+             </svg>`;
+      }
+
+      function showFeedback(isCorrect) {
+        feedback.innerHTML = iconSVG(isCorrect);
+        void feedback.offsetWidth;
+        feedback.classList.add('show');
+      }
+
+      function nextQuestion() {
+        feedback.classList.remove('show');
+        current++;
+        if (current >= QUESTIONS.length) {
+          endQuiz();
+        } else {
+          renderQuestion();
+        }
+      }
+
+      function endQuiz() {
+        setProgress();
+        quizCard.classList.add('hidden');
+        resultCard.classList.remove('hidden');
+        const pct = Math.round((score / QUESTIONS.length) * 100);
+        $('#scoreHeading').textContent = pct >= 80 ? 'Great job!' : 'Quiz complete';
+        const emoji = pct === 100 ? '🏆' : pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '✨';
+        scoreText.textContent = `${emoji} You scored ${score} out of ${QUESTIONS.length} (${pct}%).`;
+      }
+
+      nextBtn.addEventListener('click', nextQuestion);
+      restartBtn.addEventListener('click', startQuiz);
+
+      function updateScoreBadge() {
+        scoreBadge.textContent = `Score: ${score}`;
+      }
+
+      // Keyboard shortcuts: 1–9 to answer, Enter to continue
+      window.addEventListener('keydown', (e) => {
+        if (resultCard && !resultCard.classList.contains('hidden')) return;
+        const n = Number(e.key);
+        if (!Number.isNaN(n) && n >= 1 && n <= currentChoices.length) {
+          const btn = choicesEl.children[n - 1];
+          if (btn && !locked) {
+            e.preventDefault();
+            btn.click();
+          }
+        } else if (e.key === 'Enter') {
+          if (!nextBtn.disabled) {
+            e.preventDefault();
+            nextQuestion();
+          }
+        }
+      });
+
+      startQuiz();
+    </script>
+  </body>
+  </html>

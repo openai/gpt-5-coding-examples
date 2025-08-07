@@ -1,0 +1,11 @@
+id: pomodoro
+title: Pomodoro
+prompt: |
+  Create a single-page app in a single HTML file with following requirements:
+  - Name: Pomodoro
+  - Goal: Timer + sessions log.
+  - Features: Custom durations, auto-start option, session charts (SVG), sound alert (beep), dark mode.
+  - The UI should be good for daily-use and give some energy to the user!
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/pomodoro.png
+tags:
+  - utility

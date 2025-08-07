@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Product Launch Page – Smart Watch One</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --card: #0f172a;
+        --muted: #94a3b8;
+        --text: #e2e8f0;
+        --accent: #6ee7ff;
+        --accent-2: #a78bfa;
+        --ring: color-mix(in oklab, var(--accent) 40%, transparent);
+        --ok-shadow: 0 8px 24px rgba(2, 8, 23, 0.45),
+          0 2px 6px rgba(2, 8, 23, 0.35);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: radial-gradient(
+            1000px 600px at 15% -10%,
+            #172554 10%,
+            transparent 60%
+          ),
+          radial-gradient(900px 520px at 110% 10%, #3b0764 10%, transparent 60%),
+          linear-gradient(180deg, #0b1020 0%, #0b1020 60%, #0a0f1c 100%);
+        color: var(--text);
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      img {
+        max-width: 100%;
+        display: block;
+      }
+      .container {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: blur(10px);
+        background: color-mix(in oklab, var(--card) 72%, transparent);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+      .brand-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: conic-gradient(from 180deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 0 6px rgba(103, 232, 249, 0.15),
+          0 0 24px rgba(103, 232, 249, 0.5);
+      }
+      .nav-links {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .nav-links a {
+        padding: 8px 12px;
+        border-radius: 10px;
+        color: var(--muted);
+      }
+      .nav-links a[aria-current="true"],
+      .nav-links a:hover {
+        color: var(--text);
+        background: rgba(148, 163, 184, 0.12);
+      }
+      .cta-mini {
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #0b1020;
+        font-weight: 700;
+      }
+
+      .hero {
+        padding: 40px 0 10px;
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        align-items: center;
+        gap: 28px;
+      }
+      .eyebrow {
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+      .hero h1 {
+        font-size: clamp(34px, 5vw, 56px);
+        line-height: 1.05;
+        margin: 10px 0 12px;
+        letter-spacing: -0.02em;
+      }
+      .hero p.lead {
+        font-size: clamp(16px, 2.4vw, 20px);
+        color: #cbe3ff;
+        opacity: 0.9;
+      }
+      .hero .actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 20px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(2, 6, 23, 0.5);
+        color: #e6f4ff;
+        font-weight: 700;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #07111f;
+        border-color: transparent;
+        box-shadow: 0 8px 22px rgba(103, 232, 249, 0.25),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+      }
+      .hero .meta {
+        display: flex;
+        gap: 18px;
+        margin-top: 18px;
+        color: var(--muted);
+      }
+      .meta .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.12);
+        font-size: 13px;
+      }
+
+      .visual {
+        position: relative;
+      }
+      .glow {
+        position: absolute;
+        inset: -10%;
+        filter: blur(70px);
+        opacity: 0.8;
+        pointer-events: none;
+        background: radial-gradient(
+            600px 240px at 50% 20%,
+            rgba(103, 232, 249, 0.35),
+            transparent 60%
+          ),
+          radial-gradient(
+            420px 220px at 60% 60%,
+            rgba(167, 139, 250, 0.35),
+            transparent 60%
+          );
+      }
+      .visual-card {
+        position: relative;
+        border-radius: 28px;
+        padding: 24px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: linear-gradient(
+          180deg,
+          rgba(15, 23, 42, 0.65) 0%,
+          rgba(2, 6, 23, 0.4) 100%
+        );
+        box-shadow: var(--ok-shadow);
+        overflow: hidden;
+      }
+      .visual .hero-bg {
+        width: 100%;
+        height: auto;
+        border-radius: 22px;
+        opacity: 0.9;
+        mix-blend: screen;
+      }
+      .watch-wrap {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+      }
+      .watch {
+        width: min(460px, 90%);
+        height: auto;
+        filter: drop-shadow(0 18px 50px rgba(0, 0, 0, 0.5));
+      }
+
+      .section {
+        padding: 54px 0;
+      }
+      .section h2 {
+        font-size: clamp(26px, 4vw, 36px);
+        margin: 0 0 18px;
+      }
+      .kicker {
+        color: var(--muted);
+        max-width: 780px;
+      }
+      .specs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 18px;
+      }
+      .spec {
+        background: rgba(2, 6, 23, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        padding: 16px;
+      }
+      .spec h3 {
+        margin: 6px 0 6px;
+        font-size: 18px;
+      }
+      .icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #081224;
+      }
+      .spec p {
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .preorder {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+      .card {
+        background: rgba(2, 6, 23, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        padding: 18px;
+      }
+      form {
+        display: grid;
+        gap: 14px;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin: 2px 0 6px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      input,
+      select {
+        appearance: none;
+        background: #0b1224;
+        color: var(--text);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 12px;
+        padding: 12px 12px;
+        font: inherit;
+      }
+      input:focus,
+      select:focus,
+      button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--ring);
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .qty {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .qty button {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: #0b1224;
+        color: var(--text);
+        font-weight: 800;
+      }
+      .summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #0b1224;
+        border: 1px dashed rgba(148, 163, 184, 0.35);
+        padding: 12px;
+        border-radius: 12px;
+      }
+      .total {
+        font-weight: 800;
+        font-size: 20px;
+      }
+      .success {
+        display: none;
+      }
+      .success.active {
+        display: block;
+      }
+      .form.active {
+        display: none;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(103, 232, 249, 0.16);
+        color: #bff5ff;
+        border: 1px solid rgba(103, 232, 249, 0.25);
+        font-weight: 600;
+      }
+      .progress {
+        height: 8px;
+        border-radius: 999px;
+        background: #0b1224;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        overflow: hidden;
+      }
+      .progress > i {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        width: 40%;
+      }
+      .terms {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      footer {
+        color: var(--muted);
+        padding: 40px 0;
+        text-align: center;
+      }
+
+      @media (max-width: 980px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+        .preorder {
+          grid-template-columns: 1fr;
+        }
+        .specs {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 640px) {
+        .specs {
+          grid-template-columns: 1fr;
+        }
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <div class="brand">
+          <span class="brand-dot" aria-hidden="true"></span> Smart Watch One
+        </div>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="#specs">Specs</a>
+          <a href="#preorder">Pre-Order</a>
+          <a href="#preorder" class="cta-mini">Reserve now</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <div class="eyebrow">New release</div>
+            <h1>
+              Meet Smart Watch One — the minimalist smartwatch that does more
+              with less
+            </h1>
+            <p class="lead">
+              A feather‑light aluminum body, a vibrant always‑on AMOLED display
+              and week‑long battery life. Track your health, stay connected, and
+              move freely.
+            </p>
+            <div class="actions">
+              <a class="btn btn-primary" href="#preorder"
+                >Pre‑order from $249</a
+              >
+              <a class="btn" href="#specs">View full specs</a>
+            </div>
+            <div class="meta">
+              <span class="pill">Ships in September</span>
+              <span class="pill">Free 2‑year warranty</span>
+              <span class="pill">30‑day returns</span>
+            </div>
+          </div>
+          <div class="visual">
+            <div class="glow" aria-hidden="true"></div>
+            <div class="visual-card">
+              <img
+                class="hero-bg"
+                aria-hidden="true"
+                alt=""
+                src='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200"%3E%3Cdefs%3E%3ClinearGradient id="g" x1="0" x2="1" y1="0" y2="1"%3E%3Cstop stop-color="%236ee7ff"/%3E%3Cstop offset="1" stop-color="%23a78bfa"/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width="100%25" height="100%25" fill="%230b1020"/%3E%3Cellipse cx="1200" cy="280" rx="540" ry="220" fill="url(%23g)" opacity="0.25"/%3E%3Cellipse cx="280" cy="960" rx="620" ry="260" fill="url(%23g)" opacity="0.20"/%3E%3C/svg%3E'
+              />
+              <div class="watch-wrap">
+                <svg
+                  class="watch"
+                  viewBox="0 0 880 880"
+                  xmlns="http://www.w3.org/2000/svg"
+                  role="img"
+                  aria-labelledby="watchTitle watchDesc"
+                >
+                  <title id="watchTitle">
+                    Smart Watch One smartwatch render
+                  </title>
+                  <desc id="watchDesc">
+                    A modern minimalist smartwatch with rounded square face and
+                    silicone strap shown at a slight angle.
+                  </desc>
+                  <defs>
+                    <linearGradient id="faceG" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#6ee7ff" />
+                      <stop offset="1" stop-color="#a78bfa" />
+                    </linearGradient>
+                    <linearGradient id="edgeG" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#111827" />
+                      <stop offset="1" stop-color="#0b1224" />
+                    </linearGradient>
+                    <filter
+                      id="softShadow"
+                      x="-50%"
+                      y="-50%"
+                      width="200%"
+                      height="200%"
+                    >
+                      <feDropShadow
+                        dx="0"
+                        dy="28"
+                        stdDeviation="22"
+                        flood-color="#000"
+                        flood-opacity="0.6"
+                      />
+                    </filter>
+                  </defs>
+
+                  <rect
+                    x="390"
+                    y="-40"
+                    width="100"
+                    height="280"
+                    rx="40"
+                    fill="#0f1a30"
+                  />
+                  <rect
+                    x="390"
+                    y="640"
+                    width="100"
+                    height="280"
+                    rx="40"
+                    fill="#0f1a30"
+                  />
+
+                  <g filter="url(#softShadow)">
+                    <rect
+                      x="190"
+                      y="180"
+                      width="500"
+                      height="520"
+                      rx="110"
+                      fill="url(#edgeG)"
+                    />
+                    <rect
+                      x="220"
+                      y="210"
+                      width="440"
+                      height="460"
+                      rx="96"
+                      fill="#050a16"
+                    />
+                    <rect
+                      x="240"
+                      y="230"
+                      width="400"
+                      height="420"
+                      rx="84"
+                      fill="#050a16"
+                      stroke="rgba(255,255,255,.06)"
+                    />
+
+                    <rect
+                      x="250"
+                      y="240"
+                      width="380"
+                      height="400"
+                      rx="70"
+                      fill="#07111f"
+                    />
+                    <rect
+                      x="250"
+                      y="240"
+                      width="380"
+                      height="400"
+                      rx="70"
+                      fill="url(#faceG)"
+                      opacity=".22"
+                    />
+
+                    <circle cx="440" cy="440" r="148" fill="#0b1224" />
+                    <circle cx="440" cy="440" r="144" fill="#091225" />
+                    <circle
+                      cx="440"
+                      cy="440"
+                      r="140"
+                      fill="#0b1224"
+                      opacity=".5"
+                    />
+                    <g transform="translate(440 440)">
+                      <circle r="6" fill="#9fe5ff" />
+                      <rect
+                        x="-6"
+                        y="-190"
+                        width="12"
+                        height="50"
+                        rx="6"
+                        fill="#6ee7ff"
+                      />
+                      <rect
+                        x="-6"
+                        y="140"
+                        width="12"
+                        height="50"
+                        rx="6"
+                        fill="#a78bfa"
+                      />
+                      <rect
+                        x="140"
+                        y="-6"
+                        width="50"
+                        height="12"
+                        rx="6"
+                        fill="#6ee7ff"
+                      />
+                      <rect
+                        x="-190"
+                        y="-6"
+                        width="50"
+                        height="12"
+                        rx="6"
+                        fill="#a78bfa"
+                      />
+                    </g>
+                  </g>
+
+                  <rect
+                    x="690"
+                    y="380"
+                    width="24"
+                    height="120"
+                    rx="10"
+                    fill="#141f36"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="specs" class="section">
+        <div class="container">
+          <h2>Specifications</h2>
+          <p class="kicker">
+            Engineered for all‑day comfort and performance. Smart Watch One
+            blends premium materials with thoughtful software to keep you
+            moving.
+          </p>
+          <div class="specs">
+            <div class="spec">
+              <div class="icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M13 2v8h8" stroke="#081224" stroke-width="2" />
+                  <path
+                    d="M21 11v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9l7 8Z"
+                    stroke="#081224"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <h3>AMOLED display</h3>
+              <p>
+                1.8" always‑on AMOLED, 1000 nits peak brightness with sapphire
+                coating.
+              </p>
+            </div>
+            <div class="spec">
+              <div class="icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2v20M2 12h20"
+                    stroke="#081224"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <h3>Ultra battery</h3>
+              <p>
+                Up to 10 days on a single charge. 15 minutes gives 50% with
+                FastCharge.
+              </p>
+            </div>
+            <div class="spec">
+              <div class="icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 3l7.794 4.5v9L12 21 4.206 16.5v-9L12 3Z"
+                    stroke="#081224"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <h3>Water resistant</h3>
+              <p>5‑ATM water resistance. Track swims, shower without worry.</p>
+            </div>
+            <div class="spec">
+              <div class="icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    stroke="#081224"
+                    stroke-width="2"
+                  />
+                  <path d="M12 7v5l3 3" stroke="#081224" stroke-width="2" />
+                </svg>
+              </div>
+              <h3>Health sensors</h3>
+              <p>
+                HR, SpO₂, sleep, stress and GPS for accurate activity tracking.
+              </p>
+            </div>
+            <div class="spec">
+              <div class="icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    x="2"
+                    y="7"
+                    width="20"
+                    height="10"
+                    rx="5"
+                    stroke="#081224"
+                    stroke-width="2"
+                  />
+                  <circle cx="8" cy="12" r="2" fill="#081224" />
+                  <circle cx="16" cy="12" r="2" fill="#081224" />
+                </svg>
+              </div>
+              <h3>Bluetooth 5.3</h3>
+              <p>
+                Seamless notifications and calls. Works with iOS and Android.
+              </p>
+            </div>
+            <div class="spec">
+              <div class="icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 17h16M8 21h8M7 3h10l2 14H5L7 3Z"
+                    stroke="#081224"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <h3>Premium build</h3>
+              <p>Ultra‑light aluminum body with soft‑touch silicone strap.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="preorder" class="section">
+        <div class="container">
+          <h2>Pre‑order Smart Watch One</h2>
+          <p class="kicker">
+            Be the first to wear it. Early supporters get an automatic launch
+            discount and priority shipping.
+          </p>
+          <div class="preorder">
+            <div class="card">
+              <div class="badge">Early‑bird window open — limited units</div>
+              <div style="height: 10px"></div>
+              <div class="progress" aria-label="Pre‑order progress">
+                <i style="width: 62%"></i>
+              </div>
+              <p class="hint">62% of our first batch is already reserved.</p>
+              <ul class="hint" style="margin: 12px 0 0 18px">
+                <li>Free shipping to 40+ countries</li>
+                <li>2‑year limited warranty included</li>
+                <li>Ships September 2025</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="form" id="formWrap">
+                <form id="preorderForm" novalidate>
+                  <div class="row">
+                    <div class="field">
+                      <label for="name">Full name</label>
+                      <input
+                        id="name"
+                        name="name"
+                        autocomplete="name"
+                        placeholder="Alex Doe"
+                        required
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="email">Email</label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autocomplete="email"
+                        placeholder="alex@example.com"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="field">
+                      <label for="variant">Choose variant</label>
+                      <select id="variant" name="variant">
+                        <option value="standard">Standard — $249</option>
+                        <option value="pro">Pro — $349</option>
+                      </select>
+                      <div class="hint">
+                        Pro adds sapphire lens, ECG, and wireless charging.
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label for="color">Color</label>
+                      <select id="color" name="color">
+                        <option>Obsidian Black</option>
+                        <option>Arctic Silver</option>
+                        <option>Sakura Pink</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="field">
+                      <label for="size">Strap size</label>
+                      <select id="size" name="size">
+                        <option>Small (140–165 mm)</option>
+                        <option selected>Medium (160–190 mm)</option>
+                        <option>Large (185–220 mm)</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label>Quantity</label>
+                      <div class="qty">
+                        <button
+                          type="button"
+                          id="dec"
+                          aria-label="Decrease quantity"
+                        >
+                          −
+                        </button>
+                        <input
+                          id="quantity"
+                          name="quantity"
+                          inputmode="numeric"
+                          pattern="[0-9]*"
+                          value="1"
+                          style="width: 70px; text-align: center"
+                          aria-label="Quantity"
+                        />
+                        <button
+                          type="button"
+                          id="inc"
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="summary">
+                    <div>
+                      <div>
+                        <strong id="planLabel">Standard</strong> •
+                        <span id="colorLabel">Obsidian Black</span>
+                      </div>
+                      <div class="hint" id="priceHint">
+                        Launch discount applied
+                      </div>
+                    </div>
+                    <div class="total" id="total">$249</div>
+                  </div>
+
+                  <label class="terms"
+                    ><input type="checkbox" id="tos" />
+                    <span
+                      >I agree to the terms and to be contacted about my
+                      pre‑order.</span
+                    ></label
+                  >
+
+                  <button class="btn btn-primary" id="submitBtn" type="submit">
+                    Pre‑order now
+                  </button>
+                  <div
+                    id="errors"
+                    class="hint"
+                    role="status"
+                    aria-live="polite"
+                  ></div>
+                </form>
+              </div>
+
+              <div class="success" id="success">
+                <h3>Thank you — your spot is reserved</h3>
+                <p class="kicker">
+                  We sent a confirmation to <span id="emailOut"></span>. You’ll
+                  receive updates as your Smart Watch One moves into production.
+                </p>
+                <div class="summary" style="margin-top: 12px">
+                  <div>
+                    <div>
+                      <strong id="sumVariant">Standard</strong> •
+                      <span id="sumColor">Obsidian Black</span> •
+                      <span id="sumSize">Medium</span>
+                    </div>
+                    <div class="hint"><span id="sumQty">1</span> unit</div>
+                  </div>
+                  <div class="total" id="sumTotal">$249</div>
+                </div>
+                <div class="actions" style="margin-top: 18px">
+                  <a class="btn" href="#" id="another"
+                    >Place another pre‑order</a
+                  >
+                  <a class="btn btn-primary" href="#specs">Explore specs</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        © Smart Watch One. Concept launch page for demo purposes.
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        const $ = (q, c = document) => c.querySelector(q);
+        const $$ = (q, c = document) => Array.from(c.querySelectorAll(q));
+        const form = $("#preorderForm");
+        const errors = $("#errors");
+        const submitBtn = $("#submitBtn");
+        const tos = $("#tos");
+        const variant = $("#variant");
+        const color = $("#color");
+        const size = $("#size");
+        const qtyInput = $("#quantity");
+        const dec = $("#dec");
+        const inc = $("#inc");
+        const total = $("#total");
+        const planLabel = $("#planLabel");
+        const colorLabel = $("#colorLabel");
+        const priceHint = $("#priceHint");
+        const nameEl = $("#name");
+        const emailEl = $("#email");
+        const success = $("#success");
+        const formWrap = $("#formWrap");
+        const emailOut = $("#emailOut");
+        const sumVariant = $("#sumVariant");
+        const sumColor = $("#sumColor");
+        const sumSize = $("#sumSize");
+        const sumQty = $("#sumQty");
+        const sumTotal = $("#sumTotal");
+        const another = $("#another");
+
+        const BASE = { standard: 249, pro: 349 };
+        const DISCOUNT = 0.1;
+
+        function fmt(n) {
+          return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 0,
+          }).format(n);
+        }
+
+        function getQty() {
+          const v = parseInt(qtyInput.value.replace(/\D/g, ""), 10);
+          return Number.isFinite(v) && v > 0 ? Math.min(99, v) : 1;
+        }
+
+        function calc() {
+          const v = variant.value;
+          const qty = getQty();
+          const base = BASE[v];
+          const discounted = Math.round(base * (1 - DISCOUNT));
+          const totalPrice = discounted * qty;
+          total.textContent = fmt(totalPrice);
+          planLabel.textContent = v === "pro" ? "Pro" : "Standard";
+          colorLabel.textContent = color.value;
+          priceHint.textContent =
+            "Launch discount applied (" + fmt(base - discounted) + " off)";
+          qtyInput.value = String(qty);
+          return { totalPrice, discounted, qty, v };
+        }
+
+        dec.addEventListener("click", () => {
+          qtyInput.value = Math.max(1, getQty() - 1);
+          calc();
+        });
+        inc.addEventListener("click", () => {
+          qtyInput.value = Math.min(99, getQty() + 1);
+          calc();
+        });
+        qtyInput.addEventListener("input", calc);
+        variant.addEventListener("change", calc);
+        color.addEventListener("change", calc);
+
+        function validate() {
+          const issues = [];
+          if (!nameEl.value.trim()) issues.push("Please enter your name.");
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim()))
+            issues.push("Enter a valid email.");
+          if (!tos.checked) issues.push("Please accept the terms.");
+          errors.textContent = issues.join(" ");
+          return issues.length === 0;
+        }
+
+        ["input", "change"].forEach((evt) => {
+          form.addEventListener(evt, () => {
+            if (errors.textContent) validate();
+          });
+        });
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          if (!validate()) return;
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Reserving…";
+          const { totalPrice, discounted, qty, v } = calc();
+          const order = {
+            id: "ord_" + Math.random().toString(36).slice(2, 9),
+            name: nameEl.value.trim(),
+            email: emailEl.value.trim(),
+            variant: v,
+            color: color.value,
+            size: size.value,
+            unitPrice: discounted,
+            qty,
+            total: totalPrice,
+            ts: Date.now(),
+          };
+          try {
+            const key = "nova-preorders";
+            const arr = JSON.parse(localStorage.getItem(key) || "[]");
+            arr.push(order);
+            localStorage.setItem(key, JSON.stringify(arr));
+          } catch {}
+          setTimeout(() => {
+            formWrap.classList.add("active");
+            success.classList.add("active");
+            emailOut.textContent = order.email;
+            sumVariant.textContent =
+              order.variant === "pro" ? "Pro" : "Standard";
+            sumColor.textContent = order.color;
+            sumSize.textContent = order.size.split("(")[0].trim();
+            sumQty.textContent = String(order.qty);
+            sumTotal.textContent = fmt(order.total);
+          }, 600);
+        });
+
+        another.addEventListener("click", (e) => {
+          e.preventDefault();
+          form.reset();
+          tos.checked = false;
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Pre‑order now";
+          success.classList.remove("active");
+          formWrap.classList.remove("active");
+          calc();
+          nameEl.focus();
+        });
+
+        const links = $$('.nav-links a[href^="#"]');
+        function onScroll() {
+          const pos = scrollY + 120;
+          let current;
+          ["specs", "preorder"].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el && el.offsetTop <= pos) current = id;
+          });
+          links.forEach((a) =>
+            a.setAttribute(
+              "aria-current",
+              a.getAttribute("href") === "#" + current ? "true" : "false"
+            )
+          );
+        }
+        document.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+        calc();
+      })();
+    </script>
+  </body>
+</html>

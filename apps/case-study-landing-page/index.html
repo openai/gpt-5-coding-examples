@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Customer Case Study - XYZ Corp</title>
+    <meta name="description" content="A clean, single‑page case study highlighting how a SaaS platform helped XYZ Corp overcome key challenges, implement a solution, and achieve measurable business outcomes." />
+    <meta name="theme-color" content="#0ea5e9" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #0f172a; /* slate-900 */
+        --muted: #475569; /* slate-600 */
+        --border: #e2e8f0; /* slate-200 */
+        --surface: #ffffff;
+        --primary: #0ea5e9; /* sky-500 */
+        --primary-700: #0369a1; /* sky-700 */
+        --accent: #22c55e; /* green-500 */
+        --shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+        --radius: 14px;
+      }
+
+      *, *::before, *::after { box-sizing: border-box; }
+      html:focus-within { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        background: var(--bg);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; text-decoration: none; }
+      img, svg { display: block; max-width: 100%; }
+
+      .container { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 1.25rem; }
+
+      /* Header */
+      header.site-header {
+        position: sticky; top: 0; z-index: 50;
+        backdrop-filter: saturate(160%) blur(8px);
+        background: color-mix(in oklab, #ffffff 82%, transparent);
+        border-bottom: 1px solid rgba(226,232,240,0.7);
+      }
+      .nav { display: flex; align-items: center; justify-content: space-between; min-height: 68px; }
+      .brand { display: inline-flex; align-items: center; gap: .6rem; font-weight: 800; letter-spacing: -0.02em; }
+      .badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-weight: 900; background: linear-gradient(135deg, var(--primary), #22d3ee); }
+      .nav-links { display: flex; gap: .9rem; align-items: center; }
+      .nav-links a { padding: .35rem .6rem; border-radius: 999px; font-weight: 600; color: #0f172a; opacity: .82; }
+      .nav-links a[aria-current="page"], .nav-links a:hover { opacity: 1; background: #f1f5f9; }
+
+      /* Hero */
+      .hero {
+        position: relative; overflow: hidden;
+        background: radial-gradient(900px 600px at 90% -10%, #e0f2fe, transparent),
+                    linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 4.25rem 0 2.25rem;
+      }
+      .hero-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 2.25rem; align-items: center; }
+      .eyebrow { display: inline-flex; align-items: center; gap: .5rem; background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; border-radius: 999px; padding: .35rem .7rem; font-weight: 700; font-size: .85rem; }
+      .hero h1 { margin: .6rem 0 .8rem; font-size: clamp(2rem, 1.4rem + 2.5vw, 3.1rem); line-height: 1.07; letter-spacing: -0.02em; }
+      .lead { color: var(--muted); font-size: clamp(1rem, .9rem + .8vw, 1.25rem); margin: 0 0 1.1rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .5rem; }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .85rem 1.1rem; border: 1px solid transparent; border-radius: 999px; font-weight: 700; cursor: pointer; transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
+      .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 8px 22px rgba(14,165,233,.28); }
+      .btn-primary:hover { transform: translateY(-1px); background: var(--primary-700); }
+      .btn-secondary { background: #f1f5f9; border-color: var(--border); color: var(--text); }
+
+      .hero-visual { position: relative; aspect-ratio: 4/3; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); overflow: hidden; }
+      .toolbar { display: flex; align-items: center; gap: .35rem; padding: .55rem .7rem; background: #f1f5f9; border-bottom: 1px solid var(--border); }
+      .dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+      .mock { padding: 1rem; display: grid; gap: .6rem; }
+      .skel { height: 10px; border-radius: 6px; background: linear-gradient(90deg,#e2e8f0,#ffffff,#e2e8f0); background-size: 200% 100%; animation: shimmer 2.2s linear infinite; }
+      @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+      /* Sections */
+      section { padding: 3.2rem 0; }
+      .section-head { text-align: center; max-width: 760px; margin: 0 auto 1.6rem; }
+      .section-head h2 { margin: 0 0 .4rem; font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); }
+      .section-head p { margin: 0; color: var(--muted); }
+
+      /* Problem / Solution cards */
+      .cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+      .card { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 1.1rem; box-shadow: var(--shadow); display: grid; gap: .5rem; }
+      .card h3 { margin: .2rem 0 .2rem; font-size: 1.05rem; }
+      .card p { margin: 0; color: var(--muted); }
+      .icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: #e0f2fe; color: #075985; }
+
+      /* Metrics */
+      .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+      .metric { border: 1px solid var(--border); background: #ffffff; border-radius: 12px; padding: 1rem; box-shadow: var(--shadow); text-align: center; }
+      .metric .value { font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.4rem); font-weight: 800; letter-spacing: -0.02em; }
+      .metric .label { color: var(--muted); }
+
+      /* Testimonial */
+      .quote { border: 1px solid var(--border); background: #ffffff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; max-width: 880px; margin: 0 auto; position: relative; }
+      .quote p { font-size: 1.05rem; margin: 0 0 .75rem; }
+      .person { display: flex; align-items: center; gap: .7rem; color: var(--muted); }
+      .avatar { width: 42px; height: 42px; border-radius: 50%; background: #e2e8f0; display: grid; place-items: center; font-weight: 800; color: #334155; }
+
+      /* CTA */
+      .cta { border: 1px dashed var(--border); background: #f8fafc; border-radius: var(--radius); padding: 1.2rem; display: grid; gap: .6rem; box-shadow: var(--shadow); }
+      .cta .row { display: grid; grid-template-columns: 2fr 1.2fr auto; gap: .5rem; }
+      input[type="email"], input[type="text"] { border: 1px solid var(--border); background: #ffffff; border-radius: 10px; padding: .75rem .85rem; font-size: 1rem; width: 100%; }
+      .success { display: none; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; padding: .6rem .75rem; border-radius: 10px; font-weight: 600; }
+      .cta.success .success { display: block; }
+
+      /* Footer */
+      footer { border-top: 1px solid var(--border); padding: 2rem 0; color: var(--muted); font-size: .95rem; }
+
+      /* Responsive */
+      @media (max-width: 980px) {
+        .hero-grid { grid-template-columns: 1fr; }
+        .cards { grid-template-columns: 1fr; }
+        .metrics { grid-template-columns: repeat(2,1fr); }
+        .cta .row { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav" role="navigation" aria-label="Primary">
+        <a href="#overview" class="brand"><span class="badge">CS</span> Case Study</a>
+        <nav class="nav-links" aria-label="Sections">
+          <a href="#overview" data-nav>Overview</a>
+          <a href="#problem" data-nav>Problem</a>
+          <a href="#solution" data-nav>Solution</a>
+          <a href="#results" data-nav>Results</a>
+          <a href="#testimonial" data-nav>Testimonial</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="app" tabindex="-1">
+      <section class="hero" id="overview" aria-label="Case overview">
+        <div class="container hero-grid">
+          <div>
+            <span class="eyebrow">Customer Case Study — XYZ Corp</span>
+            <h1>How XYZ Corp transformed operations with a modern SaaS platform</h1>
+            <p class="lead">Goal: Highlight a SaaS client success story. XYZ Corp partnered with our platform to streamline workflows, reduce costs, and accelerate growth.</p>
+            <div class="actions">
+              <a class="btn btn-primary" href="#results">See results</a>
+              <a class="btn btn-secondary" href="#solution">Explore solution</a>
+            </div>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="toolbar"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <div class="mock">
+              <div class="skel" style="height:14px; width: 70%"></div>
+              <div class="skel" style="height:14px; width: 52%"></div>
+              <div class="skel" style="height:140px; border-radius: 10px"></div>
+              <div class="skel" style="height:10px; width: 40%"></div>
+              <div class="skel" style="height:10px; width: 60%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="problem" aria-label="Problem and context">
+        <div class="container">
+          <div class="section-head">
+            <h2>The challenge</h2>
+            <p>Disjointed tools led to slow handoffs, limited visibility, and rising costs.</p>
+          </div>
+          <div class="cards">
+            <article class="card">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v4H4zM4 10h10v4H4zM4 16h16v4H4z"/></svg>
+              </div>
+              <h3>Fragmented workflow</h3>
+              <p>Teams hopped between 5+ tools, causing delays and duplicate work.</p>
+            </article>
+            <article class="card">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l7 7-7 7-7-7 7-7zm0 14l7 7H5l7-7z"/></svg>
+              </div>
+              <h3>Limited visibility</h3>
+              <p>Leadership lacked real‑time metrics on throughput, quality, and blockers.</p>
+            </article>
+            <article class="card">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-8.5L2 8h7z"/></svg>
+              </div>
+              <h3>Escalating costs</h3>
+              <p>License sprawl and manual processes increased operating expenses.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="solution" aria-label="Solution">
+        <div class="container">
+          <div class="section-head">
+            <h2>The solution</h2>
+            <p>A unified SaaS platform with automation, live insights, and guardrails.</p>
+          </div>
+          <div class="cards">
+            <article class="card">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+              </div>
+              <h3>Automated workflows</h3>
+              <p>Playbooks reduced handoffs with automated approvals and notifications.</p>
+            </article>
+            <article class="card">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm10 8h8V3h-8v18zM3 21h8v-6H3v6z"/></svg>
+              </div>
+              <h3>Live dashboards</h3>
+              <p>Real‑time metrics on cycle time, throughput, and quality trends.</p>
+            </article>
+            <article class="card">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-3.33 0-10 1.67-10 5v1h20v-1c0-3.33-6.67-5-10-5z"/></svg>
+              </div>
+              <h3>Enterprise guardrails</h3>
+              <p>SSO, audit logs, and policy checks ensured compliance at scale.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="results" aria-label="Results and metrics">
+        <div class="container">
+          <div class="section-head">
+            <h2>Tangible results</h2>
+            <p>Fast time‑to‑value and measurable business impact.</p>
+          </div>
+          <div class="metrics" role="list">
+            <div class="metric" role="listitem">
+              <div class="value" data-countup="38">0%</div>
+              <div class="label">Faster cycle time</div>
+            </div>
+            <div class="metric" role="listitem">
+              <div class="value" data-countup="62" data-suffix="%">0%</div>
+              <div class="label">Fewer support tickets</div>
+            </div>
+            <div class="metric" role="listitem">
+              <div class="value" data-countup="2.4" data-suffix="×">0×</div>
+              <div class="label">Return on investment</div>
+            </div>
+            <div class="metric" role="listitem">
+              <div class="value" data-countup="6" data-suffix=" wks">0 wks</div>
+              <div class="label">Payback period</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="testimonial" aria-label="Testimonial">
+        <div class="container">
+          <div class="section-head">
+            <h2>What XYZ Corp says</h2>
+            <p>Direct feedback from the team that led the change.</p>
+          </div>
+          <figure class="quote" aria-label="Testimonial quote">
+            <p>“Within weeks we had clear visibility, automated approvals, and a dramatic drop in rework. The platform paid for itself in the first quarter.”</p>
+            <figcaption class="person">
+              <div class="avatar" aria-hidden="true">JL</div>
+              <div>
+                <strong>Jordan Lee</strong>
+                <div>VP Operations, XYZ Corp</div>
+              </div>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="cta" aria-label="Call to action">
+        <div class="container">
+          <div class="cta" role="form" aria-labelledby="cta-title">
+            <div>
+              <h3 id="cta-title" style="margin:0">Get the full case study</h3>
+              <p class="muted" style="margin:.15rem 0 0">Receive a shareable PDF and a checklist of best practices used by XYZ Corp</p>
+            </div>
+            <div class="row">
+              <label class="sr-only" for="name" style="position:absolute;left:-9999px">Name</label>
+              <input id="name" type="text" placeholder="Your name" autocomplete="name" />
+              <label class="sr-only" for="email" style="position:absolute;left:-9999px">Work email</label>
+              <input id="email" type="email" placeholder="Work email" autocomplete="email" />
+              <button id="ctaBtn" class="btn btn-primary" type="button">Send me the PDF</button>
+            </div>
+            <div class="success" role="status" aria-live="polite">Thanks! Check your inbox for the case study.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <div>© <span id="year"></span> Case Study — XYZ Corp</div>
+        <div class="muted">Clean, persuasive single‑page case study.</div>
+      </div>
+    </footer>
+
+    <script>
+      // Lightweight SPA-ish behavior: hash-based active nav + smooth counting
+      (function() {
+        const links = document.querySelectorAll('[data-nav]');
+        const setActive = () => {
+          let hash = window.location.hash || '#overview';
+          links.forEach(a => a.removeAttribute('aria-current'));
+          const active = document.querySelector(`.nav-links a[href="${hash}"]`);
+          if (active) active.setAttribute('aria-current','page');
+        };
+        window.addEventListener('hashchange', setActive);
+        setActive();
+
+        // Count-up metrics when visible
+        const els = document.querySelectorAll('[data-countup]');
+        const fmt = (n) => Number(n).toLocaleString(undefined,{ maximumFractionDigits: 1 });
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const el = entry.target;
+            io.unobserve(el);
+            const target = parseFloat(el.dataset.countup);
+            const suffix = el.dataset.suffix || '%';
+            const dur = 900; // ms
+            const start = performance.now();
+            const startVal = 0;
+            const step = (t) => {
+              const p = Math.min(1, (t - start) / dur);
+              const val = startVal + (target - startVal) * (1 - Math.pow(1 - p, 3));
+              el.textContent = fmt(val) + suffix;
+              if (p < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          });
+        }, { threshold: 0.4 });
+        els.forEach(el => io.observe(el));
+
+        // CTA mock submit
+        const btn = document.getElementById('ctaBtn');
+        const cta = document.querySelector('.cta');
+        btn.addEventListener('click', () => {
+          const email = document.getElementById('email').value.trim();
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            btn.textContent = 'Enter a valid email';
+            setTimeout(() => (btn.textContent = 'Send me the PDF'), 1200);
+            return;
+          }
+          cta.classList.add('success');
+          btn.disabled = true;
+          btn.textContent = 'Sent';
+        });
+
+        // Footer year
+        document.getElementById('year').textContent = new Date().getFullYear();
+      })();
+    </script>
+  </body>
+</html>
+

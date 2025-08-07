@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Micro Habit Tracker</title>
+  <style>
+    :root {
+      --bg: #0f1224;
+      --panel: #161a34;
+      --muted: #8b90b6;
+      --text: #e8eaf6;
+      --good: #27c193;
+      --bad: #ff5964;
+      --warn: #ffb020;
+      --accent1: #ff7a59;
+      --accent2: #8a5cff;
+      --accent3: #07c6e8;
+      --card-glow: 0 10px 30px rgba(138, 92, 255, 0.15);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --cell: 36px;
+      --cell-m: 30px;
+      --shadow-1: 0 2px 10px rgba(0,0,0,0.18);
+      --shadow-2: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 90% -10%, rgba(255, 143, 163, 0.2), transparent 60%),
+                  radial-gradient(1200px 800px at -10% 90%, rgba(148, 112, 255, 0.25), transparent 60%),
+                  var(--bg);
+    }
+
+    header.hero {
+      background: linear-gradient(135deg, var(--accent2), var(--accent1) 70%);
+      padding: 28px 18px 18px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow-2);
+    }
+    .hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+    h1.title {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h1.title span.spark { font-size: 22px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25)); }
+    .tagline { margin: 4px 0 0 0; opacity: 0.95; font-size: 14px; }
+
+    .hero-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    button, .btn {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      transition: transform 0.05s ease, background 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: var(--shadow-1);
+      user-select: none;
+    }
+    button:hover, .btn:hover { background: rgba(255,255,255,0.18); }
+    button:active, .btn:active { transform: translateY(1px); }
+    .btn-primary { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.35); }
+    .btn-danger { background: rgba(255, 89, 100, 0.18); border-color: rgba(255,89,100,0.6); }
+    .btn-good { background: rgba(39, 193, 147, 0.22); border-color: rgba(39,193,147,0.55); }
+
+    main { max-width: 1100px; margin: 18px auto 48px; padding: 0 12px; }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      box-shadow: var(--card-glow);
+      padding: 12px;
+    }
+
+    .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; margin-bottom: 12px; }
+    .range-controls { display: flex; gap: 6px; align-items: center; }
+    .range-label { font-weight: 700; letter-spacing: 0.4px; background: linear-gradient(90deg, #fff, #eee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .today-chip { padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); font-size: 12px; }
+
+    .skip-toggle { display: flex; gap: 8px; align-items: center; }
+    .skip-toggle input { transform: translateY(1px); }
+    .skip-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(255,176,32,0.15); border: 1px solid rgba(255,176,32,0.45); }
+
+    .grid-wrap { overflow-x: auto; padding-bottom: 6px; }
+    .grid {
+      min-width: 680px;
+      display: grid;
+      grid-auto-rows: minmax(44px, auto);
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+    .grid-header, .grid-row { display: contents; }
+
+    .col-title { position: sticky; left: 0; z-index: 2; background: linear-gradient(90deg, rgba(22,26,52,0.96), rgba(22,26,52,0.92)); backdrop-filter: blur(6px); border-right: 1px solid rgba(255,255,255,0.06); overflow: hidden; padding-right: 8px; }
+
+    .cell { border-bottom: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); padding: 6px; display: flex; align-items: center; justify-content: center; }
+    .cell:first-child { justify-content: flex-start; padding: 8px 10px; }
+
+    .day-head { font-size: 12px; letter-spacing: 0.3px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; user-select: none; cursor: pointer; }
+    .day-head b { color: var(--text); font-size: 13px; }
+    .day-head .today { color: var(--good); font-weight: 700; font-size: 11px; }
+    .day-head.selected { background: rgba(138, 92, 255, 0.08); border-radius: 8px; outline: 1px solid rgba(138,92,255,0.35); }
+
+    .habit-meta { display: grid; grid-template-columns: 12px minmax(160px, 1fr) auto auto; align-items: center; gap: 10px; width: 100%; min-width: 0; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(0,0,0,0.3); flex-shrink: 0; }
+    .habit-name { font-weight: 700; letter-spacing: 0.3px; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .streak { font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: rgba(39,193,147,0.16); color: #bff2df; border: 1px solid rgba(39,193,147,0.4); flex-shrink: 0; justify-self: end; }
+    .streak .fire { filter: drop-shadow(0 2px 6px rgba(39,193,147,0.35)); }
+
+    .tick { width: var(--cell); height: var(--cell); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.18); display: grid; place-items: center; cursor: pointer; user-select: none; transition: background 0.15s ease, transform 0.05s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+    .tick:hover { border-color: rgba(255,255,255,0.35); }
+    .tick:active { transform: translateY(1px); }
+    .tick.done { background: linear-gradient(180deg, rgba(39,193,147,0.25), rgba(39,193,147,0.22)); border-style: solid; border-color: rgba(39,193,147,0.55); box-shadow: 0 6px 16px rgba(39,193,147,0.18) inset, 0 8px 16px rgba(0,0,0,0.14); }
+    .tick.done .check { opacity: 1; transform: scale(1); }
+    .tick .check { opacity: 0; transform: scale(0.6); transition: transform 0.15s ease, opacity 0.15s ease; font-weight: 800; letter-spacing: 1px; }
+    .tick.skip { background: repeating-linear-gradient(45deg, rgba(255,176,32,0.12), rgba(255,176,32,0.12) 8px, rgba(255,176,32,0.0) 8px, rgba(255,176,32,0.0) 16px); border-color: rgba(255,176,32,0.45); color: rgba(255,176,32,0.9); cursor: not-allowed; filter: grayscale(0.2) brightness(1.05); }
+    .tick.skip:hover { border-color: rgba(255,176,32,0.55); }
+
+    .habit-actions { display: flex; align-items: center; gap: 6px; margin-left: 8px; flex-shrink: 0; justify-self: end; position: relative; }
+    .menu-btn { font-weight: 800; display: inline-flex; align-items: center; justify-content: center; width: auto; height: auto; padding: 2px 6px; background: transparent; border: none; box-shadow: none; color: var(--muted); font-size: 20px; }
+    .menu-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); border-radius: 8px; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(6, 8, 22, 0.6); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 16px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: 100%; max-width: 520px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; box-shadow: var(--shadow-2), var(--card-glow); padding: 14px; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .modal-title { margin: 0; font-size: 18px; letter-spacing: 0.3px; }
+    .modal-body { display: grid; gap: 10px; padding: 8px 0; }
+    .form-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+    .form-row label { font-size: 13px; color: var(--muted); }
+    .modal input[type="text"] { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: var(--text); }
+    .modal input[type="color"] { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: transparent; padding: 0; }
+    .modal-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
+    .modal-actions .left, .modal-actions .right { display: flex; gap: 8px; }
+    .icon-btn { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); cursor: pointer; position: relative; font-size: 15px; line-height: 1; }
+    .icon-btn:hover { background: rgba(255,255,255,0.12); }
+    .habit-actions .menu-btn { width: auto; height: auto; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; box-shadow: none; font-size: 20px; padding: 2px 6px; color: var(--muted); }
+    .habit-actions .menu-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+
+    .footerbar { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 8px; flex-wrap: wrap; }
+    .add-form { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: var(--radius); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .add-form input[type="text"] { width: 240px; max-width: 55vw; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: var(--text); }
+    .add-form input[type="color"] { width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: transparent; padding: 0; }
+
+    .count-note { color: var(--muted); font-size: 13px; }
+
+    .import-export { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .import-file { display: inline-block; position: relative; overflow: hidden; }
+    .import-file input[type=file] { position: absolute; left: 0; top: 0; right: 0; bottom: 0; opacity: 0; cursor: pointer; }
+
+    .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .info { margin-top: 18px; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 720px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .tick { width: var(--cell-m); height: var(--cell-m); border-radius: 8px; }
+      .habit-meta { min-width: 0; grid-template-columns: 12px minmax(80px, 1fr) auto auto; }
+      .add-form input[type="text"] { width: 160px; }
+      .icon-btn { width: 26px; height: 26px; font-size: 14px; }
+      .streak { padding: 3px 7px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <h1 class="title"><span class="spark">✨</span> Micro Habit Tracker</h1>
+        <div class="tagline">Tiny steps. Big wins. Track up to 7 daily habits with streaks and clean visuals.</div>
+      </div>
+      <div class="hero-actions">
+        <span class="today-chip" id="todayChip">Today: —</span>
+        <button id="btnExport" class="btn">Export JSON</button>
+        <label class="import-file btn" title="Import JSON"><input type="file" id="fileImport" accept="application/json" />Import JSON</label>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="topbar">
+        <div class="range-controls">
+          <button id="prevRange" aria-label="Previous days">◀</button>
+          <div class="range-label" id="rangeLabel">Last 14 days</div>
+          <button id="nextRange" aria-label="Next days">▶</button>
+        </div>
+        <div class="skip-toggle">
+          <span class="skip-badge"><span>⏭️</span><span id="skipLabel">Skip selected day</span></span>
+          <label style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="skipDayToggle" /> Skip day
+          </label>
+        </div>
+      </div>
+
+      <div class="grid-wrap">
+        <div id="grid" class="grid" role="grid" aria-label="Habits grid"></div>
+      </div>
+
+      <div class="footerbar">
+        <form id="addForm" class="add-form" autocomplete="off">
+          <input type="text" id="habitName" placeholder="New habit (e.g., Drink water)" maxlength="40" required />
+          <input type="color" id="habitColor" value="#07c6e8" title="Pick a color" />
+          <button type="submit" class="btn btn-primary" id="addBtn">Add habit</button>
+          <span class="count-note" id="countNote">0 / 7 habits</span>
+        </form>
+        <div class="import-export">
+          <button id="btnShowToday" class="btn">Jump to Today</button>
+          <button id="btnClearSelected" class="btn btn-danger" title="Clear selected day for all">Clear selected day</button>
+        </div>
+      </div>
+
+      <div class="hint">Tip: Tap a date header to select it. Toggle checkboxes to mark done. Use ⏭️ Skip day if life happens — your streaks will not break.</div>
+      <div id="message" class="info" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <!-- Habit Modal -->
+  <div class="modal-backdrop" id="habitModalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="habitModalTitle">
+      <div class="modal-head">
+        <h2 class="modal-title" id="habitModalTitle">Edit habit</h2>
+        <button class="icon-btn" id="habitModalClose" title="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <label for="habitModalName">Name</label>
+          <input type="text" id="habitModalName" maxlength="40" placeholder="Habit name" />
+        </div>
+        <div class="form-row">
+          <label for="habitModalColor">Color</label>
+          <input type="color" id="habitModalColor" value="#07c6e8" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <div class="left">
+          <button class="btn btn-danger" id="habitModalDelete">Delete</button>
+        </div>
+        <div class="right">
+          <button class="btn" id="habitModalCancel">Cancel</button>
+          <button class="btn btn-good" id="habitModalSave">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = 'microHabitTrackerV1';
+    const DAYS = 14;
+    let state = {
+      data: null,
+      windowEnd: todayStr(),
+      selectedDate: todayStr(),
+    };
+
+    function todayStr(d = new Date()) {
+      const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const y = dt.getFullYear();
+      const m = (dt.getMonth()+1).toString().padStart(2,'0');
+      const dd = dt.getDate().toString().padStart(2,'0');
+      return `${y}-${m}-${dd}`;
+    }
+    function parseDate(str) {
+      const [y,m,d] = str.split('-').map(Number);
+      return new Date(y, m-1, d);
+    }
+    function addDays(str, n) { const d = parseDate(str); d.setDate(d.getDate()+n); return todayStr(d); }
+    function rangeDays(endStr, n) {
+      const arr = [];
+      let cur = parseDate(endStr);
+      for (let i=n-1;i>=0;i--) {
+        const d = new Date(cur);
+        d.setDate(cur.getDate()-i);
+        const s = todayStr(d);
+        const isToday = s === todayStr();
+        const label = d.toLocaleDateString(undefined, { weekday: 'short' });
+        arr.push({ s, d, label, isToday });
+      }
+      return arr;
+    }
+
+    function uid() { return 'h' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3); }
+
+    function load() {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) {
+        state.data = makeExampleData();
+        save();
+      } else {
+        try { state.data = JSON.parse(raw); }
+        catch(e) { console.warn('Corrupt data, resetting', e); state.data = makeExampleData(); save(); }
+      }
+      if (!state.data.habits) state.data.habits = [];
+      if (!state.data.skips) state.data.skips = {};
+    }
+    function save() { localStorage.setItem(KEY, JSON.stringify(state.data)); }
+
+    function makeExampleData() {
+      const today = parseDate(todayStr());
+      function back(n) { const d = new Date(today); d.setDate(d.getDate()-n); return todayStr(d); }
+      const habits = [
+        { id: uid(), name: 'Move 10 minutes', color: '#8a5cff', createdAt: back(10), entries: {} },
+        { id: uid(), name: 'Read 5 pages', color: '#ff7a59', createdAt: back(10), entries: {} },
+        { id: uid(), name: 'Mindful breaths', color: '#07c6e8', createdAt: back(10), entries: {} },
+      ];
+      const days = [10,9,8,7,6,5,4,3,2,1,0];
+      for (const h of habits) {
+        for (const n of days) {
+          const d = back(n);
+          const w = parseDate(d).getDay();
+          const prob = h.name.includes('Read') ? 0.6 : h.name.includes('Move') ? 0.7 : 0.8;
+          const adjust = (w === 0 || w === 6) ? 0.15 : 0;
+          if (Math.random() < prob + adjust - (n===9?0.2:0)) h.entries[d] = true;
+        }
+      }
+      const skips = {};
+      skips[back(3)] = true;
+      return { version: 1, habits, skips };
+    }
+
+    function setMessage(msg) {
+      const el = document.getElementById('message');
+      el.textContent = msg || '';
+      if (!msg) return;
+      setTimeout(() => { if (document.getElementById('message').textContent === msg) el.textContent = ''; }, 2000);
+    }
+
+    function habitCount() { return state.data.habits.length; }
+
+    function daysArray() { return rangeDays(state.windowEnd, DAYS); }
+
+    function isSkipped(dateStr) { return !!state.data.skips[dateStr]; }
+
+    function toggleSkip(dateStr, next = null) {
+      const cur = isSkipped(dateStr);
+      const val = next === null ? !cur : !!next;
+      if (val) {
+        state.data.skips[dateStr] = true;
+        for (const h of state.data.habits) delete h.entries[dateStr];
+        setMessage(`Skipped ${dateStr}. Streaks will ignore this day.`);
+      } else {
+        delete state.data.skips[dateStr];
+        setMessage(`Unskipped ${dateStr}.`);
+      }
+      save();
+      render();
+    }
+
+    function mark(habitId, dateStr, val) {
+      if (isSkipped(dateStr)) return;
+      const h = state.data.habits.find(x => x.id === habitId);
+      if (!h) return;
+      if (val) h.entries[dateStr] = true; else delete h.entries[dateStr];
+      save();
+      renderStreak(habitId);
+      const cell = document.querySelector(`[data-cell="${habitId}|${dateStr}"]`);
+      if (cell) {
+        cell.classList.toggle('done', !!val);
+        const check = cell.querySelector('.check');
+        if (check) check.style.opacity = val ? 1 : 0;
+        cell.setAttribute('aria-pressed', val ? 'true' : 'false');
+      }
+    }
+
+    function computeStreak(h) {
+      let cnt = 0;
+      let cur = todayStr();
+      for (let i=0;i<365;i++) {
+        if (parseDate(cur) < parseDate(h.createdAt)) break;
+        if (isSkipped(cur)) { cur = addDays(cur, -1); continue; }
+        if (h.entries[cur]) { cnt++; cur = addDays(cur, -1); }
+        else break;
+      }
+      return cnt;
+    }
+
+    function computeBestStreak(h) {
+      let best = 0, cur = 0;
+      let d = parseDate(h.createdAt);
+      const end = parseDate(todayStr());
+      while (d <= end) {
+        const s = todayStr(d);
+        if (isSkipped(s)) {
+        } else if (h.entries[s]) {
+          cur++;
+          best = Math.max(best, cur);
+        } else {
+          cur = 0;
+        }
+        d.setDate(d.getDate()+1);
+      }
+      return best;
+    }
+
+    function render() {
+      const days = daysArray();
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `minmax(320px, 1.3fr) repeat(${days.length}, minmax(40px, 1fr))`;
+
+      const headerRow = document.createElement('div'); headerRow.className = 'grid-header';
+      const headTitle = document.createElement('div'); headTitle.className = 'cell col-title'; headTitle.innerHTML = `<div style="font-weight:800; letter-spacing:0.4px;">Habit <span style="opacity:.6; font-weight:600">/ Streak</span></div>`;
+      headerRow.appendChild(headTitle);
+      for (const dd of days) {
+        const h = document.createElement('div'); h.className = 'cell';
+        const selected = state.selectedDate === dd.s;
+        h.innerHTML = `<div class="day-head ${selected? 'selected':''}" data-day="${dd.s}" title="Select ${dd.s}">
+            <span>${dd.label}</span>
+            <b>${dd.d.getDate()}</b>
+            ${dd.isToday ? '<span class="today">today</span>' : ''}
+          </div>`;
+        headerRow.appendChild(h);
+      }
+      grid.appendChild(headerRow);
+
+      for (const h of state.data.habits) {
+        const row = document.createElement('div'); row.className = 'grid-row'; row.dataset.habitId = h.id;
+
+        const titleCell = document.createElement('div'); titleCell.className = 'cell col-title';
+        const streak = computeStreak(h);
+        const best = computeBestStreak(h);
+        titleCell.innerHTML = `<div class="habit-meta">
+            <div class="dot" style="background:${h.color}"></div>
+            <div class="habit-name" title="Created ${h.createdAt}">${escapeHtml(h.name)}</div>
+            <div class="streak" title="Best streak: ${best} days"><span class="fire">🔥</span><span><b>${streak}</b>d</span></div>
+            <div class="habit-actions">
+              <button type="button" class="icon-btn menu-btn" data-open-modal="${h.id}" aria-haspopup="dialog" aria-expanded="false" title="More">⋯</button>
+            </div>
+          </div>`;
+        row.appendChild(titleCell);
+
+        for (const dd of days) {
+          const cell = document.createElement('div'); cell.className = 'cell';
+          const skipped = isSkipped(dd.s);
+          const done = !!h.entries[dd.s];
+          const classes = ['tick']; if (done) classes.push('done'); if (skipped) classes.push('skip');
+          const title = skipped ? `Skipped ${dd.s}` : `${h.name} on ${dd.s}`;
+          cell.innerHTML = `<div class="${classes.join(' ')}" data-cell="${h.id}|${dd.s}" role="button" aria-pressed="${done? 'true':'false'}" title="${title}">
+              <span class="check">✓</span>
+            </div>`;
+          row.appendChild(cell);
+        }
+        grid.appendChild(row);
+      }
+
+      const end = parseDate(state.windowEnd);
+      const start = new Date(end); start.setDate(end.getDate() - (DAYS-1));
+      const r1 = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      const r2 = end.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      document.getElementById('rangeLabel').textContent = `${r1} — ${r2}`;
+      document.getElementById('todayChip').textContent = `Today: ${new Date().toLocaleDateString()}`;
+      document.getElementById('skipLabel').textContent = `Selected: ${state.selectedDate}`;
+      document.getElementById('skipDayToggle').checked = isSkipped(state.selectedDate);
+      document.getElementById('countNote').textContent = `${habitCount()} / 7 habits`;
+      const addDisabled = habitCount() >= 7;
+      document.getElementById('addBtn').disabled = addDisabled;
+      document.getElementById('habitName').disabled = addDisabled;
+      if (addDisabled) { document.getElementById('countNote').textContent += ' (limit reached)'; }
+      const nextBtn = document.getElementById('nextRange');
+      nextBtn.disabled = state.windowEnd >= todayStr();
+    }
+
+    function renderStreak(habitId) {
+      const h = state.data.habits.find(x => x.id === habitId);
+      if (!h) return;
+      const streak = computeStreak(h);
+      const best = computeBestStreak(h);
+      const row = document.querySelector(`[data-habit-id="${habitId}"]`);
+      if (!row) return;
+      const streakEl = row.querySelector('.streak');
+      if (streakEl) {
+        streakEl.innerHTML = `<span class="fire">🔥</span><span><b>${streak}</b>d</span>`;
+        streakEl.title = `Best streak: ${best} days`;
+      }
+    }
+
+    function escapeHtml(s) { return s.replace(/[&<>"]+/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+    document.addEventListener('click', (e) => {
+      const openBtn = e.target.closest('[data-open-modal]');
+      if (openBtn) {
+        const id = openBtn.dataset.openModal;
+        openHabitModal(id);
+        return;
+      }
+      const dayEl = e.target.closest('[data-day]');
+      if (dayEl) {
+        state.selectedDate = dayEl.dataset.day;
+        render();
+        return;
+      }
+      const cell = e.target.closest('[data-cell]');
+      if (cell) {
+        const [hid, d] = cell.dataset.cell.split('|');
+        if (isSkipped(d)) return;
+        const done = cell.classList.contains('done');
+        mark(hid, d, !done);
+        return;
+      }
+      
+      if (e.target.id === 'prevRange') {
+        state.windowEnd = addDays(state.windowEnd, -DAYS);
+        if (parseDate(state.selectedDate) > parseDate(state.windowEnd) || parseDate(state.selectedDate) < parseDate(addDays(state.windowEnd, -(DAYS-1)))) {
+          state.selectedDate = state.windowEnd;
+        }
+        render();
+        return;
+      }
+      if (e.target.id === 'nextRange') {
+        const nextEnd = addDays(state.windowEnd, DAYS);
+        if (parseDate(nextEnd) > parseDate(todayStr())) {
+          state.windowEnd = todayStr();
+        } else state.windowEnd = nextEnd;
+        if (parseDate(state.selectedDate) > parseDate(state.windowEnd) || parseDate(state.selectedDate) < parseDate(addDays(state.windowEnd, -(DAYS-1)))) {
+          state.selectedDate = state.windowEnd;
+        }
+        render();
+        return;
+      }
+      if (e.target.id === 'btnShowToday') {
+        state.windowEnd = todayStr();
+        state.selectedDate = todayStr();
+        render();
+        return;
+      }
+      if (e.target.id === 'btnClearSelected') {
+        const d = state.selectedDate;
+        for (const h of state.data.habits) delete h.entries[d];
+        delete state.data.skips[d];
+        save();
+        render();
+        setMessage(`Cleared marks for ${d}.`);
+        return;
+      }
+      if (e.target.id === 'btnExport') {
+        const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'micro-habits.json';
+        document.body.appendChild(a); a.click(); a.remove();
+        setMessage('Exported JSON.');
+        return;
+      }
+    });
+
+    const habitModalBackdrop = document.getElementById('habitModalBackdrop');
+    const habitModalName = document.getElementById('habitModalName');
+    const habitModalColor = document.getElementById('habitModalColor');
+    const habitModalClose = document.getElementById('habitModalClose');
+    const habitModalCancel = document.getElementById('habitModalCancel');
+    const habitModalSave = document.getElementById('habitModalSave');
+    const habitModalDelete = document.getElementById('habitModalDelete');
+    let habitModalId = null;
+
+    function openHabitModal(id) {
+      const h = state.data.habits.find(x => x.id === id);
+      if (!h) return;
+      habitModalId = id;
+      habitModalName.value = h.name || '';
+      habitModalColor.value = h.color || '#07c6e8';
+      habitModalBackdrop.classList.add('open');
+      habitModalBackdrop.setAttribute('aria-hidden', 'false');
+      setTimeout(() => habitModalName.focus(), 0);
+    }
+    function closeHabitModal() {
+      habitModalId = null;
+      habitModalBackdrop.classList.remove('open');
+      habitModalBackdrop.setAttribute('aria-hidden', 'true');
+    }
+    habitModalClose.addEventListener('click', closeHabitModal);
+    habitModalCancel.addEventListener('click', closeHabitModal);
+    habitModalBackdrop.addEventListener('click', (e) => { if (e.target === habitModalBackdrop) closeHabitModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && habitModalBackdrop.classList.contains('open')) closeHabitModal(); });
+    habitModalSave.addEventListener('click', () => {
+      if (!habitModalId) return;
+      const h = state.data.habits.find(x => x.id === habitModalId);
+      if (!h) return;
+      const newName = habitModalName.value.trim().slice(0, 40) || h.name;
+      const newColor = habitModalColor.value || h.color;
+      h.name = newName;
+      h.color = newColor;
+      save();
+      render();
+      setMessage('Habit updated.');
+      closeHabitModal();
+    });
+    habitModalDelete.addEventListener('click', () => {
+      if (!habitModalId) return;
+      const h = state.data.habits.find(x => x.id === habitModalId);
+      if (!h) return;
+      if (!confirm(`Delete habit “${h.name}”? This cannot be undone.`)) return;
+      state.data.habits = state.data.habits.filter(x => x.id !== habitModalId);
+      save();
+      render();
+      closeHabitModal();
+      setMessage('Habit deleted.');
+    });
+
+    document.addEventListener('change', (e) => {
+      if (e.target.id === 'skipDayToggle') {
+        toggleSkip(state.selectedDate, e.target.checked);
+      }
+      if (e.target.id === 'fileImport') {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result));
+            if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.habits) || !parsed.skips) throw new Error('Invalid JSON shape');
+            if (!confirm('Import will replace your current data. Continue?')) return;
+            state.data = { version: 1, habits: [], skips: {} };
+            for (const h of parsed.habits) {
+              if (!h || typeof h !== 'object') continue;
+              const clean = {
+                id: String(h.id || uid()),
+                name: String(h.name || 'Untitled').slice(0, 40),
+                color: String(h.color || '#07c6e8'),
+                createdAt: h.createdAt && /^\d{4}-\d{2}-\d{2}$/.test(h.createdAt) ? h.createdAt : todayStr(),
+                entries: {}
+              };
+              if (h.entries && typeof h.entries === 'object') {
+                for (const k of Object.keys(h.entries)) {
+                  if (/^\d{4}-\d{2}-\d{2}$/.test(k) && h.entries[k]) clean.entries[k] = true;
+                }
+              }
+              state.data.habits.push(clean);
+            }
+            if (parsed.skips && typeof parsed.skips === 'object') {
+              for (const k of Object.keys(parsed.skips)) {
+                if (/^\d{4}-\d{2}-\d{2}$/.test(k) && parsed.skips[k]) state.data.skips[k] = true;
+              }
+            }
+            save();
+            state.windowEnd = todayStr();
+            state.selectedDate = todayStr();
+            render();
+            setMessage('Imported data from JSON.');
+          } catch(err) {
+            console.error(err);
+            alert('Failed to import: ' + err.message);
+          }
+          e.target.value = '';
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    document.getElementById('addForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (habitCount() >= 7) { setMessage('You can only track up to 7 habits.'); return; }
+      const name = document.getElementById('habitName').value.trim();
+      const color = document.getElementById('habitColor').value || '#07c6e8';
+      if (!name) return;
+      const h = { id: uid(), name: name.slice(0,40), color, createdAt: todayStr(), entries: {} };
+      state.data.habits.push(h);
+      save();
+      document.getElementById('habitName').value = '';
+      render();
+      setMessage('Habit added.');
+    });
+
+    load();
+    render();
+  </script>
+</body>
+</html>

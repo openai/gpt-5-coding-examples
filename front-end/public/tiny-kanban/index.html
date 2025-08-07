@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tiny Kanban</title>
+    <style>
+      :root {
+        --bg: #0f141a;
+        --bg-elev: #151c23;
+        --panel: #0f1923;
+        --text: #e6eef4;
+        --text-dim: #a9bac7;
+        --accent: #3fa9ff;
+        --border: #22303c;
+        --danger: #e53935;
+        --warning: #fb8c00;
+        --ok: #43a047;
+        --muted: #22303c;
+        --shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+
+        --prio-critical: #e53935;
+        --prio-high: #fb8c00;
+        --prio-medium: #fdd835;
+        --prio-low: #43a047;
+
+        --btn-bg: #1b2733;
+        --btn-hover-bg: #1f2d3a;
+        --chip-bg: #1b2733;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html, body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #0f141a 0%, #0f1923 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+          "Segoe UI Emoji";
+        -webkit-font-smoothing: antialiased;
+      }
+
+      header.appbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 16px;
+        background: rgba(21, 28, 35, 0.9);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(8px);
+      }
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .brand .sub {
+        color: var(--text-dim);
+        font-size: 12px;
+      }
+      .clock {
+        color: var(--text-dim);
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+      }
+
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        min-width: 320px;
+      }
+      .search input {
+        flex: 1;
+        background: transparent;
+        border: 0;
+        color: var(--text);
+        outline: none;
+        font-size: 14px;
+      }
+      .search .count {
+        color: var(--text-dim);
+        font-size: 12px;
+        padding-left: 6px;
+        border-left: 1px solid var(--border);
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      button, .btn {
+        background: var(--btn-bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      button:hover, .btn:hover {
+        background: var(--btn-hover-bg);
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+        padding: 12px 12px 24px;
+        height: calc(100% - 190px);
+      }
+
+      .board-column {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        min-height: 280px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .column-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 12px;
+        background: linear-gradient(180deg, #12202e 0%, #111a24 100%);
+        border-bottom: 1px solid var(--border);
+      }
+      .column-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+      }
+      .wip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-dim);
+        font-size: 12px;
+      }
+      .wip input {
+        width: 48px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        padding: 4px 6px;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      .wip.bad .value {
+        color: var(--danger);
+        font-weight: 700;
+      }
+      .column-body {
+        flex: 1;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 120px;
+      }
+      .column-body.drag-over {
+        outline: 2px dashed var(--accent);
+        outline-offset: -6px;
+        background: rgba(63, 169, 255, 0.06);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        padding: 8px 10px 10px 10px;
+        display: grid;
+        grid-template-columns: 8px 1fr auto;
+        gap: 10px;
+        align-items: start;
+        cursor: grab;
+      }
+      .card[draggable="true"]:active { cursor: grabbing; }
+      .card .prio {
+        border-radius: 10px;
+        width: 8px;
+        height: 100%;
+      }
+      .card .content {
+        display: grid;
+        grid-template-rows: auto auto;
+        gap: 6px;
+      }
+      .card .title {
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .card .meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-dim);
+        font-size: 12px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: var(--chip-bg);
+        border: 1px solid var(--border);
+        font-size: 12px;
+      }
+      .chip .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+      .card .actions {
+        display: flex;
+        gap: 6px;
+      }
+      .icon-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: var(--btn-bg);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        cursor: pointer;
+      }
+      .icon-btn:hover { background: var(--btn-hover-bg); color: var(--text); }
+
+      .add-form {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr 1fr auto;
+        gap: 8px;
+        padding: 12px 16px 8px;
+        border-bottom: 1px dashed var(--border);
+        background: rgba(21,28,35,0.6);
+      }
+      .add-form input[type="text"], .add-form select {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+      .add-form .assignees {
+        font-size: 13px;
+      }
+      .muted {
+        color: var(--text-dim);
+      }
+      .footer {
+        padding: 8px 16px;
+        color: var(--text-dim);
+        font-size: 12px;
+      }
+
+      /* Standup mode: high-contrast light theme and larger UI for projectors */
+      body.standup {
+        --bg: #f4f6f8;
+        --bg-elev: #ffffff;
+        --panel: #ffffff;
+        --text: #0b0f14;
+        --text-dim: #2f3b45;
+        --accent: #0066cc;
+        --border: #b0bec5;
+        --muted: #dde5ea;
+        --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        --btn-bg: #e9eff3;
+        --btn-hover-bg: #d9e5ec;
+        --chip-bg: #eef4f8;
+      }
+      body.standup { background: var(--bg); }
+      body.standup header.appbar { background: #ffffff; }
+      body.standup .column-header { background: linear-gradient(180deg, #f4f8fc 0%, #eef3f8 100%); }
+      body.standup .column-body.drag-over { background: rgba(0, 102, 204, 0.08); }
+      body.standup .brand h1 { font-size: 26px; }
+      body.standup .sub { font-size: 14px; }
+      body.standup .clock { font-size: 14px; }
+      body.standup button, body.standup .btn { font-size: 15px; padding: 10px 14px; }
+      body.standup .icon-btn { width: 34px; height: 34px; }
+      body.standup .search input { font-size: 16px; }
+      body.standup .search .count { font-size: 14px; }
+      body.standup .card { grid-template-columns: 10px 1fr auto; padding: 12px 12px 14px; }
+      body.standup .card .title { font-size: 18px; }
+      body.standup .card .meta { font-size: 14px; }
+      body.standup .wip input { width: 64px; padding: 6px 8px; font-size: 16px; }
+      body.standup .column-body { gap: 12px; }
+      body.standup .add-form { background: #f7fbff; }
+
+      /* Small screens */
+      @media (max-width: 900px) {
+        main { grid-template-columns: 1fr; height: auto; }
+        header.appbar { grid-template-columns: 1fr; gap: 10px; }
+        .add-form { grid-template-columns: 1fr; }
+        .search { min-width: unset; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="appbar">
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="18" height="18" rx="4" fill="#0b1117" stroke="#3fa9ff"/>
+          <path d="M7 8h6M7 12h10M7 16h8" stroke="#a9bac7" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h1>Tiny Kanban</h1>
+          <div class="sub">Todo → Doing → Done</div>
+        </div>
+      </div>
+
+      <div class="search" title="Filter by title, description, or assignee">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.3-4.3" stroke="#a9bac7" stroke-width="1.5" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="#a9bac7" stroke-width="1.5"/></svg>
+        <input id="searchInput" placeholder="Search… (try @alice or high)"/>
+        <div class="count" id="searchCount">0</div>
+      </div>
+
+      <div class="toolbar">
+        <button id="standupToggle" title="Toggle high-contrast standup view">Standup</button>
+        <button id="compactToggle" title="Toggle compact cards">Compact</button>
+        <button id="clearDoneBtn" title="Delete all items in Done">Clear Done</button>
+      </div>
+
+      <div class="clock" id="clock"></div>
+    </header>
+
+    <section class="add-form" id="addForm">
+      <input id="newTitle" type="text" placeholder="Quick add: task title (enter to add)" />
+      <select id="newPriority" aria-label="Priority">
+        <option value="medium">Priority: Medium</option>
+        <option value="critical">Priority: Critical</option>
+        <option value="high">Priority: High</option>
+        <option value="low">Priority: Low</option>
+      </select>
+      <input id="newAssignees" class="assignees" type="text" placeholder="Assignees: comma separated (e.g., Alice, Bob)" />
+      <button id="addBtn">Add</button>
+    </section>
+
+    <main id="board">
+      <div class="board-column" data-col="todo">
+        <div class="column-header">
+          <div class="column-title">
+            <span>Todo</span>
+            <span class="muted" id="count-todo">0</span>
+          </div>
+          <div class="wip" title="WIP limit for Todo">
+            <span>WIP</span>
+            <input type="number" min="0" id="wip-todo" />
+            <span class="value" id="wipv-todo"></span>
+          </div>
+        </div>
+        <div class="column-body droptarget" id="col-todo" data-col="todo"></div>
+      </div>
+
+      <div class="board-column" data-col="doing">
+        <div class="column-header">
+          <div class="column-title">
+            <span>Doing</span>
+            <span class="muted" id="count-doing">0</span>
+          </div>
+          <div class="wip" title="WIP limit for Doing">
+            <span>WIP</span>
+            <input type="number" min="0" id="wip-doing" />
+            <span class="value" id="wipv-doing"></span>
+          </div>
+        </div>
+        <div class="column-body droptarget" id="col-doing" data-col="doing"></div>
+      </div>
+
+      <div class="board-column" data-col="done">
+        <div class="column-header">
+          <div class="column-title">
+            <span>Done</span>
+            <span class="muted" id="count-done">0</span>
+          </div>
+          <div class="wip" title="WIP limit for Done">
+            <span>WIP</span>
+            <input type="number" min="0" id="wip-done" />
+            <span class="value" id="wipv-done"></span>
+          </div>
+        </div>
+        <div class="column-body droptarget" id="col-done" data-col="done"></div>
+      </div>
+    </main>
+
+    <div class="footer">
+      Tips:
+      - Drag to reorder or move across columns. - WIP limits block drops when full.
+      - Priority colors: Critical (red), High (orange), Medium (yellow), Low (green).
+      - Search supports assignees (e.g., @alice) and priority keywords.
+    </div>
+
+    <script>
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+      const defaultWip = { todo: 99, doing: 3, done: 99 };
+      const prioMap = {
+        critical: { label: 'Critical', color: getComputedStyle(document.documentElement).getPropertyValue('--prio-critical').trim() },
+        high: { label: 'High', color: getComputedStyle(document.documentElement).getPropertyValue('--prio-high').trim() },
+        medium: { label: 'Medium', color: getComputedStyle(document.documentElement).getPropertyValue('--prio-medium').trim() },
+        low: { label: 'Low', color: getComputedStyle(document.documentElement).getPropertyValue('--prio-low').trim() },
+      };
+
+      let state = loadState();
+
+      function loadState() {
+        const raw = localStorage.getItem('tiny-kanban');
+        if (!raw) {
+          return {
+            tasks: [],
+            wip: { ...defaultWip },
+            compact: false,
+            standup: false,
+          };
+        }
+        try {
+          const s = JSON.parse(raw);
+          s.wip = { ...defaultWip, ...(s.wip || {}) };
+          s.tasks = Array.isArray(s.tasks) ? s.tasks : [];
+          s.compact = !!s.compact;
+          s.standup = !!s.standup;
+          return s;
+        } catch (e) {
+          console.warn('Failed to parse saved state, resetting.', e);
+          return {
+            tasks: [],
+            wip: { ...defaultWip },
+            compact: false,
+            standup: false,
+          };
+        }
+      }
+
+      function saveState() {
+        localStorage.setItem('tiny-kanban', JSON.stringify(state));
+      }
+
+      function uid() {
+        return 't' + Math.random().toString(36).slice(2, 9);
+      }
+
+      function renderAll() {
+        for (const col of ['todo','doing','done']) {
+          renderColumn(col);
+        }
+        updateCounts();
+        updateWipInputs();
+        updateSearch();
+        applyCompact(state.compact);
+        applyStandup(state.standup);
+      }
+
+      function renderColumn(col) {
+        const cont = $('#col-' + col);
+        cont.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        for (const task of state.tasks.filter(t => t.column === col)) {
+          frag.appendChild(renderCard(task));
+        }
+        cont.appendChild(frag);
+      }
+
+      function renderCard(task) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.setAttribute('draggable', 'true');
+        card.dataset.id = task.id;
+
+        const prio = document.createElement('div');
+        prio.className = 'prio';
+        prio.style.background = prioMap[task.priority]?.color || prioMap.medium.color;
+
+        const content = document.createElement('div');
+        content.className = 'content';
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = task.title;
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const prioChip = chip(prioMap[task.priority]?.label || 'Medium', prioMap[task.priority]?.color);
+        prioChip.title = 'Priority';
+        const people = document.createElement('div');
+        people.className = 'chips';
+        for (const name of (task.assignees || [])) {
+          const c = chip(name, colorForName(name));
+          c.title = 'Assignee';
+          people.appendChild(c);
+        }
+        meta.appendChild(prioChip);
+        if ((task.assignees || []).length) meta.appendChild(people);
+
+        content.appendChild(title);
+        if (task.description) {
+          const desc = document.createElement('div');
+          desc.className = 'muted';
+          desc.textContent = task.description;
+          content.appendChild(desc);
+        } else {
+          content.appendChild(document.createElement('div'));
+        }
+        content.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+        // Edit button
+        const editBtn = iconButton('✎', 'Edit');
+        editBtn.addEventListener('click', () => openEdit(task.id));
+        // Delete button
+        const delBtn = iconButton('🗑', 'Delete');
+        delBtn.addEventListener('click', () => deleteTask(task.id));
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        card.appendChild(prio);
+        card.appendChild(content);
+        card.appendChild(actions);
+
+        card.addEventListener('dragstart', onDragStart);
+        card.addEventListener('dragend', onDragEnd);
+
+        return card;
+      }
+
+      function chip(label, color) {
+        const div = document.createElement('div');
+        div.className = 'chip';
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.style.background = color || 'var(--accent)';
+        const span = document.createElement('span');
+        span.textContent = label;
+        div.appendChild(dot);
+        div.appendChild(span);
+        return div;
+      }
+
+      function iconButton(symbol, title) {
+        const b = document.createElement('button');
+        b.className = 'icon-btn';
+        b.title = title;
+        b.textContent = symbol;
+        return b;
+      }
+
+      function colorForName(name) {
+        // Deterministic pastel-ish color
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+        const hue = hash % 360;
+        return `hsl(${hue} 60% 55%)`;
+      }
+
+      let dragState = { id: null, srcCol: null };
+      function onDragStart(e) {
+        const id = e.currentTarget.dataset.id;
+        dragState.id = id;
+        const task = state.tasks.find(t => t.id === id);
+        dragState.srcCol = task?.column;
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'move';
+      }
+      function onDragEnd() {
+        dragState = { id: null, srcCol: null };
+        $$('.column-body').forEach(c => c.classList.remove('drag-over'));
+      }
+
+      function setupDropZones() {
+        $$('.column-body').forEach(zone => {
+          zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.classList.add('drag-over');
+            e.dataTransfer.dropEffect = 'move';
+          });
+          zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+          zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const id = e.dataTransfer.getData('text/plain') || dragState.id;
+            if (!id) return;
+            const targetCol = zone.dataset.col;
+            moveTaskToColumn(id, targetCol, getDropIndex(zone, e.clientY));
+          });
+        });
+      }
+
+      function getDropIndex(container, mouseY) {
+        const cards = [...container.querySelectorAll('.card')];
+        for (let i = 0; i < cards.length; i++) {
+          const rect = cards[i].getBoundingClientRect();
+          const mid = rect.top + rect.height / 2;
+          if (mouseY < mid) return i; // insert before i
+        }
+        return cards.length; // append
+      }
+
+      function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+          const box = child.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+          } else {
+            return closest;
+          }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+      }
+
+      function moveTaskToColumn(id, targetCol, index) {
+        const t = state.tasks.find(x => x.id === id);
+        if (!t) return;
+        const fromCol = t.column;
+        if (targetCol !== fromCol) {
+          if (!canEnter(targetCol)) {
+            toast(`WIP limit reached for ${cap(targetCol)}!`, 'warn');
+            return; // reject move
+          }
+          t.column = targetCol;
+        }
+
+        // Reorder within target col based on index
+        const others = state.tasks.filter(x => x.column === t.column && x.id !== t.id);
+        const before = state.tasks.filter(x => x.column !== t.column);
+        const newColTasks = [...others];
+        newColTasks.splice(index, 0, t);
+        state.tasks = [
+          ...before,
+          ...newColTasks,
+        ];
+        saveState();
+        renderAll();
+      }
+
+      function canEnter(col) {
+        const count = state.tasks.filter(t => t.column === col).length;
+        return count < (state.wip[col] ?? 9999);
+      }
+
+      function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+      function updateCounts() {
+        for (const col of ['todo','doing','done']) {
+          const count = state.tasks.filter(t => t.column === col).length;
+          $('#count-' + col).textContent = count + '/' + (state.wip[col] ?? '∞');
+          const wipEl = $('#wipv-' + col).parentElement;
+          if (count > (state.wip[col] ?? 9999)) {
+            wipEl.classList.add('bad');
+          } else {
+            wipEl.classList.remove('bad');
+          }
+        }
+        updateSearchCount();
+      }
+
+      function updateWipInputs() {
+        for (const col of ['todo','doing','done']) {
+          const input = $('#wip-' + col);
+          input.value = state.wip[col];
+          $('#wipv-' + col).textContent = '';
+          input.onchange = () => {
+            const val = Math.max(0, parseInt(input.value || '0', 10));
+            state.wip[col] = val;
+            saveState();
+            updateCounts();
+          };
+        }
+      }
+
+      $('#addBtn').addEventListener('click', () => addFromForm());
+      $('#newTitle').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addFromForm();
+      });
+
+      function addFromForm() {
+        const title = $('#newTitle').value.trim();
+        if (!title) return;
+        const priority = $('#newPriority').value;
+        const assignees = parseAssignees($('#newAssignees').value);
+        const t = {
+          id: uid(),
+          title, description: '',
+          priority,
+          assignees,
+          column: 'todo',
+          createdAt: Date.now(),
+        };
+        state.tasks.push(t);
+        $('#newTitle').value = '';
+        $('#newAssignees').value = '';
+        saveState();
+        renderAll();
+      }
+
+      function parseAssignees(text) {
+        return text.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
+      function openEdit(id) {
+        const t = state.tasks.find(x => x.id === id);
+        if (!t) return;
+        const title = prompt('Title', t.title);
+        if (title === null) return; // cancel
+        const desc = prompt('Description (optional)', t.description || '');
+        const prio = prompt('Priority: critical | high | medium | low', t.priority);
+        const asg = prompt('Assignees (comma separated)', (t.assignees || []).join(', '));
+        if (title !== null) t.title = title.trim() || t.title;
+        if (desc !== null) t.description = desc.trim();
+        if (prio !== null && prioMap[prio]) t.priority = prio;
+        if (asg !== null) t.assignees = parseAssignees(asg);
+        saveState();
+        renderAll();
+      }
+
+      function deleteTask(id) {
+        const t = state.tasks.find(x => x.id === id);
+        if (!t) return;
+        if (!confirm('Delete this card?\n\n' + t.title)) return;
+        state.tasks = state.tasks.filter(x => x.id !== id);
+        saveState();
+        renderAll();
+      }
+
+      $('#clearDoneBtn').addEventListener('click', () => {
+        const count = state.tasks.filter(t => t.column === 'done').length;
+        if (!count) return;
+        if (!confirm(`Delete ${count} item(s) in Done?`)) return;
+        state.tasks = state.tasks.filter(t => t.column !== 'done');
+        saveState();
+        renderAll();
+      });
+
+      $('#searchInput').addEventListener('input', updateSearch);
+
+      function updateSearch() {
+        const q = $('#searchInput').value.trim().toLowerCase();
+        const cards = $$('.card');
+        let visible = 0;
+        for (const card of cards) {
+          const id = card.dataset.id;
+          const t = state.tasks.find(x => x.id === id);
+          const hay = [t.title, t.description || '', ...(t.assignees || [])].join(' ').toLowerCase();
+          const match = q === '' || hay.includes(q) ||
+            (q.startsWith('@') && (t.assignees || []).some(a => a.toLowerCase().includes(q.slice(1)))) ||
+            prioMatch(q, t.priority);
+          card.style.display = match ? '' : 'none';
+          if (match) visible++;
+        }
+        $('#searchCount').textContent = visible;
+      }
+      function prioMatch(q, prio) {
+        if (!q) return true;
+        const m = {
+          critical: ['critical', 'p0', 'p1', 'urgent', 'red'],
+          high: ['high', 'p2', 'orange'],
+          medium: ['medium', 'p3', 'yellow'],
+          low: ['low', 'p4', 'green'],
+        };
+        return (m[prio] || []).includes(q);
+      }
+      function updateSearchCount() {
+        // count visible cards
+        let visible = 0;
+        $$('.card').forEach(c => { if (c.style.display !== 'none') visible++; });
+        $('#searchCount').textContent = visible;
+      }
+
+      const compactBtn = $('#compactToggle');
+      compactBtn.addEventListener('click', () => {
+        state.compact = !state.compact;
+        saveState();
+        applyCompact(state.compact);
+      });
+      function applyCompact(on) {
+        document.body.classList.toggle('compact', on);
+        compactBtn.textContent = on ? 'Comfortable' : 'Compact';
+        const styleId = 'compact-style';
+        let style = document.getElementById(styleId);
+        if (on && !style) {
+          style = document.createElement('style');
+          style.id = styleId;
+          style.textContent = `
+            .card { grid-template-columns: 6px 1fr auto; padding: 6px 8px; }
+            .card .meta { display: none; }
+            .card .title { font-weight: 600; font-size: 14px; }
+            .column-body { gap: 6px; }
+          `;
+          document.head.appendChild(style);
+        } else if (!on && style) {
+          style.remove();
+        }
+      }
+
+      // Standup toggle (high-contrast light theme + larger UI)
+      const standupBtn = $('#standupToggle');
+      standupBtn.addEventListener('click', () => {
+        state.standup = !state.standup;
+        saveState();
+        applyStandup(state.standup);
+      });
+      function applyStandup(on) {
+        document.body.classList.toggle('standup', on);
+        standupBtn.textContent = on ? 'Standup: On' : 'Standup';
+      }
+
+      function updateClock() {
+        const now = new Date();
+        const fmt = now.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+        $('#clock').textContent = fmt;
+      }
+      setInterval(updateClock, 1000); updateClock();
+
+      function toast(msg, type = 'info') {
+        let box = document.getElementById('toast-box');
+        if (!box) {
+          box = document.createElement('div');
+          box.id = 'toast-box';
+          box.style.position = 'fixed';
+          box.style.right = '16px';
+          box.style.bottom = '16px';
+          box.style.display = 'grid';
+          box.style.gap = '8px';
+          document.body.appendChild(box);
+        }
+        const el = document.createElement('div');
+        el.style.background = 'rgba(21,28,35,0.95)';
+        el.style.border = '1px solid var(--border)';
+        el.style.boxShadow = 'var(--shadow)';
+        el.style.color = 'var(--text)';
+        el.style.padding = '8px 12px';
+        el.style.borderLeft = '4px solid ' + (type === 'warn' ? 'var(--warning)' : type === 'err' ? 'var(--danger)' : 'var(--accent)');
+        el.style.borderRadius = '8px';
+        el.textContent = msg;
+        box.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+      }
+
+      setupDropZones();
+      renderAll();
+
+      if (state.tasks.length === 0) {
+        const seed = [
+          { title: 'Plan sprint backlog', priority: 'high', assignees: ['Alice'], column: 'todo' },
+          { title: 'Implement login', priority: 'critical', assignees: ['Bob','Carol'], column: 'doing' },
+          { title: 'Write docs for onboarding', priority: 'low', assignees: ['Dan'], column: 'done' },
+        ];
+        for (const s of seed) state.tasks.push({ id: uid(), description: '', createdAt: Date.now(), ...s });
+        saveState();
+        renderAll();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emoji Slot Machine</title>
+    <meta name="description" content="Spin to match emojis for points. Adjustable bet, win animations, and sound effects in a colorful, fancy slot-machine UI." />
+    <style>
+      :root {
+        --bg1: #0f1020;
+        --bg2: #1b0044;
+        --bg3: #002a5e;
+        --accent: #ff2bd6;
+        --accent2: #25f2ff;
+        --gold: #ffd166;
+        --green: #68eb6e;
+        --red: #ff6b6b;
+        --panel: rgba(255, 255, 255, 0.08);
+        --panel-strong: rgba(255, 255, 255, 0.14);
+        --shadow: 0 10px 30px rgba(0,0,0,0.35);
+        --symbol-size: clamp(52px, 20vw, 84px);
+        --reel-width: clamp(72px, 28vw, 120px);
+        --reel-gap: clamp(8px, 3vw, 18px);
+        --radius: 18px;
+      }
+
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        color: #fff;
+        background:
+          radial-gradient(1200px 600px at 20% 10%, rgba(255,255,255,0.06), transparent 60%),
+          radial-gradient(1000px 800px at 80% 0%, rgba(255,255,255,0.05), transparent 50%),
+          linear-gradient(135deg, var(--bg1), var(--bg2) 50%, var(--bg3));
+        overflow: hidden; /* prevent scroll when we scale-to-fit */
+      }
+
+      /* Fit-to-viewport wrapper */
+      .fitwrap {
+        height: 100dvh;
+        width: 100vw;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+      }
+
+      .container {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 18px;
+        /* allow natural height; we'll scale the whole thing to fit */
+        min-height: auto;
+      }
+
+      header {
+        text-align: center;
+      }
+      .title {
+        font-size: clamp(28px, 6vw, 56px);
+        margin: 12px 0 6px 0;
+        letter-spacing: 0.02em;
+        font-weight: 900;
+        background: linear-gradient(90deg, #fff, var(--gold), #fff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        filter: drop-shadow(0 2px 12px rgba(255, 209, 102, 0.35));
+      }
+      .subtitle {
+        opacity: 0.8;
+        font-size: 14px;
+        letter-spacing: 0.06em;
+      }
+
+      .panel {
+        background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.06));
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .hud {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 16px;
+      }
+      .meter {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: center;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--panel);
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.12);
+      }
+      .chip .label { opacity: 0.75; font-size: 13px; }
+      .chip .value { font-weight: 800; font-feature-settings: "tnum" 1, "ss01" 1; }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        appearance: none;
+        border: none;
+        background: linear-gradient(180deg, #fff, #f0f0f0);
+        color: #111;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 0.1s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+        min-width: 44px;
+        min-height: 44px;
+      }
+      .btn:hover { transform: translateY(-1px); }
+      .btn:active { transform: translateY(1px) scale(0.98); }
+
+      .btn-primary {
+        background: linear-gradient(180deg, var(--gold), #ffb703);
+        color: #3a2a00;
+        border: 2px solid rgba(255,255,255,0.35);
+        text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+      }
+
+      .bet-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--panel);
+        border-radius: 999px;
+        padding: 6px;
+        border: 1px solid rgba(255,255,255,0.12);
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .bet-control input[type="range"] {
+        width: clamp(120px, 40vw, 180px);
+        accent-color: var(--gold);
+      }
+      .bet-display {
+        min-width: 48px;
+        text-align: center;
+        font-weight: 800;
+      }
+
+      .machine {
+        position: relative;
+        padding: 24px;
+        display: grid;
+        gap: 18px;
+        justify-items: center;
+      }
+      .marquee {
+        width: min(100%, 860px);
+        padding: 10px 16px;
+        border-radius: 12px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.06));
+        border: 1px solid rgba(255,255,255,0.14);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--gold);
+        text-align: center;
+        box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.06);
+      }
+
+      .reels {
+        width: min(100%, 860px);
+        display: grid;
+        grid-template-columns: repeat(3, var(--reel-width));
+        justify-content: center;
+        gap: var(--reel-gap);
+        margin-top: 32px;
+        padding: 16px;
+        border-radius: 20px;
+        background:
+          radial-gradient(60% 100% at 50% 0%, rgba(255,255,255,0.22), transparent 60%),
+          linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.1) 18%, rgba(255,255,255,0.15) 60%, rgba(255,255,255,0.24)),
+          linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.12));
+        border: 3px solid rgba(255,255,255,0.35);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.35), inset 0 0 30px rgba(0,0,0,0.35);
+        position: relative;
+      }
+      .reels::before, .reels::after {
+        content: "";
+        position: absolute;
+        inset: -10px -10px auto -10px;
+        height: 10px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.8), transparent 40%, transparent 60%, rgba(255,255,255,0.8));
+        border-radius: 24px 24px 0 0;
+        opacity: 0.6;
+        filter: blur(4px);
+      }
+      .reels::after {
+        inset: auto -10px -10px -10px;
+        height: 10px;
+        border-radius: 0 0 24px 24px;
+      }
+
+      .reel {
+        height: calc(var(--symbol-size) * 3 + 24px);
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.9));
+        box-shadow: inset 0 8px 16px rgba(0,0,0,0.25);
+        border-radius: 12px;
+        position: relative;
+        border: 1px solid rgba(0,0,0,0.1);
+      }
+      .reel::before, .reel::after {
+        content: "";
+        position: absolute;
+        left: 0; right: 0;
+        height: 12px;
+        pointer-events: none;
+        z-index: 2;
+      }
+      .reel::before { top: 0; background: linear-gradient(180deg, rgba(0,0,0,0.35), transparent); }
+      .reel::after { bottom: 0; background: linear-gradient(0deg, rgba(0,0,0,0.35), transparent); }
+
+      .reel-track {
+        position: absolute;
+        top: 12px; left: 0; right: 0;
+        will-change: transform, filter;
+      }
+      .symbol {
+        height: var(--symbol-size);
+        line-height: var(--symbol-size);
+        font-size: calc(var(--symbol-size) * 0.74);
+        text-align: center;
+        user-select: none;
+        filter: drop-shadow(0 1px 0 #fff) drop-shadow(0 2px 8px rgba(0,0,0,0.25));
+      }
+      .symbol.highlight {
+        animation: pulse 0.9s ease-in-out 0s 3;
+        text-shadow: 0 0 10px var(--gold), 0 0 30px var(--gold);
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.14); }
+      }
+
+      .win-banner {
+        position: absolute;
+        top: 0;
+        transform: translateY(-100%);
+        left: 50%;
+        translate: -50% 0;
+        background: linear-gradient(90deg, #fff, var(--gold));
+        color: #4b2e00;
+        padding: 8px 18px;
+        font-weight: 900;
+        border-radius: 999px;
+        border: 2px solid rgba(0,0,0,0.08);
+        box-shadow: 0 14px 30px rgba(0,0,0,0.3);
+        letter-spacing: 0.08em;
+        display: none;
+        z-index: 5;
+        white-space: nowrap;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+      }
+      .switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--panel);
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.12);
+        font-weight: 700;
+        cursor: pointer;
+        user-select: none;
+      }
+      .switch input { display: none; }
+      .switch .dot {
+        width: 18px; height: 18px; border-radius: 999px;
+        background: #999;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.35);
+      }
+      .switch input:checked + .dot { background: var(--green); }
+
+      .paytable {
+        font-size: 12px;
+        opacity: 0.9;
+        text-align: center;
+        padding: 10px 14px;
+      }
+      .note { opacity: 0.7; }
+
+      /* Confetti */
+      .confetti {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+      }
+
+      /* Fancy glow on win */
+      .glow-win {
+        box-shadow: 0 0 0 6px rgba(255, 209, 102, 0.4), 0 0 40px rgba(255, 209, 102, 0.6), inset 0 0 20px rgba(255, 209, 102, 0.6) !important;
+        transition: box-shadow 0.4s ease;
+      }
+
+      @media (max-width: 560px) {
+        .hud { grid-template-columns: 1fr; }
+        .meter { justify-content: center; }
+        .machine { padding: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="fitwrap">
+      <div class="container">
+      <header>
+        <div class="title">🎰 Emoji Slot Machine</div>
+        <div class="subtitle">Spin to match emojis for points. Adjustable bet, win animations, and sound effects.</div>
+      </header>
+
+      <div class="panel hud" role="group" aria-label="Game status and controls">
+        <div class="meter">
+          <div class="chip" aria-live="polite" aria-atomic="true">
+            <span class="label">Balance</span>
+            <span class="value" id="balance">1000</span>
+            <span>💰</span>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="bet-control" role="group" aria-label="Adjust bet">
+            <button class="btn" id="betDec" title="Decrease Bet" aria-label="Decrease bet">−</button>
+            <input type="range" id="betRange" min="1" max="100" step="1" value="10" />
+            <button class="btn" id="betInc" title="Increase Bet" aria-label="Increase bet">+</button>
+            <span class="bet-display" id="betValue">10</span>
+          </div>
+        </div>
+        <div class="meter">
+          <div class="chip">
+            <span class="label">Last Win</span>
+            <span class="value" id="lastWin">0</span>
+            <span>✨</span>
+          </div>
+        </div>
+      </div>
+
+      <main class="machine panel" aria-label="Slot machine">
+        <div class="marquee" id="marquee">Match 3 to win! 7️⃣ pays the most. Two-of-a-kind pays a small prize.</div>
+        <div class="reels" id="reels">
+          <div class="win-banner" id="winBanner">YOU WIN!</div>
+          <div class="reel" data-reel="0"><div class="reel-track"></div></div>
+          <div class="reel" data-reel="1"><div class="reel-track"></div></div>
+          <div class="reel" data-reel="2"><div class="reel-track"></div></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="spinBtn" aria-label="Spin the reels">SPIN</button>
+          <label class="switch" title="Toggle sound">
+            <input type="checkbox" id="soundToggle" checked />
+            <span class="dot"></span>
+            <span>Sound</span>
+          </label>
+        </div>
+        <div class="paytable note">
+          Paytable (3 of a kind): 7️⃣ ×20 · 💎 ×15 · 👑 ×12 · 🔔 ×8 · ⭐ ×6 · 🍀 ×5 · Fruits ×3. Two-of-a-kind returns ×2 of bet.
+        </div>
+      </main>
+
+      <footer class="note" style="text-align:center; padding: 8px 0 24px 0;">
+        Tip: Use Space to spin. Good luck!
+      </footer>
+      </div>
+    </div>
+
+    <canvas class="confetti" id="confetti"></canvas>
+
+    <script>
+      // Emoji set and weights
+      const SYMBOLS = ["🍒","🍋","🔔","⭐","🍀","7️⃣","💎","🍇","🍊","🍉","👑","🔥"];
+      const WEIGHTS = {
+        "🍒": 6, "🍋": 6, "🍇": 6, "🍊": 6, "🍉": 6,
+        "⭐": 4, "🍀": 4, "🔔": 3, "🔥": 3,
+        "👑": 2, "💎": 2, "7️⃣": 1
+      };
+
+      // Payout multipliers for 3 of a kind
+      const PAY3 = { "7️⃣": 20, "💎": 15, "👑": 12, "🔔": 8, "⭐": 6, "🍀": 5, "🍒": 3, "🍋": 3, "🍇": 3, "🍊": 3, "🍉": 3, "🔥": 4 };
+
+      const reelsEl = document.getElementById('reels');
+      const spinBtn = document.getElementById('spinBtn');
+      const betRange = document.getElementById('betRange');
+      const betInc = document.getElementById('betInc');
+      const betDec = document.getElementById('betDec');
+      const betValue = document.getElementById('betValue');
+      const balanceEl = document.getElementById('balance');
+      const lastWinEl = document.getElementById('lastWin');
+      const winBanner = document.getElementById('winBanner');
+      const soundToggle = document.getElementById('soundToggle');
+      const marquee = document.getElementById('marquee');
+
+      let balance = 1000;
+      let bet = parseInt(betRange.value, 10);
+      let spinning = false;
+
+      const reelElements = Array.from(document.querySelectorAll('.reel'));
+      const REPEATS = 20; // number of times to repeat the symbol list in each reel
+      let SYMBOL_HEIGHT = 84; // will adjust after first render
+
+      // Audio engine (WebAudio) - simple, lightweight, generated sounds
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      let actx = null;
+      let spinNoiseNode = null;
+      function initAudio() {
+        if (!actx) actx = new AudioCtx();
+      }
+      function playSpinStart() {
+        if (!soundToggle.checked) return;
+        initAudio();
+        // create gentle noise using buffer source
+        const bufferSize = actx.sampleRate * 2;
+        const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.2; // white noise
+        }
+        const source = actx.createBufferSource();
+        source.buffer = buffer;
+        const filter = actx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 1200;
+        const gain = actx.createGain();
+        gain.gain.value = 0.3;
+        source.connect(filter).connect(gain).connect(actx.destination);
+        source.loop = true;
+        source.start();
+        spinNoiseNode = { source, gain };
+        // add slight fade-out later
+      }
+      function stopSpinSound() {
+        if (spinNoiseNode) {
+          const { source, gain } = spinNoiseNode;
+          // fade out
+          const t = actx.currentTime;
+          gain.gain.cancelScheduledValues(t);
+          gain.gain.setValueAtTime(gain.gain.value, t);
+          gain.gain.linearRampToValueAtTime(0.0001, t + 0.25);
+          setTimeout(() => { try { source.stop(); } catch(e){} }, 260);
+          spinNoiseNode = null;
+        }
+      }
+      function playTick(delay = 0) {
+        if (!soundToggle.checked) return;
+        initAudio();
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 800;
+        gain.gain.value = 0.0;
+        const t = actx.currentTime + delay;
+        osc.connect(gain).connect(actx.destination);
+        osc.start(t);
+        gain.gain.setValueAtTime(0.0, t);
+        gain.gain.linearRampToValueAtTime(0.25, t + 0.01);
+        gain.gain.linearRampToValueAtTime(0.0, t + 0.08);
+        osc.stop(t + 0.1);
+      }
+      function playWin(amount) {
+        if (!soundToggle.checked) return;
+        initAudio();
+        // simple celebratory arpeggio
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        const now = actx.currentTime;
+        notes.forEach((f, i) => {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = f;
+          osc.connect(gain).connect(actx.destination);
+          const t = now + i * 0.1;
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.35, t + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+          osc.start(t);
+          osc.stop(t + 0.3);
+        });
+      }
+      function playLose() {
+        if (!soundToggle.checked) return;
+        initAudio();
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 220;
+        osc.connect(gain).connect(actx.destination);
+        const t = actx.currentTime;
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.2, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+        osc.start(t);
+        osc.stop(t + 0.4);
+      }
+
+      // Confetti animation
+      const confettiCanvas = document.getElementById('confetti');
+      const cctx = confettiCanvas.getContext('2d');
+      let confettiPieces = [];
+      function resizeConfetti() {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeConfetti);
+      resizeConfetti();
+      // also refit UI on resize
+      window.addEventListener('resize', () => requestAnimationFrame(fitToViewport));
+      function launchConfetti(count = 150) {
+        confettiPieces = [];
+        for (let i = 0; i < count; i++) {
+          confettiPieces.push({
+            x: Math.random() * confettiCanvas.width,
+            y: -10 - Math.random() * 100,
+            r: 3 + Math.random() * 6,
+            c: `hsl(${Math.random() * 360}, 90%, 60%)`,
+            vx: -1 + Math.random() * 2,
+            vy: 2 + Math.random() * 2.5,
+            rot: Math.random() * Math.PI,
+            vr: -0.2 + Math.random() * 0.4
+          });
+        }
+        animateConfetti(0);
+      }
+      let confettiAnimId = null;
+      function animateConfetti(t) {
+        cctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+        confettiPieces.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
+          cctx.save();
+          cctx.translate(p.x, p.y);
+          cctx.rotate(p.rot);
+          cctx.fillStyle = p.c;
+          cctx.fillRect(-p.r, -p.r, p.r*2, p.r*2);
+          cctx.restore();
+        });
+        confettiPieces = confettiPieces.filter(p => p.y < confettiCanvas.height + 20);
+        if (confettiPieces.length > 0) confettiAnimId = requestAnimationFrame(animateConfetti);
+      }
+
+      // Utility: weighted random choice
+      function weightedChoice(items, weightsMap) {
+        const weights = items.map(it => weightsMap[it] || 1);
+        const total = weights.reduce((a,b)=>a+b,0);
+        let r = Math.random() * total;
+        for (let i=0; i<items.length; i++) {
+          r -= weights[i];
+          if (r <= 0) return items[i];
+        }
+        return items[items.length-1];
+      }
+
+      function updateBet(value) {
+        bet = Math.max(1, Math.min(1000, parseInt(value, 10) || 1));
+        betRange.value = Math.min(100, Math.max(1, bet));
+        betValue.textContent = bet;
+      }
+
+      function setMarquee(msg, color = 'var(--gold)') {
+        marquee.style.color = color;
+        marquee.textContent = msg;
+        // adjust scaling if message length changes layout
+        requestAnimationFrame(fitToViewport);
+      }
+
+      function initReels() {
+        reelElements.forEach(reel => {
+          const track = reel.querySelector('.reel-track');
+          track.innerHTML = '';
+          for (let r=0; r<REPEATS; r++) {
+            for (const s of SYMBOLS) {
+              const div = document.createElement('div');
+              div.className = 'symbol';
+              div.textContent = s;
+              track.appendChild(div);
+            }
+          }
+        });
+        // measure symbol height
+        const anySymbol = document.querySelector('.symbol');
+        if (anySymbol) SYMBOL_HEIGHT = anySymbol.getBoundingClientRect().height;
+        // after initial render, fit to viewport
+        fitToViewport();
+      }
+
+      // Scale the whole UI to fit within the viewport without scrolling
+      function fitToViewport() {
+        const wrap = document.querySelector('.fitwrap');
+        const cont = document.querySelector('.container');
+        if (!wrap || !cont) return;
+        // reset scale to measure intrinsic size
+        cont.style.transform = 'none';
+        cont.style.transformOrigin = 'top center';
+        cont.style.minHeight = 'auto';
+        const naturalW = cont.scrollWidth;
+        const naturalH = cont.scrollHeight;
+        const scaleW = wrap.clientWidth / naturalW;
+        const scaleH = wrap.clientHeight / naturalH;
+        const scale = Math.min(1, scaleW, scaleH);
+        cont.style.transform = `scale(${scale})`;
+      }
+
+      function spin() {
+        if (spinning) return;
+        if (balance < bet) {
+          setMarquee('Not enough balance. Lower your bet or add points via a big win!', 'var(--red)');
+          playLose();
+          return;
+        }
+        spinning = true;
+        spinBtn.disabled = true;
+        setMarquee('Good luck! Spinning...');
+        winBanner.style.display = 'none';
+        reelsEl.classList.remove('glow-win');
+        lastWinEl.textContent = '0';
+
+        // deduct bet
+        balance -= bet;
+        balanceEl.textContent = balance;
+
+        // choose result symbols
+        const result = [0,1,2].map(() => weightedChoice(SYMBOLS, WEIGHTS));
+
+        // Clear previous highlights
+        document.querySelectorAll('.symbol.highlight').forEach(el => el.classList.remove('highlight'));
+
+        // Start spin sound and visual spin
+        playSpinStart();
+
+        const stopDelays = [0, 250, 500];
+        const durations = [1100, 1400, 1700];
+
+        reelElements.forEach((reel, i) => {
+          const track = reel.querySelector('.reel-track');
+          // Reset position instantly
+          track.style.transition = 'none';
+          track.style.transform = 'translateY(0)';
+          track.style.filter = 'blur(2px)';
+          // Force reflow
+          void track.offsetHeight;
+          // Compute final index: pick a symbol instance near the end
+          const indices = [];
+          for (let r=0; r<REPEATS; r++) {
+            for (let idx=0; idx<SYMBOLS.length; idx++) indices.push(idx);
+          }
+          // Find all positions where symbol equals result[i]
+          const targetIndices = [];
+          for (let j=0; j<indices.length; j++) {
+            if (SYMBOLS[indices[j]] === result[i]) targetIndices.push(j);
+          }
+          const pick = targetIndices[targetIndices.length - 1 - Math.floor(Math.random()*3)];
+          const middleRowOffset = 1; // show result at middle row (row index 1 of 0..2 visible rows)
+          const y = -pick * SYMBOL_HEIGHT + (SYMBOL_HEIGHT * middleRowOffset);
+          setTimeout(() => {
+            track.style.transition = `transform ${durations[i]}ms cubic-bezier(.17,.67,.32,1.35)`;
+            track.style.transform = `translateY(${y}px)`;
+          }, stopDelays[i]);
+        });
+
+        // After all reels stop, evaluate
+        const totalWait = Math.max(...durations) + Math.max(...stopDelays) + 80;
+        setTimeout(() => {
+          stopSpinSound();
+          // Add subtle ticks
+          playTick(0);
+          playTick(0.12);
+          playTick(0.22);
+
+          const [a,b,c] = result;
+          let win = 0;
+          if (a === b && b === c) {
+            const mult = PAY3[a] || 3;
+            win = bet * mult;
+          } else if (a === b || b === c || a === c) {
+            win = bet * 2; // two-of-a-kind
+          }
+
+          // Remove motion blur and highlight the middle row symbols that stopped
+          reelElements.forEach((reel, i) => {
+            const track = reel.querySelector('.reel-track');
+            track.style.filter = 'none';
+            // compute the nearest child to middleRowOffset position
+            const children = Array.from(track.children);
+            // Determine final translateY to infer index
+            const m = /translateY\((-?\d+(?:\.\d+)?)px\)/.exec(track.style.transform);
+            const ty = m ? parseFloat(m[1]) : 0;
+            const finalIndex = Math.round((-ty + (SYMBOL_HEIGHT * 1)) / SYMBOL_HEIGHT);
+            const el = children[finalIndex];
+            if (el) el.classList.add('highlight');
+          });
+
+          if (win > 0) {
+            balance += win;
+            balanceEl.textContent = balance;
+            lastWinEl.textContent = win;
+            setMarquee(`WIN! You got ${result.join(' ')} and won ${win} points!`, 'var(--green)');
+            winBanner.style.display = 'inline-flex';
+            reelsEl.classList.add('glow-win');
+            launchConfetti(160);
+            playWin(win);
+          } else {
+            setMarquee(`No win this time (${result.join(' ')}). Try again!`, 'var(--red)');
+            playLose();
+          }
+
+          spinning = false;
+          spinBtn.disabled = false;
+          // ensure we still fit after any layout changes
+          fitToViewport();
+        }, totalWait);
+      }
+
+      // Event listeners
+      spinBtn.addEventListener('click', () => {
+        // resume audio context on first interaction if needed
+        if (actx && actx.state === 'suspended') actx.resume();
+        spin();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') { e.preventDefault(); spinBtn.click(); }
+        if (e.code === 'ArrowUp') { updateBet(bet + 1); }
+        if (e.code === 'ArrowDown') { updateBet(bet - 1); }
+      });
+      betRange.addEventListener('input', (e) => updateBet(e.target.value));
+      betInc.addEventListener('click', () => updateBet(bet + 1));
+      betDec.addEventListener('click', () => updateBet(bet - 1));
+
+      // Initialize
+      updateBet(bet);
+      initReels();
+    </script>
+  </body>
+</html>

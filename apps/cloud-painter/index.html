@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cloud Painter</title>
+  <style>
+    :root {
+      --panel: rgba(255,255,255,0.6);
+      --panel-strong: rgba(255,255,255,0.8);
+      --ink: #475569;
+      --accent: #8b9cf6;
+      --accent-2: #ffd3e1;
+      --glow: rgba(255,255,255,0.8);
+    }
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(180deg, #b9e6ff 0%, #d6efff 40%, #f7fbff 100%);
+      font-family: ui-rounded, system-ui, -apple-system, Segoe UI, "Trebuchet MS", "Comic Sans MS", sans-serif;
+      color: var(--ink);
+    }
+    #sky {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+    .hud {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+      z-index: 10;
+      user-select: none;
+    }
+    .card {
+      background: var(--panel);
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(85,120,160,0.18), 0 2px 8px rgba(0,0,0,0.08);
+      padding: 14px 16px;
+      backdrop-filter: blur(8px) saturate(1.2);
+      -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      font-size: 18px;
+    }
+    .title .logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff 0 30%, rgba(255,255,255,0.5) 55%, rgba(255,255,255,0) 70%),
+                  radial-gradient(circle at 65% 65%, rgba(255,255,255,0.9) 0 26%, rgba(255,255,255,0.0) 60%);
+      box-shadow: 0 0 0 6px rgba(255,255,255,0.4), 0 6px 14px rgba(123,170,230,0.45);
+    }
+    .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .label { font-size: 12px; opacity: 0.8; }
+    .brushes { display: flex; gap: 8px; }
+    .chip {
+      appearance: none;
+      border: none;
+      background: var(--panel-strong);
+      color: var(--ink);
+      border-radius: 20px;
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9), 0 4px 10px rgba(0,0,0,0.08);
+      transition: transform 0.08s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .chip:hover { transform: translateY(-1px); }
+    .chip.active {
+      background: linear-gradient(135deg, #fff, #f4f7ff);
+      box-shadow: inset 0 0 0 2px var(--accent), 0 6px 16px rgba(139,156,246,0.35);
+      color: #3d4aa6;
+    }
+    .slider {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 10px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #ffffffaa, #ffffff);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+      outline: none;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fff, #eef5ff 70%);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+    .btn {
+      appearance: none; border: none; cursor: pointer;
+      padding: 10px 14px; border-radius: 14px;
+      font-weight: 800; color: #30465a;
+      background: linear-gradient(135deg, #ffffff, #f0f7ff);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.1), inset 0 0 0 2px #fff;
+      transition: transform 0.08s ease, box-shadow 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: linear-gradient(135deg, #c8d4ff, #ffe1ef); color: #283a54; }
+    .footer {
+      position: fixed; right: 16px; bottom: 16px; z-index: 10;
+      background: var(--panel);
+      padding: 10px 12px; border-radius: 16px; backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(85,120,160,0.18), 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 12px; opacity: 0.9;
+    }
+    .hint { font-size: 12px; opacity: 0.8; }
+    .sep { height: 1px; background: rgba(255,255,255,0.8); margin: 6px 0; border-radius: 1px; }
+    .toggle {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--panel-strong); padding: 6px 8px; border-radius: 12px;
+      box-shadow: inset 0 0 0 2px #fff7;
+    }
+    .toggle input { width: 34px; height: 18px; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #00000014; padding: 1px 4px; border-radius: 6px; }
+  </style>
+  <meta name="description" content="Paint fluffy clouds across a breezy sky. Soft brush shapes, drifting clouds, playful airplanes, save your masterpiece."
+  />
+</head>
+<body>
+  <canvas id="sky"></canvas>
+
+  <div class="hud">
+    <div class="card">
+      <div class="title"><div class="logo" aria-hidden="true"></div> Cloud Painter</div>
+      <div class="hint">Paint fluffy clouds. They gently drift while little planes fly by.</div>
+      <div class="sep"></div>
+      <div class="row" style="gap:10px; align-items:flex-start;">
+        <div style="min-width:56px" class="label">Brush</div>
+        <div class="brushes" id="brushes">
+          <button class="chip active" data-shape="puff" title="Puff">☁️ Puff</button>
+          <button class="chip" data-shape="fluffy" title="Fluffy cloud">🌥 Fluffy</button>
+          <button class="chip" data-shape="oval" title="Oval">🍥 Oval</button>
+          <button class="chip" data-shape="cumulus" title="Cumulus">⛅ Cumulus</button>
+        </div>
+      </div>
+      <div class="row">
+        <div style="min-width:56px" class="label">Size</div>
+        <input id="size" class="slider" type="range" min="10" max="160" value="64" />
+        <div id="sizeVal" class="label"></div>
+      </div>
+      <div class="row">
+        <div style="min-width:56px" class="label">Fluff</div>
+        <input id="soft" class="slider" type="range" min="20" max="100" value="85" />
+        <div id="softVal" class="label"></div>
+      </div>
+      <div class="row">
+        <div style="min-width:56px" class="label">Wind</div>
+        <input id="wind" class="slider" type="range" min="-30" max="60" value="12" />
+        <div id="windVal" class="label"></div>
+      </div>
+      <div class="sep"></div>
+      <div class="row" style="justify-content:space-between; gap:8px;">
+        <button class="btn" id="clear">Clear sky</button>
+        <div class="toggle"><input type="checkbox" id="planesToggle" checked /><label for="planesToggle">Airplanes</label></div>
+        <button class="btn primary" id="save">Save picture</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Tip: Drag to paint. Try switching brushes. Press <span class="kbd">S</span> to save.</div>
+
+  <script>
+    const canvas = document.getElementById('sky');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = window.innerWidth;
+    let H = canvas.height = window.innerHeight;
+    const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    function resize() {
+      W = canvas.width = Math.floor(window.innerWidth * DPR);
+      H = canvas.height = Math.floor(window.innerHeight * DPR);
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const state = {
+      shape: 'puff',
+      size: 64,
+      softness: 0.85,
+      wind: 12,
+      painting: false,
+      last: null,
+      planesEnabled: true,
+    };
+
+    const MAX_PUFFS = 16000;
+    const puffs = [];
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+    function rint(a,b){ return Math.floor(rand(a,b+1)); }
+
+    function addPuff(p){
+      if (puffs.length > MAX_PUFFS) puffs.splice(0, Math.floor(MAX_PUFFS*0.15));
+      puffs.push(p);
+    }
+
+    function spawnBrush(x,y) {
+      const s = state.size * DPR;
+      const baseAlpha = state.softness;
+      if (state.shape === 'puff') {
+        addPuff({x,y,r: s*rand(0.8,1.1), a: baseAlpha*rand(0.85,1), type:'circle', vx: state.wind/60*DPR*rand(0.8,1.2), wob: rand(0.2,0.8), phase: rand(0,Math.PI*2)});
+      } else if (state.shape === 'oval') {
+        const aspect = rand(1.5,2.2);
+        const rot = rand(-0.6,0.6);
+        addPuff({x,y,r: s*0.7, a: baseAlpha*0.95, type:'ellipse', aspect, rot, vx: state.wind/60*DPR*rand(0.8,1.2), wob: rand(0.15,0.5), phase: rand(0,Math.PI*2)});
+      } else if (state.shape === 'fluffy') {
+        const count = rint(3,5);
+        for (let i=0;i<count;i++) {
+          const ang = rand(0, Math.PI*2);
+          const dist = s*rand(0.05,0.22);
+          const px = x + Math.cos(ang)*dist;
+          const py = y + Math.sin(ang)*dist;
+          addPuff({x:px, y:py, r: s*rand(0.45,0.7), a: baseAlpha*rand(0.8,1), type:'circle', vx: state.wind/60*DPR*rand(0.9,1.3), wob: rand(0.2,0.8), phase: rand(0,Math.PI*2)});
+        }
+      } else if (state.shape === 'cumulus') {
+        addPuff({x, y: y, r: s*0.7, a: baseAlpha, type:'circle', vx: state.wind/60*DPR, wob: rand(0.2,0.6), phase: rand(0,Math.PI*2)});
+        addPuff({x: x - s*0.35, y: y, r: s*0.5, a: baseAlpha, type:'circle', vx: state.wind/60*DPR*1.05, wob: rand(0.2,0.6), phase: rand(0,Math.PI*2)});
+        addPuff({x: x + s*0.35, y: y, r: s*0.5, a: baseAlpha, type:'circle', vx: state.wind/60*DPR*0.95, wob: rand(0.2,0.6), phase: rand(0,Math.PI*2)});
+        addPuff({x: x - s*0.15, y: y - s*0.35, r: s*0.35, a: baseAlpha, type:'circle', vx: state.wind/60*DPR*1.1, wob: rand(0.2,0.6), phase: rand(0,Math.PI*2)});
+        addPuff({x: x + s*0.15, y: y - s*0.35, r: s*0.35, a: baseAlpha, type:'circle', vx: state.wind/60*DPR*0.9, wob: rand(0.2,0.6), phase: rand(0,Math.PI*2)});
+      }
+    }
+
+    const pointer = { x: 0, y: 0 };
+    let lastStamp = null;
+    function onPointerDown(e){
+      state.painting = true;
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = (e.clientX - rect.left) * DPR;
+      pointer.y = (e.clientY - rect.top) * DPR;
+      lastStamp = { x: pointer.x, y: pointer.y };
+      spawnBrush(pointer.x, pointer.y);
+    }
+    function onPointerMove(e){
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = (e.clientX - rect.left) * DPR;
+      pointer.y = (e.clientY - rect.top) * DPR;
+      if (!state.painting) return;
+      const step = state.size * 0.35 * DPR;
+      const dx = pointer.x - lastStamp.x, dy = pointer.y - lastStamp.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist >= step) {
+        const steps = Math.floor(dist / step);
+        for (let i = 1; i <= steps; i++) {
+          const t = i / steps;
+          const ix = lastStamp.x + dx * t;
+          const iy = lastStamp.y + dy * t;
+          spawnBrush(ix, iy);
+        }
+        lastStamp.x = pointer.x; lastStamp.y = pointer.y;
+      }
+    }
+    function onPointerUp(){ state.painting = false; }
+    canvas.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+
+    const brushesEl = document.getElementById('brushes');
+    brushesEl.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button[data-shape]');
+      if (!btn) return;
+      state.shape = btn.getAttribute('data-shape');
+      brushesEl.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+
+    const sizeEl = document.getElementById('size');
+    const sizeVal = document.getElementById('sizeVal');
+    function syncSize(){ state.size = +sizeEl.value; sizeVal.textContent = state.size + ' px'; }
+    sizeEl.addEventListener('input', syncSize); syncSize();
+
+    const softEl = document.getElementById('soft');
+    const softVal = document.getElementById('softVal');
+    function syncSoft(){ state.softness = (+softEl.value)/100; softVal.textContent = Math.round(state.softness*100)+'%'; }
+    softEl.addEventListener('input', syncSoft); syncSoft();
+
+    const windEl = document.getElementById('wind');
+    const windVal = document.getElementById('windVal');
+    function syncWind(){ state.wind = +windEl.value; windVal.textContent = (state.wind>=0?'+':'') + state.wind; puffs.forEach(p=>p.vx = (state.wind/60*DPR)* (p.vx>=0?1:-1)); }
+    windEl.addEventListener('input', syncWind); syncWind();
+
+    document.getElementById('clear').addEventListener('click', ()=>{ puffs.length = 0; });
+    const planesToggle = document.getElementById('planesToggle');
+    planesToggle.addEventListener('change', ()=>{ state.planesEnabled = planesToggle.checked; });
+
+    document.getElementById('save').addEventListener('click', saveImage);
+    window.addEventListener('keydown', (e)=>{ if (e.key.toLowerCase()==='s') saveImage(); });
+
+    function saveImage(){
+      const link = document.createElement('a');
+      link.download = 'cloud-painting.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function drawBackground(t){
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0, '#b9e6ff');
+      g.addColorStop(0.4, '#d6efff');
+      g.addColorStop(1, '#f7fbff');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,W,H);
+
+      const sunX = W*0.85 + Math.sin(t*0.0002)*20*DPR;
+      const sunY = H*0.18 + Math.cos(t*0.0002)*10*DPR;
+      const R = Math.min(W,H)*0.08;
+      const rg = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, R*1.6);
+      rg.addColorStop(0, 'rgba(255,255,255,1)');
+      rg.addColorStop(0.6, 'rgba(255,244,200,0.45)');
+      rg.addColorStop(1, 'rgba(255,244,200,0)');
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.arc(sunX, sunY, R, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(sunX, sunY, R*1.6, 0, Math.PI*2); ctx.fill();
+    }
+
+    function drawPuff(p, t){
+      const wobY = Math.sin(t*0.001 + p.phase) * p.wob * p.r*0.08;
+      const x = p.x; const y = p.y + wobY;
+      if (p.type === 'circle') {
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, p.r);
+        const a = Math.max(0, Math.min(1, p.a));
+        grad.addColorStop(0, 'rgba(255,255,255,'+(a*0.95)+')');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(x, y, p.r, 0, Math.PI*2); ctx.fill();
+      } else if (p.type === 'ellipse') {
+        const a = Math.max(0, Math.min(1, p.a));
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(p.rot||0);
+        ctx.scale(p.aspect||1.8, 1);
+        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.r);
+        grad.addColorStop(0, 'rgba(255,255,255,'+(a*0.95)+')');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function updatePuffs(dt){
+      for (let i = puffs.length - 1; i >= 0; i--) {
+        const p = puffs[i];
+        p.x += (p.vx||0) * dt;
+        if (p.x < -400*DPR || p.x > W + 400*DPR || p.y < -400*DPR || p.y > H + 400*DPR) {
+          puffs.splice(i,1);
+        }
+      }
+    }
+
+    const planes = [];
+    function spawnPlane(){
+      const fromLeft = Math.random() < 0.5;
+      const y = rand(H*0.15, H*0.65);
+      const speed = rand(40, 95) * DPR;
+      const dir = fromLeft ? 1 : -1;
+      const x = fromLeft ? -120*DPR : W + 120*DPR;
+      const scale = rand(0.6,1.1);
+      planes.push({ x, y, vx: dir*speed, dir, bob: rand(4,12)*DPR, phase: rand(0,Math.PI*2), scale, trail: [] });
+    }
+    let nextPlaneTime = 0;
+
+    function drawPlane(pl, t, dt){
+      const wob = Math.sin(t*0.003 + pl.phase) * pl.bob;
+      const x = pl.x; const y = pl.y + wob;
+      const s = 0.6 * pl.scale;
+      ctx.save();
+      ctx.translate(x, y);
+      if (pl.dir < 0) ctx.scale(-1,1);
+      ctx.scale(DPR*s, DPR*s);
+      ctx.translate(0,0);
+      ctx.fillStyle = 'rgba(255,255,255,0.98)';
+      ctx.strokeStyle = 'rgba(180,200,255,0.8)';
+      ctx.lineWidth = 1.3;
+      roundRect(-34, -8, 68, 16, 9);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,-8); ctx.lineTo(18,-22); ctx.lineTo(4,-8); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-20,8); ctx.lineTo(-2,22); ctx.lineTo(-8,8); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#8b9cf6';
+      roundRect(-40, -6, 14, 12, 3); ctx.fill();
+      ctx.fillStyle = '#4f5db8';
+      ctx.beginPath(); for (let i= -12;i<=12;i+=8){ ctx.rect(-12+i, -2.2, 3.6, 4.4);} ctx.fill();
+
+      const cx = x - pl.dir*34*DPR*s; const cy = y + wob*0;
+      pl.trail.push({x: cx, y: cy, r: rand(6,12)*DPR*s, a: 0.32, life: 1});
+      if (pl.trail.length > 90) pl.trail.shift();
+      ctx.restore();
+
+      for (let i=pl.trail.length-1;i>=0;i--) {
+        const c = pl.trail[i];
+        c.r += 6*DPR*dt*0.06; c.a *= (1 - 0.015*dt);
+        if (c.a < 0.01) { pl.trail.splice(i,1); continue; }
+        const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+        g.addColorStop(0, 'rgba(255,255,255,'+(c.a*0.9)+')');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    function roundRect(x, y, w, h, r){
+      r = Math.min(r, Math.abs(w)/2, Math.abs(h)/2);
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y, x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x, y+h, r);
+      ctx.arcTo(x, y+h, x, y, r);
+      ctx.arcTo(x, y, x+w, y, r);
+      ctx.closePath();
+    }
+
+    let lastT = performance.now();
+    function frame(now){
+      const dtMs = now - lastT; lastT = now;
+      const dt = Math.max(0.5, Math.min(4, dtMs/16.67));
+      drawBackground(now);
+      updatePuffs(dt);
+      for (let i=0;i<puffs.length;i++) drawPuff(puffs[i], now);
+      if (state.planesEnabled) {
+        if (now > nextPlaneTime) {
+          spawnPlane();
+          nextPlaneTime = now + rand(4500, 11000);
+        }
+        for (let i = planes.length-1; i >= 0; i--) {
+          const pl = planes[i];
+          pl.x += pl.vx * (dt/60);
+          drawPlane(pl, now, dt);
+          if (pl.dir>0 && pl.x > W + 200*DPR) planes.splice(i,1);
+          else if (pl.dir<0 && pl.x < -200*DPR) planes.splice(i,1);
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
+

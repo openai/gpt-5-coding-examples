@@ -1,0 +1,11 @@
+id: online-course-landing-page
+title: Online Academy
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Online Academy
+  - Goal: Promote a variety of online courses; coding, design, marketing, etc.
+  - Features: Course syllabus, instructor bio, enrollment form.
+  - The UI should be learning-focused with bright accents.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/online-course-landing-page.png
+tags:
+  - landing

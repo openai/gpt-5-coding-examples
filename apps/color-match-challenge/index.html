@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Color Match — 30s Speed Game</title>
+  <style>
+    :root {
+      --bg: #0e0f13;
+      --panel: #151821;
+      --text: #e6e8ef;
+      --muted: #a7adbe;
+      --accent: #00e5a8;
+      --danger: #ff5a6e;
+      --shadow: rgba(0, 0, 0, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 50% -10%, #1d2030 0%, var(--bg) 60%);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .app {
+      width: min(100%, 1000px);
+      padding: 24px clamp(16px, 4vw, 32px);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-weight: 800;
+      font-size: clamp(22px, 3.5vw, 32px);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--text);
+      opacity: 0.95;
+    }
+
+    .right, .left { display: flex; align-items: center; gap: 12px; }
+
+    .pill {
+      background: color-mix(in oklab, var(--panel), white 4%);
+      border: 1px solid color-mix(in oklab, var(--panel), white 10%);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 16px var(--shadow) inset, 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .pill .value { color: var(--text); min-width: 2ch; text-align: right; }
+
+    .btn-primary {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 18px;
+      background: linear-gradient(180deg, #27f5c2, var(--accent));
+      color: #091013;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0, 229, 168, 0.35), 0 2px 0 #0bbd8e inset;
+      transition: transform 100ms ease, box-shadow 160ms ease, filter 160ms ease;
+      user-select: none;
+    }
+    .btn-primary:hover { filter: brightness(1.03); }
+    .btn-primary:active { transform: translateY(1px) scale(0.99); box-shadow: 0 6px 16px rgba(0, 229, 168, 0.3), 0 1px 0 #0bbd8e inset; }
+    .btn-primary[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid color-mix(in oklab, var(--panel), white 8%);
+      border-radius: clamp(12px, 3vw, 20px);
+      padding: clamp(12px, 3vw, 24px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    }
+
+    .stage {
+      display: grid;
+      grid-template-rows: auto auto;
+      align-items: center;
+      gap: clamp(12px, 3vw, 22px);
+    }
+
+    .prompt {
+      text-align: center;
+      font-size: clamp(20px, 2.2vw, 22px);
+      color: var(--muted);
+    }
+
+    .word {
+      text-align: center;
+      font-size: clamp(48px, 10vw, 120px);
+      font-weight: 1000;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      line-height: 0.95;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+      user-select: none;
+      will-change: transform, color;
+      transition: transform 120ms ease;
+    }
+
+    .controls {
+      margin-top: clamp(12px, 3vw, 22px);
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .color-btn {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 16px 8px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      color: #111;
+      cursor: pointer;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.35) inset,
+        0 8px 24px rgba(0,0,0,0.35);
+      transform: translateZ(0);
+      transition: transform 90ms ease, box-shadow 140ms ease, filter 200ms ease;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .color-btn span { position: relative; z-index: 2; }
+
+    .color-btn::after {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      background: radial-gradient(120px 120px at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.35), transparent 55%);
+      opacity: 0;
+      transition: opacity 200ms ease;
+      z-index: 1;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+    }
+
+    .color-btn:hover::after { opacity: 0.7; }
+    .color-btn:hover { filter: brightness(1.03); }
+    .color-btn:active {
+      transform: translateY(1px) scale(0.985);
+      box-shadow:
+        0 0 0 rgba(255,255,255,0) inset,
+        0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    .pop { animation: pop 140ms ease-out; }
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    .correct-blink { animation: blink 220ms ease-in-out; }
+    .wrong-shake { animation: shake 220ms ease-in-out; }
+    @keyframes blink { 0%, 100% { filter: none; } 50% { filter: saturate(1.5) brightness(1.1); } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    .progress {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--panel), white 6%);
+      overflow: hidden;
+      border: 1px solid color-mix(in oklab, var(--panel), white 10%);
+    }
+    .progress > .bar {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      background: linear-gradient(90deg, #3df2bd, #47a6ff);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2) inset;
+      transition: width 100ms linear;
+    }
+
+    .center {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      gap: 16px;
+      padding: 8px 0 0;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 11, 18, 0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: var(--panel);
+      border: 1px solid color-mix(in oklab, var(--panel), white 8%);
+      border-radius: 18px;
+      padding: 24px;
+      width: min(92vw, 520px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .modal h2 { margin: 0 0 8px; font-size: 28px; }
+    .modal p { margin: 0 0 18px; color: var(--muted); }
+    .modal .row { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="left">
+        <div class="pill" aria-live="polite" aria-label="Score">
+          <span>Score</span>
+          <span class="value" id="score">0</span>
+        </div>
+        <div class="pill" aria-live="polite" aria-label="Time left">
+          <span>Time</span>
+          <span class="value" id="time">30.0</span>
+        </div>
+      </div>
+      <div class="title">Color Match</div>
+      <div class="right">
+        <button id="startBtn" class="btn-primary">Start</button>
+      </div>
+    </header>
+
+    <div class="card stage" role="region" aria-label="Game stage">
+      <div class="prompt">Click the button that matches the text color (not the word).</div>
+      <div id="word" class="word" aria-live="assertive" aria-atomic="true">Ready?</div>
+
+      <div class="controls" id="controls" aria-label="Color choices"></div>
+
+      <div class="center">
+        <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="over-title">
+    <div class="modal">
+      <h2 id="over-title">Time's up!</h2>
+      <p id="final">You scored 0. Great start — go again!</p>
+      <div class="row">
+        <button id="againBtn" class="btn-primary">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const COLORS = [
+      { name: 'RED',    hex: '#e53935' },
+      { name: 'BLUE',   hex: '#1e88e5' },
+      { name: 'GREEN',  hex: '#43a047' },
+      { name: 'YELLOW', hex: '#fdd835' },
+      { name: 'PURPLE', hex: '#8e24aa' },
+      { name: 'ORANGE', hex: '#fb8c00' },
+      { name: 'PINK',   hex: '#d81b60' },
+      { name: 'BROWN',  hex: '#6d4c41' },
+      { name: 'BLACK',  hex: '#212121' },
+      { name: 'GRAY',   hex: '#757575' }
+    ];
+
+    
+    const wordEl   = document.getElementById('word');
+    const scoreEl  = document.getElementById('score');
+    const timeEl   = document.getElementById('time');
+    const startBtn = document.getElementById('startBtn');
+    const againBtn = document.getElementById('againBtn');
+    const overlay  = document.getElementById('overlay');
+    const barEl    = document.getElementById('bar');
+    const controls = document.getElementById('controls');
+
+    let expected = null;
+    let running = false;
+    let startAt = 0;
+    let rafId = 0;
+    let score = 0;
+
+    function randInt(n) { return Math.floor(Math.random() * n); }
+    function choice(arr) { return arr[randInt(arr.length)]; }
+
+    function hexToRgb(hex) {
+      const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (!m) return { r: 0, g: 0, b: 0 };
+      return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+    }
+    function luminance(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const srgb = [r, g, b].map(v => v / 255);
+      const lin = srgb.map(c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+      return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+    }
+
+    
+    function buildButtons() {
+      controls.innerHTML = '';
+      for (const c of COLORS) {
+        const btn = document.createElement('button');
+        btn.className = 'color-btn';
+        btn.dataset.color = c.name;
+        btn.style.background = c.hex;
+        const l = luminance(c.hex);
+        btn.style.color = l > 0.55 ? '#111' : '#fff';
+        btn.innerHTML = `<span>${c.name}</span>`;
+        btn.addEventListener('pointermove', (e) => {
+          const rect = btn.getBoundingClientRect();
+          btn.style.setProperty('--x', ((e.clientX - rect.left) / rect.width) * 100 + '%');
+          btn.style.setProperty('--y', ((e.clientY - rect.top) / rect.height) * 100 + '%');
+        });
+        btn.addEventListener('click', () => onGuess(btn.dataset.color, btn));
+        controls.appendChild(btn);
+      }
+    }
+
+    function nextRound() {
+      if (!running) return;
+      const word = choice(COLORS).name;
+      const color = choice(COLORS);
+      expected = color.name;
+      wordEl.textContent = word;
+      wordEl.style.color = color.hex;
+      wordEl.classList.remove('wrong-shake', 'correct-blink');
+      
+      wordEl.style.transform = 'scale(1.03)';
+      setTimeout(() => { wordEl.style.transform = 'scale(1)'; }, 90);
+    }
+
+    function onGuess(name, btn) {
+      if (!running) return;
+      const correct = name === expected;
+      btn.classList.remove('pop');
+      void btn.offsetWidth;
+      btn.classList.add('pop');
+
+      if (correct) {
+        score += 1;
+        scoreEl.textContent = String(score);
+        wordEl.classList.remove('correct-blink');
+        void wordEl.offsetWidth;
+        wordEl.classList.add('correct-blink');
+      } else {
+        wordEl.classList.remove('wrong-shake');
+        void wordEl.offsetWidth;
+        wordEl.classList.add('wrong-shake');
+      }
+      nextRound();
+    }
+
+    function formatTime(t) { return t.toFixed(1); }
+
+    function tick() {
+      if (!running) return;
+      const now = performance.now();
+      const elapsed = (now - startAt) / 1000;
+      const total = 30;
+      const left = Math.max(0, total - elapsed);
+      timeEl.textContent = formatTime(left);
+      const pct = Math.max(0, Math.min(1, left / total));
+      barEl.style.width = (pct * 100).toFixed(2) + '%';
+      if (left <= 0) {
+        endGame();
+        return;
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function startGame() {
+      score = 0;
+      scoreEl.textContent = '0';
+      running = true;
+      startBtn.disabled = true;
+      overlay.classList.remove('show');
+      startAt = performance.now();
+      barEl.style.transition = 'none';
+      barEl.style.width = '100%';
+      
+      void barEl.offsetWidth;
+      barEl.style.transition = 'width 100ms linear';
+      nextRound();
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function endGame() {
+      running = false;
+      cancelAnimationFrame(rafId);
+      timeEl.textContent = '0.0';
+      startBtn.disabled = false;
+      const msg = score === 0 ? "You scored 0. Great start — go again!" : `Your score: ${score}. Can you beat it?`;
+      document.getElementById('final').textContent = msg;
+      overlay.classList.add('show');
+      expected = null;
+      wordEl.textContent = 'Done!';
+    }
+
+    startBtn.addEventListener('click', startGame);
+    againBtn.addEventListener('click', () => {
+      overlay.classList.remove('show');
+      startGame();
+    });
+
+    
+    buildButtons();
+  </script>
+</body>
+</html>

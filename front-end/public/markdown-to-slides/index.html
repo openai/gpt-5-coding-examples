@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Markdown → Slides</title>
+    <meta name="description" content="Convert Markdown (--- as slide breaks) into a presentation deck with live preview, fullscreen, keyboard navigation, and theme toggle." />
+    <style>
+      :root {
+        --bg: #f5f6fa;
+        --text: #1e293b;
+        --muted: #64748b;
+        --surface: #ffffff;
+        --outline: #e2e8f0;
+        --accent: #0f62fe;
+        --accent-contrast: #ffffff;
+        --focus: 0 0 0 3px rgba(15, 98, 254, 0.35);
+        --slide-bg: #ffffff;
+        --slide-fg: #0f172a;
+        --slide-title: #111827;
+        --code-bg: #f6f8fb;
+        --code-fg: #0f172a;
+        --blockquote-bg: #f8fafc;
+        --blockquote-border: #e2e8f0;
+        --shadow: 0 8px 24px rgba(2, 6, 23, 0.08), 0 2px 6px rgba(2, 6, 23, 0.05);
+      }
+
+      [data-theme="dark"] {
+        --bg: #0b1220;
+        --text: #d1d5db;
+        --muted: #9ca3af;
+        --surface: #0f172a;
+        --outline: #1f2a44;
+        --accent: #60a5fa;
+        --accent-contrast: #0b1220;
+        --focus: 0 0 0 3px rgba(96, 165, 250, 0.35);
+        --slide-bg: #0b1220;
+        --slide-fg: #e5e7eb;
+        --slide-title: #93c5fd;
+        --code-bg: #111827;
+        --code-fg: #e5e7eb;
+        --blockquote-bg: #0f172a;
+        --blockquote-border: #334155;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.45);
+      }
+
+      
+
+      html, body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .app {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        min-height: 100vh;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 18px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--outline);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .logo {
+        width: 28px;
+        height: 28px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 7px;
+        background: linear-gradient(135deg, var(--accent) 0%, #8ab6ff 100%);
+        color: var(--accent-contrast);
+        font-weight: 800;
+        font-size: 14px;
+        box-shadow: var(--shadow);
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .control {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--outline);
+        padding: 8px 10px;
+        border-radius: 10px;
+      }
+      select.control-input, button.control-btn {
+        appearance: none;
+        background: var(--surface);
+        border: 1px solid var(--outline);
+        color: var(--text);
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button.control-btn.primary {
+        background: var(--accent);
+        color: var(--accent-contrast);
+        border-color: transparent;
+      }
+      button.control-btn:hover, select.control-input:hover {
+        filter: brightness(0.98);
+      }
+      button.control-btn:focus, select.control-input:focus {
+        outline: none;
+        box-shadow: var(--focus);
+      }
+
+      .main {
+        display: grid;
+        grid-template-columns: minmax(320px, 0.45fr) 1fr;
+        gap: 16px;
+        padding: 16px;
+      }
+      .pane {
+        background: var(--surface);
+        border: 1px solid var(--outline);
+        border-radius: 14px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        box-shadow: var(--shadow);
+        min-height: 0; /* allow children to size */
+      }
+      .pane-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--outline);
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .pane-body {
+        min-height: 0; /* necessary for children height calc */
+      }
+      textarea#markdownInput {
+        width: 100%;
+        height: 100%;
+        min-height: 300px;
+        border: none;
+        outline: none;
+        resize: none;
+        padding: 14px;
+        font-size: 14px;
+        line-height: 1.5;
+        background: transparent;
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+
+      .preview-pane .pane-body {
+        position: relative;
+        padding: 12px;
+      }
+      .preview-container {
+        position: relative;
+        height: calc(100% - 44px);
+        background: var(--surface);
+        border: 1px solid var(--outline);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .stage-wrapper {
+        position: absolute;
+        inset: 48px 16px 34px 16px; /* leave room for header/progress */
+      }
+      .stage {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 1280px;
+        height: 720px; /* 16:9 */
+        transform-origin: center center;
+      }
+      .slide {
+        width: 100%;
+        height: 100%;
+        background: var(--slide-bg);
+        color: var(--slide-fg);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        padding: 48px 56px;
+      }
+      .slide h1, .slide h2, .slide h3, .slide h4, .slide h5 {
+        margin: 0 0 16px 0;
+        line-height: 1.1;
+        color: var(--slide-title);
+      }
+      .slide h1 { font-size: 56px; font-weight: 800; }
+      .slide h2 { font-size: 40px; font-weight: 800; }
+      .slide h3 { font-size: 32px; font-weight: 700; }
+      .slide p { font-size: 22px; line-height: 1.45; margin: 8px 0 10px; }
+      .slide ul, .slide ol { font-size: 22px; line-height: 1.45; padding-left: 26px; margin: 8px 0 10px; }
+      .slide li { margin: 6px 0; }
+      .slide a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+      .slide a:hover { text-decoration: underline; }
+      .slide img { max-width: 100%; max-height: 60vh; border-radius: 10px; box-shadow: var(--shadow); }
+      .slide pre.code { background: var(--code-bg); color: var(--code-fg); padding: 14px 16px; border-radius: 12px; overflow: auto; font-size: 18px; line-height: 1.4; border: 1px solid var(--outline); }
+      .slide code { background: var(--code-bg); color: var(--code-fg); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--outline); }
+      .slide blockquote { background: var(--blockquote-bg); border-left: 4px solid var(--blockquote-border); padding: 10px 14px; border-radius: 10px; }
+      .slide .subtitle { color: var(--muted); font-size: 26px; margin-top: -6px; }
+
+      .preview-header {
+        position: absolute;
+        top: 8px; left: 10px; right: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        pointer-events: none;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: color-mix(in oklab, var(--surface), transparent 20%);
+        border: 1px solid var(--outline);
+        color: var(--muted);
+        font-size: 12px;
+        pointer-events: auto;
+      }
+      .nav-btn {
+        position: absolute;
+        top: 50%; transform: translateY(-50%);
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        border: 1px solid var(--outline);
+        background: color-mix(in oklab, var(--surface), transparent 10%);
+        display: grid; place-items: center;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+      }
+      .nav-btn:hover { filter: brightness(0.98); }
+      .nav-btn:focus { outline: none; box-shadow: var(--focus); }
+      .nav-prev { left: 24px; }
+      .nav-next { right: 24px; }
+
+      .progressbar {
+        position: absolute;
+        left: 16px; right: 16px; bottom: 10px;
+        height: 6px;
+        background: var(--outline);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progressbar > .fill {
+        height: 100%;
+        width: 0%;
+        background: var(--accent);
+        transition: width 160ms ease-out;
+      }
+
+      .help-hint {
+        padding: 6px 10px 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        text-align: right;
+      }
+
+      @media (max-width: 1100px) {
+        .main { grid-template-columns: 1fr; }
+        .preview-container { height: 65vh; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand" title="Markdown to Slides">
+          <span class="logo">M→S</span>
+          <span>Markdown → Slides</span>
+        </div>
+        <div class="controls">
+          <label aria-label="Theme" title="Theme">
+            <select id="themeSelect" class="control-input" title="Theme">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+          <button id="loadSample" class="control-btn" title="Load a sample presentation">Load Sample</button>
+          <button id="fullscreenTop" class="control-btn primary" title="Toggle fullscreen preview">Fullscreen</button>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="pane editor-pane" aria-label="Markdown editor">
+          <div class="pane-header">
+            <div>Markdown</div>
+            <div class="small-hint" style="color: var(--muted); font-size: 12px;">Use a line with --- to start a new slide</div>
+          </div>
+            <div class="pane-body">
+            <textarea id="markdownInput" aria-label="Markdown input" placeholder="# Your presentation title\n---\n## Slide title\nYour points here...\n- Bullet 1\n- Bullet 2"></textarea>
+          </div>
+        </section>
+
+        <section class="pane preview-pane" aria-label="Live preview">
+          <div class="pane-header">
+            <div>Live Preview</div>
+            <div id="slideIndicator" style="color: var(--muted); font-size: 12px;">Slide 1 of 1</div>
+          </div>
+          <div class="pane-body">
+            <div id="preview" class="preview-container" tabindex="0" aria-label="Presentation preview">
+              <div class="preview-header">
+                <div class="pill" id="deckTitle">Presentation</div>
+                <div class="pill" id="pillHelp">←/→ Navigate • F Fullscreen</div>
+              </div>
+              <div class="stage-wrapper">
+                <div id="stage" class="stage">
+                  <div id="currentSlide" class="slide">Loading…</div>
+                </div>
+              </div>
+              <button id="prevBtn" class="nav-btn nav-prev" aria-label="Previous slide" title="Previous (←)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button id="nextBtn" class="nav-btn nav-next" aria-label="Next slide" title="Next (→)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="progressbar" aria-hidden="true"><div class="fill" id="progressFill"></div></div>
+            </div>
+            <div class="help-hint">Tip: Use ←/→ to navigate. Press F for fullscreen.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      (function() {
+        const baseWidth = 1280, baseHeight = 720;
+        const $ = sel => document.querySelector(sel);
+
+        const dom = {
+          body: document.body,
+          themeSelect: $('#themeSelect'),
+          markdown: $('#markdownInput'),
+          preview: $('#preview'),
+          stage: $('#stage'),
+          currentSlide: $('#currentSlide'),
+          indicator: $('#slideIndicator'),
+          progressFill: $('#progressFill'),
+          deckTitle: $('#deckTitle'),
+          prev: $('#prevBtn'),
+          next: $('#nextBtn'),
+          fullscreenTop: $('#fullscreenTop'),
+        };
+
+        const SAMPLE = `# Markdown → Slides\nA clean, business-ready deck from plain text.\n\nPresenter: Jane Doe\nCompany: Example Corp\n\n---\n\n## Agenda\n- Why Markdown slides\n- How it works\n- Live demo\n- Tips\n- Q&A\n\n---\n\n## Why Markdown?\n- Focus on content, not formatting\n- Version control friendly\n- Quickly iterate and collaborate\n- Portable: works anywhere with a browser\n\n---\n\n## Formatting essentials\n- Emphasis with **bold** and *italic*\n- Links like [OpenAI](https://openai.com) and images below\n- Inline code: \`npm start\`\n- Code blocks:\n\n\`\`\`js\nfunction hello(name) {\n  console.log('Hello, ' + name + '!');\n}\nhello('world');\n\`\`\`\n\n---\n\n## Visuals\n![Chart](https://dummyimage.com/960x320/4b9cd3/ffffff&text=Business+Chart)\n\n- Add images to support your narrative\n- Keep slides focused and uncluttered\n\n---\n\n## Tips for great slides\n1. One idea per slide\n2. Use readable font sizes\n3. Contrast matters\n4. Keep code snippets small\n\n> Pro tip: Press F for fullscreen, use ← → to navigate.\n\n---\n\n# Thank you\n\nQuestions?\n`;
+
+        // State
+        let slides = [];
+        let index = 0;
+
+        // Setup theme from preference/localStorage
+        const savedTheme = localStorage.getItem('m2s-theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const normalizedSaved = (savedTheme === 'corporate') ? null : savedTheme;
+        const initialTheme = normalizedSaved || 'light';
+        setTheme(initialTheme);
+        dom.themeSelect.value = initialTheme;
+
+        // Fill sample by default
+        dom.markdown.value = SAMPLE;
+
+        // Render initial
+        compileAndRender();
+        layoutStage();
+
+        // Event listeners
+        window.addEventListener('resize', layoutStage);
+        document.addEventListener('fullscreenchange', layoutStage);
+
+        dom.themeSelect.addEventListener('change', (e) => setTheme(e.target.value));
+        $('#loadSample').addEventListener('click', () => { dom.markdown.value = SAMPLE; compileAndRender(true); });
+        dom.fullscreenTop.addEventListener('click', toggleFullscreen);
+
+        dom.prev.addEventListener('click', prevSlide);
+        dom.next.addEventListener('click', nextSlide);
+
+        dom.preview.addEventListener('dblclick', toggleFullscreen);
+        dom.preview.addEventListener('keydown', handleKey);
+        document.addEventListener('keydown', (e) => {
+          const tag = (e.target && e.target.tagName || '').toLowerCase();
+          if (tag === 'textarea' || tag === 'input') return; // ignore while typing
+          handleKey(e);
+        });
+
+        // Debounced input handler
+        let timer = null;
+        dom.markdown.addEventListener('input', () => {
+          window.clearTimeout(timer);
+          timer = window.setTimeout(() => compileAndRender(), 180);
+        });
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('m2s-theme', theme);
+        }
+
+        function handleKey(e) {
+          const key = e.key;
+          if (key === 'ArrowRight' || key === 'PageDown' || key === ' ') { e.preventDefault(); nextSlide(); }
+          else if (key === 'ArrowLeft' || key === 'PageUp') { e.preventDefault(); prevSlide(); }
+          else if (key === 'Home') { e.preventDefault(); gotoSlide(0); }
+          else if (key === 'End') { e.preventDefault(); gotoSlide(slides.length - 1); }
+          else if (key === 'f' || key === 'F') { e.preventDefault(); toggleFullscreen(); }
+        }
+
+        function toggleFullscreen() {
+          const el = dom.preview;
+          if (!document.fullscreenElement) {
+            el.requestFullscreen && el.requestFullscreen();
+          } else {
+            document.exitFullscreen && document.exitFullscreen();
+          }
+        }
+
+        function layoutStage() {
+          const wrap = dom.preview.querySelector('.stage-wrapper');
+          const rect = wrap.getBoundingClientRect();
+          const scale = Math.min(rect.width / baseWidth, rect.height / baseHeight);
+          dom.stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        }
+
+        function prevSlide() { gotoSlide(index - 1); }
+        function nextSlide() { gotoSlide(index + 1); }
+        function gotoSlide(i) {
+          if (!slides.length) return;
+          index = Math.max(0, Math.min(slides.length - 1, i));
+          dom.currentSlide.innerHTML = slides[index] || '';
+          updateHud();
+        }
+
+        function updateHud() {
+          dom.indicator.textContent = `Slide ${slides.length ? index + 1 : 0} of ${slides.length}`;
+          const pct = slides.length ? ((index + 1) / slides.length) * 100 : 0;
+          dom.progressFill.style.width = pct.toFixed(2) + '%';
+          // Update deck title from first H1, if present
+          const tmp = document.createElement('div');
+          tmp.innerHTML = slides[0] || '';
+          const h1 = tmp.querySelector('h1');
+          dom.deckTitle.textContent = h1 ? h1.textContent : 'Presentation';
+        }
+
+        function compileAndRender(forceFirst=false) {
+          const text = dom.markdown.value ?? '';
+          const parts = splitSlides(text);
+          slides = parts.map(s => mdToHtml(s.trim()));
+          if (forceFirst) index = 0;
+          if (index >= slides.length) index = Math.max(0, slides.length - 1);
+          gotoSlide(index);
+        }
+
+        function splitSlides(text) {
+          const lines = (text || '').replace(/\r/g, '').split('\n');
+          const out = [];
+          let buf = [];
+          let inCode = false;
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (/^```/.test(line.trim())) inCode = !inCode;
+            if (!inCode && line.trim() === '---') {
+              out.push(buf.join('\n'));
+              buf = [];
+            } else {
+              buf.push(line);
+            }
+          }
+          out.push(buf.join('\n'));
+          return out;
+        }
+
+        // Basic Markdown to HTML (safe, minimal, business-friendly)
+        function mdToHtml(md) {
+          if (!md.trim()) return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:18px;">(Empty slide)</div>';
+          // Escape HTML first
+          let text = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+          // Extract fenced code blocks
+          const codeBlocks = [];
+          text = text.replace(/```(\w+)?\n([\s\S]*?)\n```/g, (m, lang, code) => {
+            const i = codeBlocks.length;
+            codeBlocks.push(`<pre class="code"><code${lang ? ` data-lang="${escapeHtmlAttr(lang)}"` : ''}>${escapeHtml(code)}</code></pre>`);
+            return `\uE000CODEBLOCK${i}\uE000`;
+          });
+
+          // Block-level transforms: headings, lists, quotes, paragraphs
+          text = blockify(text);
+
+          // Inline transforms
+          text = inlineify(text);
+
+          // Restore code blocks
+          text = text.replace(/\uE000CODEBLOCK(\d+)\uE000/g, (_, i) => codeBlocks[Number(i)] || '');
+
+          return text;
+        }
+
+        function blockify(src) {
+          const lines = src.split('\n');
+          let out = '';
+          let inUl = false, inOl = false, inBlockquote = false, para = '';
+
+          const flushPara = () => {
+            if (para.trim()) out += `<p>${inlineify(para.trim())}</p>`;
+            para = '';
+          };
+          const closeLists = () => {
+            if (inUl) { out += '</ul>'; inUl = false; }
+            if (inOl) { out += '</ol>'; inOl = false; }
+          };
+          const closeQuote = () => { if (inBlockquote) { out += '</blockquote>'; inBlockquote = false; } };
+
+          for (let i = 0; i < lines.length; i++) {
+            const raw = lines[i];
+            const line = raw; // already escaped
+            if (!line.trim()) { // blank line
+              flushPara();
+              closeLists();
+              closeQuote();
+              continue;
+            }
+
+            // Headings
+            const h = /^(#{1,6})\s+(.*)$/.exec(line);
+            if (h) {
+              flushPara(); closeLists(); closeQuote();
+              const level = h[1].length;
+              out += `<h${level}>${inlineify(h[2].trim())}</h${level}>`;
+              continue;
+            }
+
+            // Blockquote (single level)
+            const bq = /^>\s?(.*)$/.exec(line);
+            if (bq) {
+              flushPara(); closeLists();
+              if (!inBlockquote) { out += '<blockquote>'; inBlockquote = true; }
+              out += `<p>${inlineify(bq[1])}</p>`;
+              continue;
+            }
+
+            // Unordered list
+            const ul = /^\s*[-+*]\s+(.*)$/.exec(line);
+            if (ul) {
+              flushPara(); closeQuote();
+              if (!inUl) { out += '<ul>'; inUl = true; }
+              out += `<li>${inlineify(ul[1])}</li>`;
+              continue;
+            }
+
+            // Ordered list
+            const ol = /^\s*\d+[\.)]\s+(.*)$/.exec(line);
+            if (ol) {
+              flushPara(); closeQuote();
+              if (!inOl) { out += '<ol>'; inOl = true; }
+              out += `<li>${inlineify(ol[1])}</li>`;
+              continue;
+            }
+
+            // Default: paragraph continuation
+            para += (para ? ' ' : '') + line.trim();
+          }
+
+          flushPara();
+          closeLists();
+          closeQuote();
+          return out;
+        }
+
+        function inlineify(str) {
+          let s = str;
+
+          // Images ![alt](src "title")
+          s = s.replace(/!\[([^\]]*)\]\(([^\s\)]+)(?:\s+"([^"]+)")?\)/g, (m, alt, src, title) => {
+            const safeSrc = sanitizeUrlForImg(unescapeMdLink(src));
+            const safeAlt = escapeHtmlAttr(alt);
+            const safeTitle = title ? ` title="${escapeHtmlAttr(title)}"` : '';
+            if (!safeSrc) return alt ? `<em>${safeAlt}</em>` : '';
+            return `<img alt="${safeAlt}" src="${safeSrc}"${safeTitle} />`;
+          });
+
+          // Links [text](href "title")
+          s = s.replace(/\[([^\]]+)\]\(([^\s\)]+)(?:\s+"([^"]+)")?\)/g, (m, txt, href, title) => {
+            const safeHref = sanitizeUrl(unescapeMdLink(href));
+            const safeTxt = escapeHtmlAttr(txt);
+            const safeTitle = title ? ` title="${escapeHtmlAttr(title)}"` : '';
+            if (!safeHref) return safeTxt;
+            return `<a href="${safeHref}" target="_blank" rel="noopener"${safeTitle}>${safeTxt}</a>`;
+          });
+
+          // Bold **text** or __text__
+          s = s.replace(/(\*\*|__)(.+?)\1/g, '<strong>$2</strong>');
+          // Italic *text* or _text_
+          s = s.replace(/(\*|_)([^*_]+?)\1/g, '<em>$2</em>');
+          // Inline code `code`
+          s = s.replace(/`([^`]+?)`/g, (m, code) => `<code>${escapeHtml(code)}</code>`);
+          return s;
+        }
+
+        function escapeHtml(s) {
+          return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        function escapeHtmlAttr(s) {
+          return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function sanitizeUrl(u) {
+          try {
+            if (!u) return '';
+            // allow anchors and relative paths
+            if (u.startsWith('#') || u.startsWith('/') || u.startsWith('./') || u.startsWith('../')) return u;
+            const url = new URL(u, window.location.origin);
+            return ['http:', 'https:', 'mailto:'].includes(url.protocol) ? url.href : '';
+          } catch { return ''; }
+        }
+        function sanitizeUrlForImg(u) {
+          try {
+            if (!u) return '';
+            if (u.startsWith('/') || u.startsWith('./') || u.startsWith('../')) return u;
+            if (u.startsWith('data:image/')) return u;
+            const url = new URL(u, window.location.origin);
+            return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+          } catch { return ''; }
+        }
+        function unescapeMdLink(s) {
+          return s.replace(/\((?=.*\))/g, '%28').replace(/\)/g, '%29');
+        }
+      })();
+    </script>
+  </body>
+  </html>

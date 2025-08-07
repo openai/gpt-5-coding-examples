@@ -1,0 +1,12 @@
+id: farewell-message-board
+title: Farewell Message Board
+prompt: |
+  Create a single-page app, in a single HTML file, for a farewell message board with a warm and fun feeling:
+  - Use the latest UI components to give the site a professional appearance.
+  - Display 10 pre-posted messages nicely as heartfelt cards, each with a meaningful picture. If a message includes pictures, be sure the text remains the main focus.
+  - Include a "Write" button that allows users to add new messages.
+  - Add a pseudo login button at the top.
+  - Ensure UI design policies, such as button sizes, are consistent throughout.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/farewell-message-board.png
+tags:
+  - app

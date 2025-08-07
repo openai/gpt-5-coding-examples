@@ -1,0 +1,12 @@
+id: regex-lab
+title: Regex Lab
+prompt: |
+  Build a single-file regex playground (index.html) with no bundler that helps users learn and test regular expressions:
+  - Inputs: pattern, flags (g i m s u y), and test text area with live updates
+  - Output panes: highlighted matches with group colors, table of matches with indices and capture groups, and an explanation of the pattern using common tokens
+  - Utilities: quick inserts for common tokens (\d, \w, \s, [A-Z], lookahead, etc.), copy/share permalink with pattern+flags encoded in URL hash
+  - Error handling: graceful feedback for invalid patterns, show error message and caret position
+  - UX: terminal-window style, light/dark toggle (default to dark), clear button
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/regex-lab.png
+tags:
+  - tool

@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Equation Solver Tool</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #111111;
+      --muted: #666666;
+      --accent: #0b5394;
+      --border: #dadada;
+      --surface: #f7f7f7;
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 0;
+      font-family: Cambria, Georgia, serif;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    header h1 {
+      font-weight: 600;
+      font-size: 28px;
+      letter-spacing: 0.2px;
+      margin: 0 0 4px 0;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .panel {
+      margin-top: 24px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .panel .body {
+      padding: 16px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    textarea#input {
+      width: 100%;
+      min-height: 64px;
+      resize: vertical;
+      font: inherit;
+      font-size: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button, .link-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--fg);
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 15px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .examples {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .chip {
+      padding: 4px 8px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .results {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    .results h2 {
+      font-size: 20px;
+      margin: 0 0 6px 0;
+    }
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .math {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+    }
+    ol.steps {
+      margin: 8px 0 0 22px;
+    }
+    .summary {
+      padding: 8px 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 12px;
+    }
+    .status {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    footer {
+      margin-top: 36px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .error {
+      color: #a61b1b;
+    }
+    details.notes {
+      margin-top: 10px;
+    }
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      padding: 0 4px;
+      border-radius: 4px;
+      background: #fff;
+      font-size: 12px;
+    }
+    .muted-box {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+  </style>
+  <meta name="description" content="A minimal academic single-page app that solves and explains math equations step-by-step, with export.">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Equation Solver Tool</h1>
+      <p>Enter an equation or expression. The tool will simplify and, for linear and quadratic equations in x, show a step-by-step solution.</p>
+    </header>
+
+    <section class="panel">
+      <div class="body">
+        <label for="input">Input (examples: 2x + 3 = 7, x^2 - 5x + 6 = 0, 3 + 4*2 - 1)</label>
+        <textarea id="input" placeholder="Type an equation or expression involving x…"></textarea>
+        <div class="actions">
+          <button id="solve" class="primary">Solve</button>
+          <button id="clear">Clear</button>
+          <button id="export">Export Results</button>
+          <span class="status" id="status"></span>
+        </div>
+        <div class="examples" id="examples">
+          <span class="chip" data-example="2x + 3 = 7">2x + 3 = 7</span>
+          <span class="chip" data-example="x^2 - 5x + 6 = 0">x^2 - 5x + 6 = 0</span>
+          <span class="chip" data-example="2(x+3) = x - 4">2(x+3) = x - 4</span>
+          <span class="chip" data-example="3 + 4*2 - 1">3 + 4*2 - 1</span>
+          <span class="chip" data-example="(x-1)(x-2)=0">(x-1)(x-2)=0</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="results" id="results" hidden>
+      <h2>Step-by-step breakdown</h2>
+      <div id="detected" class="note"></div>
+      <ol class="steps" id="steps"></ol>
+      <div class="summary" id="summary"></div>
+      <details class="notes">
+        <summary>Notes</summary>
+        <div class="muted-box">
+          This tool handles linear and quadratic equations in the variable x. It supports +, −, ×, ÷, parentheses, implicit multiplication (e.g., 2x or 3(x+1)), and exponents like x^2. Division by expressions with x is not supported. For higher-degree equations, the expression is simplified but not solved.
+        </div>
+      </details>
+    </section>
+
+    <footer>
+      <div>Academic, minimal UI. No external libraries. Your data stays in your browser.</div>
+      <div>Shortcuts: <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> to solve; <span class="kbd">Esc</span> to clear.</div>
+    </footer>
+  </div>
+
+  <script>
+    const EPS = 1e-12;
+    const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+    const nearZero = (n) => Math.abs(n) < EPS;
+
+    function gcd(a, b) {
+      a = Math.abs(Math.round(a));
+      b = Math.abs(Math.round(b));
+      while (b) { const t = b; b = a % b; a = t; }
+      return a || 1;
+    }
+
+    function toFraction(x, maxDen = 10000) {
+      if (!isFinite(x)) return null;
+      let sign = x < 0 ? -1 : 1;
+      x = Math.abs(x);
+      if (nearZero(x)) return { n: 0, d: 1 };
+      
+      let h1 = 1, h0 = 0, k1 = 0, k0 = 1;
+      let b = x, a = Math.floor(b);
+      let h = a*h1 + h0, k = a*k1 + k0;
+      let iter = 0;
+      while (Math.abs(x - h/k) > 1e-12 && k < maxDen && iter < 50) {
+        b = 1/(b - a);
+        a = Math.floor(b);
+        h0 = h1; h1 = h;
+        k0 = k1; k1 = k;
+        h = a*h1 + h0;
+        k = a*k1 + k0;
+        iter++;
+      }
+      return { n: sign * h, d: k };
+    }
+
+    function formatNumber(x, {sig=12}={}) {
+      if (!isFinite(x)) return String(x);
+      if (nearZero(x)) x = 0;
+      
+      if (Math.abs(x - Math.round(x)) < 1e-12) return String(Math.round(x));
+      
+      const s = x.toPrecision(sig);
+      
+      return s.replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
+    }
+
+    function formatMaybeFraction(x) {
+      if (!isFinite(x)) return String(x);
+      const fr = toFraction(x, 10000);
+      if (!fr) return formatNumber(x);
+      const approx = fr.n / fr.d;
+      if (Math.abs(approx - x) < 1e-10 && Math.abs(fr.d) <= 1000) {
+        if (fr.d === 1) return String(fr.n);
+        return fr.n + '/' + fr.d + ' ≈ ' + formatNumber(x);
+      }
+      return formatNumber(x);
+    }
+
+    
+    class Poly {
+      constructor(coeffs = {}) {
+        this.c = {};
+        for (const k in coeffs) {
+          const kk = parseInt(k, 10);
+          const v = coeffs[k];
+          if (!nearZero(v)) this.c[kk] = (this.c[kk] || 0) + v;
+        }
+        this._cleanup();
+      }
+      static fromNumber(n) { return new Poly({0: n}); }
+      static fromVar() { return new Poly({1: 1}); }
+      clone() { return new Poly({...this.c}); }
+      _cleanup() {
+      
+        for (const k of Object.keys(this.c)) if (nearZero(this.c[k])) delete this.c[k];
+        return this;
+      }
+      degree() {
+        const keys = Object.keys(this.c).map(k => parseInt(k,10));
+        return keys.length ? Math.max(...keys) : -Infinity;
+      }
+      isZero() { return Object.keys(this.c).length === 0; }
+      coeff(p) { return this.c[p] || 0; }
+      add(other) {
+        const out = new Poly({...this.c});
+        for (const k in other.c) out.c[k] = (out.c[k] || 0) + other.c[k];
+        return out._cleanup();
+      }
+      sub(other) { return this.add(other.mul(Poly.fromNumber(-1))); }
+      mul(other) {
+        const out = new Poly();
+        for (const i in this.c) {
+          for (const j in other.c) {
+            const pi = parseInt(i,10), pj = parseInt(j,10);
+            const t = (out.c[pi+pj] || 0) + this.c[i]*other.c[j];
+            out.c[pi+pj] = t;
+          }
+        }
+        return out._cleanup();
+      }
+      divScalar(s) {
+        if (nearZero(s)) throw new Error('Division by zero');
+        const out = new Poly();
+        for (const k in this.c) out.c[k] = this.c[k] / s;
+        return out._cleanup();
+      }
+      powInt(exp) {
+        if (exp < 0) throw new Error('Negative exponents are not supported');
+        let res = Poly.fromNumber(1);
+        let base = this.clone();
+        let e = exp;
+        while (e > 0) {
+          if (e & 1) res = res.mul(base);
+          e >>= 1;
+          if (e) base = base.mul(base);
+        }
+        return res;
+      }
+      toString() {
+        const ks = Object.keys(this.c).map(k => parseInt(k,10)).sort((a,b)=>b-a);
+        if (ks.length === 0) return '0';
+        const parts = [];
+        for (const p of ks) {
+          const a = this.c[p];
+          const sign = a < 0 ? '-' : '+';
+          const abs = Math.abs(a);
+          let coeffStr;
+          if (p === 0) {
+            coeffStr = formatNumber(a);
+          } else {
+            if (Math.abs(abs - 1) < 1e-12) coeffStr = (a < 0 ? '-' : '') + 'x' + (p===1 ? '' : '^'+p);
+            else coeffStr = (a < 0 ? '-' : '') + formatNumber(abs) + 'x' + (p===1 ? '' : '^'+p);
+          }
+          parts.push({p, coeffStr, sign});
+        }
+        const out = parts.map((t,i)=>{
+          if (i===0) return t.coeffStr.replace(/^\+/,'');
+          return (t.sign==='-'? ' - ' : ' + ') + t.coeffStr.replace(/^[-+]/,'');
+        }).join('');
+        return out;
+      }
+    }
+
+    
+    function preprocessInput(raw) {
+      return raw
+        .replace(/[\u2013\u2014\u2212]/g, '-')
+        .replace(/[\u00D7\u22C5]/g, '*')
+        .replace(/[\u00F7]/g, '/')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function tokenize(expr) {
+      const tokens = [];
+      const n = expr.length;
+      let i = 0;
+      const isDigit = c => /[0-9]/.test(c);
+      const isLetter = c => /[a-zA-Z]/.test(c);
+      let prevType = 'start';
+      while (i < n) {
+        const ch = expr[i];
+        if (ch === ' ') { i++; continue; }
+        if (ch === '(') {
+          
+          if (prevType === 'number' || prevType === 'variable' || prevType === 'rparen') {
+            tokens.push({type:'op', op:'*'});
+          }
+          tokens.push({type:'lparen'});
+          prevType = 'lparen';
+          i++; continue;
+        }
+        if (ch === ')') {
+          tokens.push({type:'rparen'});
+          prevType = 'rparen';
+          i++; continue;
+        }
+        if ('+-*/^'.includes(ch)) {
+          
+          if ((ch === '+' || ch === '-') && (prevType === 'start' || prevType === 'op' || prevType === 'lparen')) {
+            tokens.push({type:'op', op: ch === '-' ? 'u-' : 'u+'});
+          } else {
+            tokens.push({type:'op', op: ch});
+          }
+          prevType = 'op';
+          i++; continue;
+        }
+        if (isDigit(ch) || (ch === '.' && isDigit(expr[i+1]||''))) {
+          let j = i+1;
+          while (j < n && (isDigit(expr[j]) || expr[j] === '.')) j++;
+          const num = parseFloat(expr.slice(i, j));
+          
+          if (prevType === 'number') {
+          } else if (prevType === 'variable' || prevType === 'rparen') {
+            tokens.push({type:'op', op:'*'});
+          }
+          tokens.push({type:'number', value:num});
+          prevType = 'number';
+          i = j; continue;
+        }
+        if (isLetter(ch)) {
+          let j = i+1;
+          while (j < n && isLetter(expr[j])) j++;
+          const name = expr.slice(i, j);
+          
+          if (/^x$/i.test(name)) {
+            if (prevType === 'number' || prevType === 'variable' || prevType === 'rparen') tokens.push({type:'op', op:'*'});
+            tokens.push({type:'variable', name:'x'});
+            prevType = 'variable';
+          } else {
+            throw new Error('Unsupported symbol: ' + name);
+          }
+          i = j; continue;
+        }
+        throw new Error('Unexpected character: ' + ch);
+      }
+      return tokens;
+    }
+
+    function toRPN(tokens) {
+      const output = [];
+      const stack = [];
+      const prec = { 'u+': 4, 'u-': 4, '^': 3, '*': 2, '/': 2, '+': 1, '-': 1 };
+      const rightAssoc = { '^': true, 'u+': true, 'u-': true };
+      for (const t of tokens) {
+        if (t.type === 'number' || t.type === 'variable') output.push(t);
+        else if (t.type === 'op') {
+          const o1 = t.op;
+          while (stack.length) {
+            const top = stack[stack.length-1];
+            if (top.type === 'op') {
+              const o2 = top.op;
+              const cond = (!rightAssoc[o1] && prec[o1] <= prec[o2]) || (rightAssoc[o1] && prec[o1] < prec[o2]);
+              if (cond) output.push(stack.pop()); else break;
+            } else break;
+          }
+          stack.push(t);
+        } else if (t.type === 'lparen') stack.push(t);
+        else if (t.type === 'rparen') {
+          let found = false;
+          while (stack.length) {
+            const top = stack.pop();
+            if (top.type === 'lparen') { found = true; break; }
+            output.push(top);
+          }
+          if (!found) throw new Error('Mismatched parentheses');
+        }
+      }
+      while (stack.length) {
+        const t = stack.pop();
+        if (t.type === 'lparen' || t.type === 'rparen') throw new Error('Mismatched parentheses');
+        output.push(t);
+      }
+      return output;
+    }
+
+    function evalRPNtoPoly(rpn) {
+      const st = [];
+      for (const t of rpn) {
+        if (t.type === 'number') st.push(Poly.fromNumber(t.value));
+        else if (t.type === 'variable') st.push(Poly.fromVar());
+        else if (t.type === 'op') {
+          if (t.op === 'u+' || t.op === 'u-') {
+            if (!st.length) throw new Error('Invalid unary operator usage');
+            const a = st.pop();
+            st.push(t.op === 'u-' ? a.mul(Poly.fromNumber(-1)) : a);
+          } else if (t.op === '+' || t.op === '-' || t.op === '*' || t.op === '/' || t.op === '^') {
+            if (st.length < 2) throw new Error('Insufficient operands for ' + t.op);
+            const b = st.pop();
+            const a = st.pop();
+            if (t.op === '+') st.push(a.add(b));
+            else if (t.op === '-') st.push(a.sub(b));
+            else if (t.op === '*') st.push(a.mul(b));
+            else if (t.op === '/') {
+              if (Object.keys(b.c).length !== 1 || !('0' in b.c)) throw new Error('Division by a non-constant is not supported');
+              st.push(a.divScalar(b.c[0]));
+            } else if (t.op === '^') {
+              if (Object.keys(b.c).length !== 1 || !('0' in b.c)) throw new Error('Non-constant exponent is not supported');
+              const e = b.c[0];
+              if (Math.abs(e - Math.round(e)) > 1e-12) throw new Error('Non-integer exponent is not supported');
+              st.push(a.powInt(Math.round(e)));
+            }
+          }
+        }
+      }
+      if (st.length !== 1) throw new Error('Invalid expression');
+      return st[0];
+    }
+
+    function parseExpressionToPoly(expr) {
+      const tokens = tokenize(expr);
+      const rpn = toRPN(tokens);
+      const poly = evalRPNtoPoly(rpn);
+      return poly;
+    }
+
+    
+    function classifyInput(raw) {
+      const hasEq = (raw.split('=').length - 1) === 1;
+      return hasEq ? 'equation' : 'expression';
+    }
+
+    function simplifySide(expr) {
+      const poly = parseExpressionToPoly(expr);
+      return { poly, text: poly.toString() };
+    }
+
+    function solve(rawInput) {
+      const steps = [];
+      let type = classifyInput(rawInput);
+      let summary = '';
+      let detected = '';
+      let resultObj = null;
+      if (type === 'equation') {
+        const [lhsRaw, rhsRaw] = rawInput.split('=');
+        const {poly: L, text: Lt} = simplifySide(lhsRaw);
+        const {poly: R, text: Rt} = simplifySide(rhsRaw);
+        steps.push('Simplify each side: ' + wrapMath(Lt) + ' = ' + wrapMath(Rt));
+        const moved = L.sub(R);
+        const movedStr = moved.toString();
+        steps.push('Bring all terms to the left: ' + wrapMath(movedStr + ' = 0'));
+        const deg = moved.degree();
+        if (deg === -Infinity) {
+          detected = 'Equation reduces to 0 = 0.';
+          summary = 'Identity: infinitely many solutions (all real numbers).';
+          resultObj = { kind: 'all-real' };
+        } else if (deg === 0) {
+          detected = 'Equation reduces to c = 0 with c ≠ 0.';
+          summary = 'Contradiction: no solution.';
+          resultObj = { kind: 'none' };
+        } else if (deg === 1) {
+          detected = 'Detected: linear equation in x.';
+          const a = moved.coeff(1), b = moved.coeff(0);
+          steps.push('Combine like terms: ' + wrapMath(formatLinear(a,b)) + ' = 0');
+          steps.push('Isolate x: ' + wrapMath(`${formatNumber(a)}x = ${formatNumber(-b)}`));
+          const x = -b / a;
+          const xFmt = formatMaybeFraction(x);
+          steps.push('Divide by ' + wrapMath(formatNumber(a)) + ': ' + wrapMath(`x = ${xFmt}`));
+          summary = 'Solution: x = ' + xFmt;
+          resultObj = { kind: 'linear', x, xFmt };
+        } else if (deg === 2) {
+          detected = 'Detected: quadratic equation in x.';
+          const a = moved.coeff(2), b = moved.coeff(1), c = moved.coeff(0);
+          steps.push('Combine like terms: ' + wrapMath(formatQuadratic(a,b,c)) + ' = 0');
+          const D = b*b - 4*a*c;
+          steps.push('Compute discriminant: ' + wrapMath(`Δ = b² − 4ac = (${formatNumber(b)})² − 4·${formatNumber(a)}·${formatNumber(c)} = ${formatNumber(D)}`));
+          const twoA = 2*a;
+          if (D > -EPS && D < 0) {
+            steps.push('Numerical round-off: treating Δ as 0.');
+          }
+          if (D >= -EPS) {
+            const sqrtD = Math.sqrt(Math.max(0, D));
+            const exprExact = `x = (−b ± √Δ) / (2a)`;
+            steps.push('Quadratic formula: ' + wrapMath(exprExact));
+            const x1 = (-b + sqrtD) / twoA;
+            const x2 = (-b - sqrtD) / twoA;
+            const approx1 = formatMaybeFraction(x1);
+            const approx2 = formatMaybeFraction(x2);
+            
+            let exact1 = null, exact2 = null;
+            const isInt = Math.abs(sqrtD - Math.round(sqrtD)) < 1e-12;
+            if (isInt) {
+              const N1 = -b + sqrtD, N2 = -b - sqrtD;
+              const g1 = gcd(N1, twoA), g2 = gcd(N2, twoA);
+              exact1 = (N1/g1) + '/' + (twoA/g1);
+              exact2 = (N2/g2) + '/' + (twoA/g2);
+              
+              exact1 = simplifyFractionSign(exact1);
+              exact2 = simplifyFractionSign(exact2);
+            }
+            if (exact1 && exact2) {
+              steps.push('Exact roots: ' + wrapMath(`x₁ = ${exact1}, x₂ = ${exact2}`));
+              summary = 'Solutions: x₁ = ' + exact1 + ', x₂ = ' + exact2 + ' (≈ ' + formatNumber(x1) + ', ' + formatNumber(x2) + ')';
+              resultObj = { kind: 'quadratic', D, roots: [x1, x2], exact: [exact1, exact2] };
+            } else {
+              steps.push('Roots (approx.): ' + wrapMath(`x₁ = ${approx1}, x₂ = ${approx2}`));
+              summary = 'Solutions: x₁ = ' + approx1 + ', x₂ = ' + approx2;
+              resultObj = { kind: 'quadratic', D, roots: [x1, x2] };
+            }
+          } else {
+            const absD = Math.abs(D);
+            const sqrtAbsD = Math.sqrt(absD);
+            const re = -b / twoA;
+            const im = sqrtAbsD / Math.abs(twoA);
+            const reStr = formatMaybeFraction(re);
+            const imStr = formatMaybeFraction(im);
+            steps.push('Quadratic formula with Δ < 0 (complex roots): ' + wrapMath('x = (−b ± i√|Δ|) / (2a)'));
+            steps.push('Roots: ' + wrapMath(`x₁ = ${reStr} + ${imStr}i, x₂ = ${reStr} − ${imStr}i`));
+            summary = 'Solutions (complex): x₁ = ' + reStr + ' + ' + imStr + 'i, x₂ = ' + reStr + ' − ' + imStr + 'i';
+            resultObj = { kind: 'quadratic-complex', D, roots: [{re, im}, {re, im: -im}] };
+          }
+        } else {
+          detected = 'Detected: polynomial equation of degree ' + moved.degree() + ' (not solved).';
+          summary = 'The simplified equation is ' + movedStr + ' = 0. This tool currently solves only linear and quadratic equations.';
+          resultObj = { kind: 'higher-degree', degree: moved.degree() };
+        }
+      } else {
+        const {poly: P, text: Pt} = simplifySide(rawInput);
+        steps.push('Simplify: ' + wrapMath(Pt));
+        if (P.degree() <= 0) {
+          detected = 'Detected: numeric expression';
+          summary = 'Value: ' + formatNumber(P.coeff(0));
+          resultObj = { kind: 'numeric', value: P.coeff(0) };
+        } else {
+          detected = 'Detected: algebraic expression in x';
+          summary = 'Simplified form: ' + Pt;
+          resultObj = { kind: 'algebraic', poly: P };
+        }
+      }
+      return { type, steps, summary, detected, resultObj };
+    }
+
+    function simplifyFractionSign(fr) {
+      
+      const m = fr.match(/^\s*([+-]?\d+)\s*\/\s*([+-]?\d+)\s*$/);
+      if (!m) return fr;
+      let n = parseInt(m[1],10), d = parseInt(m[2],10);
+      if (d < 0) { n = -n; d = -d; }
+      const g = gcd(n, d);
+      n /= g; d /= g;
+      return (d === 1 ? String(n) : (n + '/' + d));
+    }
+
+    function formatLinear(a, b) {
+      const A = Math.abs(a);
+      const aStr = Math.abs(A - 1) < 1e-12 ? (a < 0 ? '-' : '') + 'x' : (formatNumber(a) + 'x');
+      const bStr = b === 0 ? '' : (b > 0 ? ' + ' + formatNumber(b) : ' - ' + formatNumber(Math.abs(b)));
+      return aStr + bStr;
+    }
+
+    function formatQuadratic(a, b, c) {
+      const terms = [];
+      if (!nearZero(a)) terms.push((Math.abs(Math.abs(a)-1)<1e-12 ? (a<0?'-':'') : formatNumber(a)) + 'x^2');
+      if (!nearZero(b)) terms.push((Math.abs(Math.abs(b)-1)<1e-12 ? (b<0?'-':'') : formatNumber(b)) + 'x');
+      if (!nearZero(c)) terms.push(formatNumber(c));
+      let s = terms[0] || '0';
+      for (let i=1;i<terms.length;i++) {
+        const t = terms[i];
+        s += (t.startsWith('-')? ' - ' + t.slice(1) : ' + ' + t);
+      }
+      return s;
+    }
+
+    function wrapMath(s) {
+      return '<span class="math">' + s.replace(/\*/g,'·') + '</span>';
+    }
+
+    
+    const $ = (sel) => document.querySelector(sel);
+    const inputEl = $('#input');
+    const solveBtn = $('#solve');
+    const clearBtn = $('#clear');
+    const exportBtn = $('#export');
+    const resultsEl = $('#results');
+    const stepsEl = $('#steps');
+    const summaryEl = $('#summary');
+    const detectedEl = $('#detected');
+    const statusEl = $('#status');
+
+    function setStatus(msg, cls='') {
+      statusEl.textContent = msg || '';
+      statusEl.className = 'status' + (cls ? (' ' + cls) : '');
+    }
+
+    function renderOutput(out, raw) {
+      resultsEl.hidden = false;
+      stepsEl.innerHTML = '';
+      detectedEl.textContent = out.detected;
+      for (const s of out.steps) {
+        const li = document.createElement('li');
+        li.innerHTML = s;
+        stepsEl.appendChild(li);
+      }
+      summaryEl.textContent = out.summary;
+      
+      const report = buildTextReport(raw, out);
+      window.__lastReport = report;
+      try { localStorage.setItem('equation-solver-tool:last-report', report); } catch {}
+    }
+
+    function buildTextReport(raw, out) {
+      const now = new Date();
+      const header = 'Equation Solver Tool\n' +
+        'Timestamp: ' + now.toISOString() + '\n' +
+        'Input: ' + raw + '\n' +
+        'Detected: ' + out.detected + '\n\n';
+      const steps = out.steps.map((s,i)=> `Step ${i+1}. ${stripTags(s)}`).join('\n');
+      const body = steps + (steps ? '\n\n' : '') + 'Summary: ' + out.summary + '\n';
+      const footer = '\n— Generated locally in your browser.';
+      return header + body + footer;
+    }
+
+    function stripTags(html) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+
+    function doSolve() {
+      const raw0 = inputEl.value || '';
+      const raw = preprocessInput(raw0);
+      inputEl.value = raw0;
+      if (!raw) { setStatus('Please enter an equation or expression.'); return; }
+      try {
+        setStatus('Solving…');
+        const what = classifyInput(raw) === 'equation' ? 'equation' : 'expression';
+        const norm = raw.replace(/\s+/g,'');
+        
+        if (what === 'equation' && (raw.split('=').length - 1) !== 1) throw new Error('Only one equals sign is allowed');
+        const out = solve(raw);
+        renderOutput(out, raw);
+        setStatus('Done');
+        try { localStorage.setItem('equation-solver-tool:input', raw0); } catch {}
+      } catch (err) {
+        resultsEl.hidden = false;
+        stepsEl.innerHTML = '';
+        detectedEl.textContent = '';
+        summaryEl.innerHTML = '<span class="error">' + (err && err.message ? err.message : String(err)) + '</span>';
+        window.__lastReport = 'Equation Solver Tool\nError: ' + (err && err.message ? err.message : String(err));
+        setStatus('Error', 'error');
+      }
+    }
+
+    function doClear() {
+      inputEl.value = '';
+      resultsEl.hidden = true;
+      stepsEl.innerHTML = '';
+      summaryEl.textContent = '';
+      detectedEl.textContent = '';
+      setStatus('Cleared');
+    }
+
+    function doExport() {
+      const text = window.__lastReport || localStorage.getItem('equation-solver-tool:last-report') || '';
+      if (!text) { setStatus('Nothing to export yet.'); return; }
+      const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().replace(/[:.]/g,'-');
+      a.download = `equation-solver-${ts}.txt`;
+      a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{
+        URL.revokeObjectURL(a.href);
+        a.remove();
+      }, 100);
+      setStatus('Exported .txt file');
+    }
+
+    
+    solveBtn.addEventListener('click', doSolve);
+    clearBtn.addEventListener('click', doClear);
+    exportBtn.addEventListener('click', doExport);
+    inputEl.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); doSolve(); }
+      if (e.key === 'Escape') { e.preventDefault(); doClear(); }
+    });
+    document.getElementById('examples').addEventListener('click', (e)=>{
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      inputEl.value = chip.getAttribute('data-example');
+      inputEl.focus();
+      setTimeout(()=>doSolve(), 50);
+    });
+
+    
+    try {
+      const last = localStorage.getItem('equation-solver-tool:input');
+      if (last) inputEl.value = last;
+    } catch {}
+  </script>
+</body>
+</html>

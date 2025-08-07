@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weather Theatre – React + Canvas</title>
+    <style>
+      :root {
+        --bg: #0f0f13;
+        --panel: #151821;
+        --panel-2: #1b2030;
+        --text: #e9eef9;
+        --muted: #9fb0d0;
+        --accent: #ffb86b;
+        --accent-2: #7aa8ff;
+      }
+      * { box-sizing: border-box; }
+      html, body, #root { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+        background: radial-gradient(1200px 600px at 80% -10%, #20304a 0%, var(--bg) 60%);
+        color: var(--text);
+        overflow: hidden;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 18px;
+        padding: 16px;
+        height: 100%;
+      }
+      .panel {
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid #263049;
+        border-radius: 14px;
+        padding: 16px 14px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+        overflow: auto;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 8px 0;
+        letter-spacing: 0.3px;
+      }
+      .sub { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+      .controls { display: grid; gap: 14px; }
+      .row { display: grid; gap: 8px; }
+      .row label { font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: space-between; }
+      input[type="range"] { width: 100%; }
+      .meter {
+        height: 8px;
+        background: #22304c;
+        border-radius: 999px;
+        overflow: hidden;
+        position: relative;
+      }
+      .meter > i {
+        display: block;
+        height: 100%; width: var(--w, 0%);
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+      .toggles { display: flex; gap: 8px; }
+      .button, button {
+        background: linear-gradient(180deg, #2a334a, #1d2538);
+        color: var(--text);
+        border: 1px solid #2d3b5d;
+        border-radius: 12px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 600;
+        letter-spacing: .2px;
+        box-shadow: 0 8px 20px rgba(14,18,27,.35), inset 0 1px 0 rgba(255,255,255,.05);
+        transition: transform .06s ease, box-shadow .2s ease;
+      }
+      .button:active, button:active { transform: translateY(1px); }
+      .segmented {
+        display: inline-grid; grid-auto-flow: column; gap: 0; border-radius: 12px; overflow: hidden;
+        border: 1px solid #2d3b5d; background: #1b2234;
+      }
+      .segmented button { border: 0; background: transparent; padding: 8px 12px; }
+      .segmented button.active { background: linear-gradient(180deg, #2a334a, #1d2538); }
+
+      .stage-wrap {
+        position: relative;
+        border-radius: 16px;
+        background: radial-gradient(1000px 500px at 50% -20%, #2b3e63 0%, #0f1422 65%);
+        border: 1px solid #263049;
+        box-shadow: 0 20px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+        overflow: hidden;
+      }
+      canvas { display: block; width: 100%; height: 100%; }
+      .subtitle {
+        position: absolute;
+        left: 0; right: 0; bottom: 8px;
+        display: flex; justify-content: center;
+        pointer-events: none;
+      }
+      .subtitle .bubble {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        color: #e9eef9;
+        background: rgba(18,22,34,.65);
+        border: 1px solid rgba(75, 94, 133, .7);
+        border-radius: 999px;
+        padding: 8px 14px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+        backdrop-filter: blur(6px) saturate(120%);
+        max-width: calc(100% - 40px);
+        white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+      }
+
+      .legend { color: var(--muted); font-size: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+      .legend span::before {
+        content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px;
+      }
+      .legend .cosy::before { background: #ffb86b; }
+      .legend .eerie::before { background: #66e0c2; }
+      .legend .heroic::before { background: #7aa8ff; }
+      .footer { color: var(--muted); font-size: 11px; margin-top: 10px; }
+      @media (max-width: 980px) {
+        .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+        .panel { order: 2; }
+        .stage-wrap { order: 1; height: 62vh; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+      const { useEffect, useRef, useState, useMemo } = React;
+      const clamp = (n, a=0, b=1) => Math.max(a, Math.min(b, n));
+      const lerp = (a,b,t) => a + (b-a)*t;
+      const ease = t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
+      const hsla = (h,s,l,a=1) => `hsla(${h}, ${s}%, ${l}%, ${a})`;
+      const MOCK_FORECAST = { title: 'Overcast with light showers', tempC: 18, windKph: 12, humidity: 72 };
+
+      function useTypewriter(text, speed=28, immediate=false) {
+        const [out, setOut] = useState(immediate ? text : '');
+        const iRef = useRef(0);
+        const idRef = useRef(null);
+        useEffect(() => {
+          if (immediate) { setOut(text); return; }
+          setOut('');
+          iRef.current = 0;
+          if (idRef.current) cancelAnimationFrame(idRef.current);
+          const step = () => {
+            const n = iRef.current;
+            if (n <= text.length) {
+              iRef.current += Math.random() < .15 ? 2 : 1;
+              setOut(text.slice(0, iRef.current));
+              idRef.current = requestAnimationFrame(step);
+            }
+          };
+          idRef.current = requestAnimationFrame(step);
+          return () => idRef.current && cancelAnimationFrame(idRef.current);
+        }, [text, speed, immediate]);
+        return out;
+      }
+
+      function computeSceneTitle({ cosy, eerie, heroic, night }) {
+        const vibes = [
+          { k: 'cosy', v: cosy },
+          { k: 'eerie', v: eerie },
+          { k: 'heroic', v: heroic },
+        ].sort((a,b) => b.v-a.v)[0].k;
+        const dayWord = night ? 'Night' : 'Matinée';
+        let flavor = '';
+        if (vibes === 'cosy') flavor = night ? 'lamp-lit drizzle over quiet streets' : 'a warm hush beneath gentle clouds';
+        if (vibes === 'eerie') flavor = night ? 'silver fog veils the moonlit facades' : 'pale fog drifts through whispering alleys';
+        if (vibes === 'heroic') flavor = night ? 'electric skies rally the skyline' : 'a brave glow parts the brooding heavens';
+        return `${dayWord}: ${flavor} — ${MOCK_FORECAST.tempC}°C, ${MOCK_FORECAST.windKph} km/h wind`;
+      }
+
+      function WeatherTheatre() {
+        const canvasRef = useRef(null);
+        const wrapRef = useRef(null);
+        const [cosy, setCosy] = useState(65);
+        const [eerie, setEerie] = useState(25);
+        const [heroic, setHeroic] = useState(35);
+        const [night, setNight] = useState(false);
+        const [curtainOpen, setCurtainOpen] = useState(false);
+        const [seed] = useState(() => Math.random()*10000|0);
+        const title = computeSceneTitle({ cosy, eerie, heroic, night });
+        const subtitle = useTypewriter(title, 28, false);
+        const raf = useRef(0);
+        const ctxRef = useRef(null);
+        const dprRef = useRef(Math.max(1, Math.min(2, window.devicePixelRatio || 1)));
+        const sizeRef = useRef({ w: 300, h: 200 });
+        const tRef = useRef(0);
+        const mouseRef = useRef({ x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 });
+        const curtainRef = useRef({ p: 0, target: 0 });
+        const sceneGeom = useMemo(() => {
+          function rng(seed) { let s = seed >>> 0; return () => (s = (s*1664525 + 1013904223) >>> 0) / 0xFFFFFFFF; }
+          const R = rng(seed);
+          const hills = Array.from({ length: 5 }, (_, i) => ({
+            baseY: 0.55 + i*0.04 + R()*0.02,
+            amp: 0.08 + R()*0.04,
+            freq: 2 + i + Math.floor(R()*2),
+            phase: R()*Math.PI*2,
+          }));
+          const buildings = Array.from({ length: 48 }, (_, i) => {
+            const x = i/48;
+            const w = 0.012 + (i%4===0?0.02:0.01) * (0.6 + R()*0.8);
+            const h = 0.18 + (R()**1.5)*0.55;
+            return { x: clamp(x + (R()-0.5)*0.02,0,1), w, h, roof: R()<0.3? 'spike' : (R()<0.5? 'flat' : 'antenna') };
+          });
+          const clouds = Array.from({ length: 16 }, () => ({ x: R(), y: 0.18 + R()*0.35, r: 0.06 + R()*0.12, s: 0.4 + R()*0.8, d: 0.3 + R()*0.7 }));
+          return { hills, buildings, clouds };
+        }, [seed]);
+        useEffect(() => {
+          const canvas = canvasRef.current;
+          const ctx = canvas.getContext('2d');
+          ctxRef.current = ctx;
+          const handle = () => {
+            const rect = wrapRef.current.getBoundingClientRect();
+            const dpr = dprRef.current;
+            sizeRef.current = { w: Math.floor(rect.width), h: Math.floor(rect.height) };
+            canvas.width = Math.floor(rect.width * dpr);
+            canvas.height = Math.floor(rect.height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          };
+          handle();
+          window.addEventListener('resize', handle);
+          return () => window.removeEventListener('resize', handle);
+        }, []);
+        useEffect(() => {
+          const onMove = (e) => {
+            const rect = wrapRef.current.getBoundingClientRect();
+            const x = clamp((e.clientX - rect.left)/rect.width);
+            const y = clamp((e.clientY - rect.top)/rect.height);
+            mouseRef.current.tx = x; mouseRef.current.ty = y;
+          };
+          const onLeave = () => { mouseRef.current.tx = 0.5; mouseRef.current.ty = 0.5; };
+          wrapRef.current.addEventListener('pointermove', onMove);
+          wrapRef.current.addEventListener('pointerleave', onLeave);
+          return () => {
+            wrapRef.current && wrapRef.current.removeEventListener('pointermove', onMove);
+            wrapRef.current && wrapRef.current.removeEventListener('pointerleave', onLeave);
+          };
+        }, []);
+        useEffect(() => {
+          const id = setTimeout(() => { setCurtainOpen(true); }, 900);
+          return () => clearTimeout(id);
+        }, []);
+        useEffect(() => {
+          const loop = (ts) => {
+            const t = (ts || 0) / 1000;
+            tRef.current = t;
+            const ctx = ctxRef.current; if (!ctx) { raf.current = requestAnimationFrame(loop); return; }
+            const { w, h } = sizeRef.current;
+            const m = mouseRef.current;
+            m.x = lerp(m.x, m.tx, 0.06); m.y = lerp(m.y, m.ty, 0.06);
+            const target = curtainOpen ? 1 : 0;
+            const c = curtainRef.current; c.target = target; c.p = lerp(c.p, target, 0.07);
+            drawScene(ctx, w, h, t, { cosy: cosy/100, eerie: eerie/100, heroic: heroic/100, night, mouse: m, curtain: c.p, geom: sceneGeom });
+            raf.current = requestAnimationFrame(loop);
+          };
+          raf.current = requestAnimationFrame(loop);
+          return () => cancelAnimationFrame(raf.current);
+        }, [cosy, eerie, heroic, night, sceneGeom, curtainOpen]);
+        return (
+          <div className="app">
+            <div className="panel">
+              <h1>Weather Theatre</h1>
+              <div className="sub">Remix the same mock forecast into different stage sets. Parallax backdrops, spotlight sweeps, and a velvet curtain reveal. No external APIs.</div>
+              <div className="controls">
+                <div className="row">
+                  <label>Cosy <span>{cosy}</span></label>
+                  <input type="range" min="0" max="100" value={cosy} onChange={e=>setCosy(+e.target.value)} />
+                  <div className="meter"><i style={{'--w': cosy+'%'}}></i></div>
+                </div>
+                <div className="row">
+                  <label>Eerie <span>{eerie}</span></label>
+                  <input type="range" min="0" max="100" value={eerie} onChange={e=>setEerie(+e.target.value)} />
+                  <div className="meter"><i style={{'--w': eerie+'%', background: 'linear-gradient(90deg,#66e0c2,#8ae6ff)'}}></i></div>
+                </div>
+                <div className="row">
+                  <label>Heroic <span>{heroic}</span></label>
+                  <input type="range" min="0" max="100" value={heroic} onChange={e=>setHeroic(+e.target.value)} />
+                  <div className="meter"><i style={{'--w': heroic+'%', background: 'linear-gradient(90deg,#7aa8ff,#a8b3ff)'}}></i></div>
+                </div>
+                <div className="row">
+                  <label>Showtime</label>
+                  <div className="toggles">
+                    <div className="segmented">
+                      <button className={!night? 'active' : ''} onClick={()=>setNight(false)}>Matinée</button>
+                      <button className={night? 'active' : ''} onClick={()=>setNight(true)}>Night</button>
+                    </div>
+                    <button onClick={()=>setCurtainOpen(v => !v)}>{curtainOpen? 'Lower Curtain' : 'Raise Curtain'}</button>
+                  </div>
+                </div>
+                <div className="legend">
+                  <span className="cosy">Cosy: warmth, glow, drizzle</span>
+                  <span className="eerie">Eerie: fog, teal haze</span>
+                  <span className="heroic">Heroic: contrast, bold spotlights</span>
+                </div>
+                <div className="footer">Forecast: {MOCK_FORECAST.title} — {MOCK_FORECAST.tempC}°C, wind {MOCK_FORECAST.windKph} km/h, humidity {MOCK_FORECAST.humidity}%</div>
+              </div>
+            </div>
+            <div className="stage-wrap" ref={wrapRef}>
+              <canvas ref={canvasRef} aria-label="Weather theatre canvas" />
+              <div className="subtitle"><div className="bubble">{subtitle}</div></div>
+            </div>
+          </div>
+        );
+      }
+
+      function drawScene(ctx, w, h, t, opts) {
+        const { cosy, eerie, heroic, night, mouse, geom, curtain } = opts;
+        const vibeW = cosy + eerie + heroic || 1;
+        const wc = cosy / vibeW, we = eerie / vibeW, wh = heroic / vibeW;
+        const horizon = 0.62;
+        const topHue = night ? 223 : 212;
+        const baseSat = night ? 38 : 60;
+        const topCol = hsla(topHue + (-8*we + 10*wh + 12*wc), baseSat + 10*wh, night? 12: 54);
+        const midCol = hsla(topHue + (15*wc - 12*we), baseSat + 20*wc, night? 16: 56);
+        ctx.clearRect(0,0,w,h);
+        const grd = ctx.createLinearGradient(0, 0, 0, h);
+        grd.addColorStop(0, topCol);
+        grd.addColorStop(horizon-0.12, midCol);
+        grd.addColorStop(horizon+0.04, night? 'hsl(220,20%,8%)' : 'hsl(210,30%,88%)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0,0,w,h);
+        const px = (mouse.x - 0.5), py = (mouse.y - 0.5);
+        if (night) {
+          ctx.save();
+          ctx.globalAlpha = 0.8 + 0.2*wh;
+          const nStars = 120 + Math.floor(100*wh);
+          for (let i=0;i<nStars;i++) {
+            const sx = (i*97 % 1024)/1024 * w;
+            const sy = (i*233 % 1024)/1024 * h * 0.6;
+            const tw = 0.3 + 0.7 * (Math.sin(t*2 + i) * 0.5 + 0.5);
+            const r = (0.8 + (i%5)/5) * tw;
+            ctx.fillStyle = `rgba(255,255,255,${0.18 + 0.6*tw})`;
+            ctx.fillRect(sx, sy, r, r);
+          }
+          ctx.restore();
+        }
+        const cloudSpeed = 8 + 36*(0.4*wc + 0.2*we + 0.6*wh);
+        ctx.save();
+        ctx.globalAlpha = 0.25 + 0.4*(we) + 0.25*wc;
+        geom.clouds.forEach((c) => {
+          const x = ((c.x + (t * c.s / cloudSpeed) + 0.04*px) % 1) * w;
+          const y = c.y * h * (0.98 + py*0.04);
+          const r = c.r * w * (0.9 + 0.2*wc);
+          const g = ctx.createRadialGradient(x, y, r*0.2, x, y, r);
+          g.addColorStop(0, night? 'rgba(240,245,255,0.36)' : 'rgba(255,255,255,0.55)');
+          g.addColorStop(1, night? 'rgba(50,60,80,0.0)' : 'rgba(120,140,180,0.0)');
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.ellipse(x, y, r, r*0.6, 0, 0, Math.PI*2); ctx.fill();
+        });
+        ctx.restore();
+        ctx.save();
+        ctx.translate(px*20, py*10);
+        geom.hills.forEach((hill, idx) => {
+          const yBase = hill.baseY * h;
+          ctx.beginPath(); ctx.moveTo(0, h);
+          for (let x = 0; x <= w; x+=8) {
+            const k = x/w;
+            const y = yBase + Math.sin(hill.phase + k * Math.PI * hill.freq) * hill.amp * h;
+            ctx.lineTo(x, y);
+          }
+          ctx.lineTo(w, h); ctx.closePath();
+          const hue = night? 225 : 210;
+          const sat = 20 + idx*4 + 20*wh;
+          const light = night? (10 + idx*4) : (28 + idx*3 - 8*we + 6*wc);
+          ctx.fillStyle = hsla(hue + 6*wc - 10*we + 5*wh, sat, light, 0.95);
+          ctx.fill();
+        });
+        ctx.restore();
+        ctx.save();
+        ctx.translate(px*40, 0);
+        const baseY = h * 0.72;
+        const fog = 0.15 + 0.5*we + 0.1*wc;
+        geom.buildings.forEach((b) => {
+          const x = b.x * w;
+          const bw = b.w * w * 0.9;
+          const bh = b.h * h * 0.5;
+          ctx.fillStyle = night? `rgba(18,22,32,${0.9 - 0.4*we})` : `rgba(40,56,82,${0.9 - 0.3*we})`;
+          ctx.fillRect(x, baseY-bh, bw, bh);
+          ctx.fillStyle = night? 'rgba(180,190,210,0.06)' : 'rgba(0,0,0,0.06)';
+          if (b.roof==='spike') ctx.fillRect(x+bw*0.45, baseY-bh-8, 2, 8);
+          if (b.roof==='antenna') ctx.fillRect(x+bw*0.5, baseY-bh-12, 1.5, 12);
+        });
+        if (night) {
+          ctx.globalCompositeOperation = 'lighter';
+          geom.buildings.forEach((b,i) => {
+            if ((i+Math.floor(t*2))%3===0 && (wc>0.3 || wh>0.4)) {
+              const x = b.x*w + b.w*w*0.1;
+              const y = baseY - b.h*h*0.5 + 6;
+              const g = ctx.createLinearGradient(0,y, 0, y+18);
+              g.addColorStop(0, 'rgba(255,214,130,0.25)'); g.addColorStop(1, 'rgba(255,170,80,0.0)');
+              ctx.fillStyle = g; ctx.fillRect(x, y, b.w*w*0.8, 18);
+            }
+          });
+          ctx.globalCompositeOperation = 'source-over';
+        }
+        if (fog>0.01) {
+          const g = ctx.createLinearGradient(0, baseY-30, 0, baseY+100);
+          g.addColorStop(0, night? `rgba(180,210,230,${0.05+fog*0.35})` : `rgba(210,230,255,${0.04+fog*0.3})`);
+          g.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = g; ctx.fillRect(0, baseY-30, w, 140);
+        }
+        ctx.restore();
+        const rainI = 80*(0.2 + 0.8*(wc*0.6 + wh*0.2 + we*0.2));
+        if (rainI>4) {
+          ctx.save();
+          ctx.globalAlpha = 0.25 + 0.35*wc + 0.15*we;
+          ctx.strokeStyle = night? 'rgba(200,220,255,0.3)' : 'rgba(80,90,120,0.35)';
+          ctx.lineWidth = 1;
+          for (let i=0;i<rainI;i++) {
+            const rx = (i*53 % 1021)/1021 * w;
+            const ry = ((i*97 % 997)/997 * 0.6 + (t*0.08 % 1)) * h;
+            const len = 8 + 14*wc + 10*wh;
+            ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx + 0.3*len, ry + len); ctx.stroke();
+          }
+          ctx.restore();
+        }
+        const stageTop = h * 0.78;
+        ctx.fillStyle = night? '#0e1420' : '#121a28';
+        ctx.fillRect(0, stageTop, w, h-stageTop);
+        const nLights = 11;
+        for (let i=0;i<nLights;i++) {
+          const lx = (i+0.5)/nLights * w;
+          const ly = stageTop + 6;
+          const g = ctx.createRadialGradient(lx, ly, 1, lx, ly, 28);
+          const warm = 0.3 + wc*0.6 + wh*0.2;
+          g.addColorStop(0, `rgba(255,230,170,${0.45*warm})`);
+          g.addColorStop(1, 'rgba(255,210,140,0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, ly, 28, 0, Math.PI*2); ctx.fill();
+        }
+        const beams = 2 + Math.round(wh*2);
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        for (let i=0;i<beams;i++) {
+          const phase = i*1.3;
+          const cx = w * (0.1 + 0.8 * (Math.sin(t*0.4 + phase) * 0.5 + 0.5));
+          const r = 140 + 80*wh + 40*wc;
+          const g = ctx.createRadialGradient(cx, stageTop*0.2 + (i%2)*10, 0, cx, stageTop*0.2 + (i%2)*10, r);
+          const hue = 48 + 10*wc + 200*wh + 140*we;
+          const col = `hsla(${hue%360}, 90%, ${night? 60:40}%, ${0.12 + 0.18*wh})`;
+          g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, stageTop-90, r, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+        ctx.save();
+        const archCol = night? '#151e2b' : '#182233';
+        ctx.strokeStyle = archCol; ctx.lineWidth = 14; ctx.strokeRect(8, 8, w-16, h-16);
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.strokeRect(8, 8, w-16, h-16);
+        ctx.restore();
+        drawCurtains(ctx, w, h, 1-clamp(curtain,0,1), night, wc, we, wh);
+      }
+
+      function drawCurtains(ctx, w, h, closed, night, wc, we, wh) {
+        if (closed <= 0.001) return;
+        const t = ease(closed);
+        const gap = lerp(0, w*0.52, 1-t);
+        const leftW = (w*0.5 - gap*0.5);
+        const rightW = leftW;
+        const col = night? '#541f2d' : '#7c2438';
+        const foldCol = night? '#6b2a3d' : '#a32f4b';
+        ctx.save(); ctx.globalAlpha = 0.98;
+        ctx.fillStyle = col; ctx.fillRect(0, 0, leftW, h); ctx.fillRect(w-rightW, 0, rightW, h);
+        ctx.fillStyle = foldCol;
+        const n = Math.max(4, Math.floor(leftW/28));
+        for (let i=1;i<n;i++) {
+          const x1 = (i/n) * leftW; ctx.globalAlpha = 0.35 + 0.25*Math.sin(i*12); ctx.fillRect(x1, 0, 3, h);
+          const x2 = w - (i/n) * rightW; ctx.fillRect(x2, 0, 3, h);
+        }
+        ctx.globalAlpha = 1.0; ctx.fillStyle = wc>0.4? '#ffd27a' : '#d6b45a'; ctx.fillRect(0, 0, w, 8);
+        const g = ctx.createLinearGradient(w*0.5, 0, w*0.5, h);
+        g.addColorStop(0, 'rgba(0,0,0,0.35)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, 160); ctx.restore();
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<WeatherTheatre />);
+    </script>
+  </body>
+  </html>

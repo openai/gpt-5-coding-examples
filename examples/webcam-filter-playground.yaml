@@ -1,0 +1,12 @@
+id: webcam-filter-playground
+title: Webcam Filter Playground
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Webcam Filter Playground
+  - Goal: Apply fun & surprising filters to live webcam feed
+  - Features: Multiple effects, snapshot capture, save image.
+  - The UI should be minimal with a live preview.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/webcam-filter-playground.png
+tags:
+  - interactive
+camera: true

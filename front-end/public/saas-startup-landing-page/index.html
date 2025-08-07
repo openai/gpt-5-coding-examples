@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SaaS Startup Landing Page — FlowPilot</title>
+    <meta
+      name="description"
+      content="FlowPilot is a modern SaaS platform that helps product teams ship faster with AI-assisted workflows. Start your free trial and get more done."
+    />
+    <meta name="theme-color" content="#4f46e5" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #0f172a; /* slate-900 */
+        --muted: #475569; /* slate-600 */
+        --border: #e2e8f0; /* slate-200 */
+        --primary: #4f46e5; /* indigo-600 */
+        --primary-600: #4f46e5;
+        --primary-700: #4338ca;
+        --accent: #22c55e; /* green-500 */
+        --surface: #ffffff;
+        --shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+        --radius: 14px;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html:focus-within {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        background: var(--bg);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      img,
+      svg {
+        display: block;
+        max-width: 100%;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        padding: 0.8rem 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 180ms ease, box-shadow 180ms ease,
+          background 180ms ease, color 180ms ease;
+      }
+
+      .btn:focus-visible {
+        outline: 3px solid rgba(79, 70, 229, 0.35);
+        outline-offset: 2px;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-700);
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        background: #f8fafc; /* slate-50 */
+        color: var(--text);
+        border-color: var(--border);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #eef2ff; /* indigo-50 */
+        color: #3730a3; /* indigo-800 */
+        border: 1px solid #c7d2fe; /* indigo-200 */
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+
+      header.site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: saturate(180%) blur(8px);
+        background: color-mix(in oklab, white 75%, transparent);
+        border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 68px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: linear-gradient(135deg, var(--primary), #22d3ee);
+        display: grid;
+        place-items: center;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 900;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .nav-links a {
+        color: #0f172a;
+        font-weight: 600;
+        opacity: 0.85;
+      }
+
+      .nav-links a:hover {
+        opacity: 1;
+      }
+
+      .mobile-toggle {
+        display: none;
+        background: transparent;
+        border: none;
+        padding: 0.5rem;
+        border-radius: 8px;
+      }
+
+      /* Hero */
+      .hero {
+        position: relative;
+        background: radial-gradient(1200px 600px at 80% -20%, #e0e7ff, transparent),
+          conic-gradient(from 180deg at 0% 0%, #ffffff, #f8fafc);
+        padding: 4.5rem 0 2rem;
+        overflow: hidden;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 2.5rem;
+        align-items: center;
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 4vw + 1rem, 3.25rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin: 0.5rem 0 1rem;
+      }
+
+      .hero p.lead {
+        font-size: clamp(1rem, 1.2vw + 0.5rem, 1.25rem);
+        color: var(--muted);
+        margin: 0 0 1.25rem;
+      }
+
+      .hero .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 1.25rem 0 1.5rem;
+      }
+
+      .hero .bullets {
+        margin: 1rem 0 0;
+        display: grid;
+        gap: 0.5rem;
+        color: var(--muted);
+      }
+
+      .hero .bullets li {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+
+      .check {
+        color: var(--accent);
+        margin-top: 2px;
+      }
+
+      .hero-visual {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .mock-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.6rem 0.75rem;
+        background: #f1f5f9; /* slate-100 */
+        border-bottom: 1px solid var(--border);
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #cbd5e1; /* slate-300 */
+      }
+
+      .mock-content {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        height: calc(100% - 38px);
+      }
+
+      .mock-sidebar {
+        border-right: 1px solid var(--border);
+        padding: 1rem;
+        background: #f8fafc;
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .skeleton {
+        height: 12px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #eef2ff, #ffffff, #eef2ff);
+        background-size: 200% 100%;
+        animation: shimmer 2.2s linear infinite;
+      }
+
+      .skeleton.small {
+        height: 8px;
+        opacity: 0.9;
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+
+      .mock-main {
+        padding: 1rem 1rem 0.75rem 1rem;
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        gap: 0.75rem;
+      }
+
+      .mini-card-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+      }
+
+      .mini-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.75rem;
+        background: #fff;
+      }
+
+      .trusted {
+        display: grid;
+        gap: 0.5rem;
+        color: var(--muted);
+        margin-top: 1.25rem;
+      }
+
+      .logo-row {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+
+      .logo-chip {
+        border: 1px dashed var(--border);
+        color: #334155; /* slate-700 */
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 0.5rem 0.75rem;
+        text-align: center;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      /* Section base */
+      section {
+        padding: 4rem 0;
+      }
+
+      .section-head {
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto 2rem;
+      }
+
+      .section-head h2 {
+        font-size: clamp(1.6rem, 1.3rem + 1.6vw, 2.25rem);
+        margin: 0 0 0.5rem;
+      }
+
+      .section-head p {
+        color: var(--muted);
+        margin: 0;
+      }
+
+      /* Features */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+
+      .feature {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .feature h3 {
+        margin: 0.5rem 0 0.5rem;
+        font-size: 1.1rem;
+      }
+
+      .feature p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: #eef2ff;
+        color: #3730a3;
+      }
+
+      /* Testimonials slider */
+      .slider {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: #ffffff;
+        box-shadow: var(--shadow);
+      }
+
+      .slider-track {
+        display: flex;
+        width: 100%;
+        transition: transform 500ms ease;
+      }
+
+      .slide {
+        flex: 0 0 100%;
+        padding: 1.25rem;
+      }
+
+      .quote {
+        font-size: 1.05rem;
+        color: #0f172a;
+        margin: 0 0 1rem;
+      }
+
+      .stars {
+        color: #f59e0b; /* amber-500 */
+        display: inline-flex;
+        gap: 2px;
+        margin-bottom: 0.5rem;
+      }
+
+      .person {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: #334155;
+      }
+
+      .slider-nav {
+        position: absolute;
+        inset: auto 0 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem;
+        pointer-events: none;
+      }
+
+      .slider-btn {
+        pointer-events: auto;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.4rem 0.6rem;
+        box-shadow: var(--shadow);
+      }
+
+      .slider-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+      }
+
+      .dot-btn {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        border: none;
+        background: #cbd5e1;
+        padding: 0;
+      }
+
+      .dot-btn[aria-current="true"] {
+        width: 18px;
+        background: var(--primary);
+      }
+
+      /* Pricing */
+      .pricing-wrap {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      .billing {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+      }
+
+      .toggle {
+        --w: 48px;
+        --h: 26px;
+        width: var(--w);
+        height: var(--h);
+        border-radius: 999px;
+        background: #e2e8f0;
+        border: 1px solid var(--border);
+        position: relative;
+        cursor: pointer;
+      }
+
+      .toggle .knob {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: var(--shadow);
+        position: absolute;
+        top: 50%;
+        left: 3px;
+        transform: translateY(-50%);
+        transition: left 200ms ease, background 200ms ease;
+      }
+
+      .toggle.active {
+        background: #c7d2fe;
+        border-color: #a5b4fc;
+      }
+
+      .toggle.active .knob {
+        left: calc(var(--w) - 23px);
+        background: var(--primary);
+      }
+
+      .save-badge {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        border-radius: 999px;
+        padding: 0.15rem 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        align-items: stretch;
+      }
+
+      .plan {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: #ffffff;
+        box-shadow: var(--shadow);
+        padding: 1.25rem;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 0.75rem;
+      }
+
+      .plan.popular {
+        border-color: #c7d2fe;
+        box-shadow: 0 20px 40px rgba(79, 70, 229, 0.15);
+        position: relative;
+      }
+
+      .plan .label {
+        display: inline-block;
+        background: #eef2ff;
+        color: #3730a3;
+        border: 1px solid #c7d2fe;
+        border-radius: 8px;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .price {
+        display: flex;
+        align-items: baseline;
+        gap: 0.35rem;
+      }
+
+      .price .value {
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .feature-list {
+        display: grid;
+        gap: 0.5rem;
+        color: var(--muted);
+      }
+
+      .feature-list li {
+        display: grid;
+        grid-template-columns: 18px 1fr;
+        gap: 0.5rem;
+        align-items: start;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .signup {
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+        display: grid;
+        gap: 0.75rem;
+        background: #f8fafc;
+      }
+
+      .signup .fields {
+        display: grid;
+        grid-template-columns: 2fr 1.5fr auto;
+        gap: 0.5rem;
+      }
+
+      input[type="email"],
+      input[type="text"] {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.75rem 0.85rem;
+        font-size: 1rem;
+        width: 100%;
+      }
+
+      .success-msg {
+        display: none;
+        color: #166534;
+        background: #dcfce7;
+        border: 1px solid #bbf7d0;
+        padding: 0.6rem 0.75rem;
+        border-radius: 10px;
+        font-weight: 600;
+      }
+
+      .signup.success .success-msg {
+        display: block;
+      }
+
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 2rem 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 1rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 1024px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+        .mock-content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .nav-links {
+          display: none;
+        }
+        .mobile-toggle {
+          display: inline-flex;
+        }
+        .logo-row {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .features-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .pricing-grid {
+          grid-template-columns: 1fr;
+        }
+        .signup .fields {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#pricing" class="eyebrow" style="position: absolute; left: -9999px"
+      >Skip to pricing</a
+    >
+
+    <header class="site-header" aria-label="Primary">
+      <div class="container nav">
+        <a href="#home" class="brand" aria-label="FlowPilot home">
+          <span class="brand-badge">FP</span>
+          <span>FlowPilot</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#testimonials">Testimonials</a>
+          <a href="#signup">Sign up</a>
+        </nav>
+        <div style="display:flex; align-items:center; gap:.5rem">
+          <a class="btn btn-secondary" href="#">Sign in</a>
+          <a class="btn btn-primary" href="#pricing">Start free trial</a>
+          <button class="mobile-toggle" aria-label="Open menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="#0f172a" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="home">
+      <section class="hero" aria-label="Hero">
+        <div class="container hero-grid">
+          <div>
+            <span class="eyebrow"
+              ><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2l2.39 4.85L20 8.27l-3.73 3.64L17.8 18 12 15.27 6.2 18l1.53-6.09L4 8.27l5.61-1.42L12 2z"></path>
+              </svg>
+              New: AI Workflows</span
+            >
+            <h1>Ship features faster with an AI‑assisted product engine</h1>
+            <p class="lead">
+              FlowPilot unblocks your team with automated checklists, smart
+              approvals, and real‑time insights. Start a 14‑day free trial and
+              see results this week.
+            </p>
+            <div class="actions">
+              <a class="btn btn-primary" href="#pricing">Start free trial</a>
+              <a class="btn btn-secondary" href="#testimonials">See customer stories</a>
+            </div>
+            <ul class="bullets" role="list">
+              <li>
+                <span class="check" aria-hidden="true">✔</span>
+                No credit card required
+              </li>
+              <li>
+                <span class="check" aria-hidden="true">✔</span>
+                Set up in minutes
+              </li>
+              <li>
+                <span class="check" aria-hidden="true">✔</span>
+                SOC 2 Type II and SSO ready
+              </li>
+            </ul>
+            <div class="trusted">
+              <span class="muted">Trusted by fast‑moving teams</span>
+              <div class="logo-row">
+                <div class="logo-chip">Acme</div>
+                <div class="logo-chip">Globex</div>
+                <div class="logo-chip">Luma</div>
+                <div class="logo-chip">Northwind</div>
+                <div class="logo-chip">Umbrella</div>
+                <div class="logo-chip">Stark</div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="mock-toolbar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <div class="mock-content">
+              <aside class="mock-sidebar">
+                <div class="skeleton" style="width: 70%"></div>
+                <div class="skeleton" style="width: 55%"></div>
+                <div class="skeleton" style="width: 62%"></div>
+                <div class="skeleton" style="width: 80%"></div>
+                <div class="skeleton" style="width: 64%"></div>
+              </aside>
+              <div class="mock-main">
+                <div class="skeleton" style="height: 16px; width: 35%"></div>
+                <div class="mini-card-row">
+                  <div class="mini-card">
+                    <div class="skeleton small" style="width: 60%"></div>
+                    <div class="skeleton" style="width: 90%; margin-top: 10px"></div>
+                  </div>
+                  <div class="mini-card">
+                    <div class="skeleton small" style="width: 40%"></div>
+                    <div class="skeleton" style="width: 80%; margin-top: 10px"></div>
+                  </div>
+                  <div class="mini-card">
+                    <div class="skeleton small" style="width: 50%"></div>
+                    <div class="skeleton" style="width: 75%; margin-top: 10px"></div>
+                  </div>
+                </div>
+                <div class="skeleton" style="height: 160px; border-radius: 10px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" aria-label="Feature highlights">
+        <div class="container">
+          <div class="section-head">
+            <h2>Everything you need to launch and scale</h2>
+            <p>Purpose‑built to increase velocity without sacrificing quality.</p>
+          </div>
+
+          <div class="features-grid">
+            <article class="feature">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M4 4h16v4H4zM4 10h10v4H4zM4 16h16v4H4z"></path>
+                </svg>
+              </div>
+              <h3>AI Checklists</h3>
+              <p>Auto‑generate PR and release checklists that adapt to your repo and team conventions.</p>
+            </article>
+            <article class="feature">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3l7 6-7 6-7-6 7-6zm0 9l7 6H5l7-6z"></path>
+                </svg>
+              </div>
+              <h3>Smart Approvals</h3>
+              <p>Intelligently routes reviews to the right people, reducing cycle time by up to 40%.</p>
+            </article>
+            <article class="feature">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 13h8V3H3v10zm10 8h8V3h-8v18zM3 21h8v-6H3v6z"></path>
+                </svg>
+              </div>
+              <h3>Live Insights</h3>
+              <p>Track velocity, lead time, and throughput in real‑time. Export to your BI tool.</p>
+            </article>
+            <article class="feature">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2" fill="none"/>
+                </svg>
+              </div>
+              <h3>Workflow Automations</h3>
+              <p>Trigger actions on merges, deploys, or incidents. Works with Jira, GitHub, Slack and more.</p>
+            </article>
+            <article class="feature">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 1l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-8.5L2 8h7z"></path>
+                </svg>
+              </div>
+              <h3>Quality Gates</h3>
+              <p>Set up guardrails for tests, coverage, and security. Prevent regressions with confidence.</p>
+            </article>
+            <article class="feature">
+              <div class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-3.33 0-10 1.67-10 5v1h20v-1c0-3.33-6.67-5-10-5z"></path>
+                </svg>
+              </div>
+              <h3>Enterprise‑ready</h3>
+              <p>SSO/SAML, SCIM, roles & permissions, audit logs, and SOC 2 Type II.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="testimonials" aria-label="Testimonials">
+        <div class="container">
+          <div class="section-head">
+            <h2>Loved by modern teams</h2>
+            <p>Don’t take our word for it—here’s what customers say.</p>
+          </div>
+          <div
+            class="slider"
+            aria-roledescription="carousel"
+            aria-label="Customer testimonials"
+          >
+            <div class="slider-track">
+              <article class="slide" role="group" aria-roledescription="slide" aria-label="1 of 4">
+                <div class="stars" aria-hidden="true">★★★★★</div>
+                <p class="quote">FlowPilot cut our cycle time by 34% in the first month. The AI checklists are a game‑changer for consistent releases.</p>
+                <div class="person">
+                  <div class="avatar">AL</div>
+                  <div>
+                    <strong>Ava Larson</strong>
+                    <div class="muted">VP Engineering, Globex</div>
+                  </div>
+                </div>
+              </article>
+              <article class="slide" role="group" aria-roledescription="slide" aria-label="2 of 4">
+                <div class="stars" aria-hidden="true">★★★★★</div>
+                <p class="quote">The smart approvals found the right reviewers every time. PRs move so much faster now.</p>
+                <div class="person">
+                  <div class="avatar">DT</div>
+                  <div>
+                    <strong>Diego Torres</strong>
+                    <div class="muted">Staff Engineer, Northwind</div>
+                  </div>
+                </div>
+              </article>
+              <article class="slide" role="group" aria-roledescription="slide" aria-label="3 of 4">
+                <div class="stars" aria-hidden="true">★★★★★</div>
+                <p class="quote">Setup was painless. We had dashboards and automations live in an hour. Instant value.</p>
+                <div class="person">
+                  <div class="avatar">SK</div>
+                  <div>
+                    <strong>Sofia Kim</strong>
+                    <div class="muted">Product Lead, Luma</div>
+                  </div>
+                </div>
+              </article>
+              <article class="slide" role="group" aria-roledescription="slide" aria-label="4 of 4">
+                <div class="stars" aria-hidden="true">★★★★★</div>
+                <p class="quote">We replaced three tools and got better insights. Security loved the audit trail.</p>
+                <div class="person">
+                  <div class="avatar">OM</div>
+                  <div>
+                    <strong>Omar Mahmoud</strong>
+                    <div class="muted">CTO, Acme</div>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div class="slider-nav" aria-hidden="true">
+              <button class="slider-btn prev" aria-label="Previous testimonial">
+                ‹
+              </button>
+              <button class="slider-btn next" aria-label="Next testimonial">
+                ›
+              </button>
+            </div>
+          </div>
+          <div class="slider-dots" role="tablist" aria-label="Select testimonial"></div>
+        </div>
+      </section>
+
+      <section id="pricing" aria-label="Pricing">
+        <div class="container">
+          <div class="section-head">
+            <h2>Simple pricing that scales with you</h2>
+            <p>Start free, upgrade when your team grows. Cancel anytime.</p>
+          </div>
+
+          <div class="pricing-wrap">
+            <div class="billing">
+              <span class="muted">Monthly</span>
+              <button class="toggle" id="billingToggle" aria-pressed="false" aria-label="Toggle yearly billing">
+                <span class="knob"></span>
+              </button>
+              <span class="muted">Yearly <span class="save-badge">Save 20%</span></span>
+            </div>
+
+            <div class="pricing-grid">
+              <article class="plan" aria-label="Starter plan">
+                <div class="label">Starter</div>
+                <div class="price" data-monthly="19" data-yearly="15">
+                  <span class="value">$19</span>
+                  <span class="muted">/ user / month</span>
+                </div>
+                <ul class="feature-list" role="list">
+                  <li><span class="check" aria-hidden="true">✔</span> All core features</li>
+                  <li><span class="check" aria-hidden="true">✔</span> 5 projects</li>
+                  <li><span class="check" aria-hidden="true">✔</span> Email support</li>
+                </ul>
+                <a href="#signup" class="btn btn-primary">Start free</a>
+              </article>
+
+              <article class="plan popular" aria-label="Growth plan">
+                <div class="label">Most popular</div>
+                <div class="price" data-monthly="39" data-yearly="31">
+                  <span class="value">$39</span>
+                  <span class="muted">/ user / month</span>
+                </div>
+                <ul class="feature-list" role="list">
+                  <li><span class="check" aria-hidden="true">✔</span> Unlimited projects</li>
+                  <li><span class="check" aria-hidden="true">✔</span> Advanced automations</li>
+                  <li><span class="check" aria-hidden="true">✔</span> SSO & RBAC</li>
+                  <li><span class="check" aria-hidden="true">✔</span> Priority support</li>
+                </ul>
+                <a href="#signup" class="btn btn-primary">Start 14‑day trial</a>
+              </article>
+
+              <article class="plan" aria-label="Scale plan">
+                <div class="label">Scale</div>
+                <div class="price" data-monthly="0" data-yearly="0">
+                  <span class="value">Custom</span>
+                </div>
+                <ul class="feature-list" role="list">
+                  <li><span class="check" aria-hidden="true">✔</span> Enterprise features</li>
+                  <li><span class="check" aria-hidden="true">✔</span> Dedicated CSM</li>
+                  <li><span class="check" aria-hidden="true">✔</span> Security review</li>
+                </ul>
+                <a href="#signup" class="btn btn-secondary">Contact sales</a>
+              </article>
+            </div>
+
+            <form id="signup" class="signup" aria-labelledby="signup-title">
+              <h3 id="signup-title" style="margin:0">Start your free trial</h3>
+              <p class="muted" style="margin:0">Get set up in minutes. No credit card required.</p>
+              <div class="fields">
+                <label class="sr-only" for="email" style="position:absolute;left:-9999px">Email</label>
+                <input id="email" type="email" placeholder="Work email" required />
+                <label class="sr-only" for="company" style="position:absolute;left:-9999px">Company</label>
+                <input id="company" type="text" placeholder="Company (optional)" />
+                <button class="btn btn-primary" type="submit">Get started</button>
+              </div>
+              <div aria-live="polite" class="success-msg" id="signup-msg">Thanks! Check your inbox to activate your trial.</div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container footer-grid">
+        <div>
+          <div class="brand" style="margin-bottom: .25rem">
+            <span class="brand-badge">FP</span>
+            <span>FlowPilot</span>
+          </div>
+          <div>© <span id="year"></span> FlowPilot, Inc. All rights reserved.</div>
+        </div>
+        <div class="footer-links">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#testimonials">Testimonials</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Utilities
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+      // Header: year stamp
+      $('#year').textContent = new Date().getFullYear();
+
+      // Testimonials slider
+      (function initSlider() {
+        const slider = $('.slider');
+        const track = $('.slider-track', slider);
+        const slides = $$('.slide', track);
+        const prev = $('.prev', slider);
+        const next = $('.next', slider);
+        const dotsWrap = $('.slider-dots');
+        let idx = 0;
+        let timer = null;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function update() {
+          track.style.transform = `translateX(-${idx * 100}%)`;
+          slides.forEach((s, i) => s.setAttribute('aria-label', `${i + 1} of ${slides.length}`));
+          // dots
+          $$('.dot-btn', dotsWrap).forEach((d, i) => d.setAttribute('aria-current', i === idx ? 'true' : 'false'));
+        }
+
+        function goTo(i) {
+          idx = (i + slides.length) % slides.length;
+          update();
+        }
+
+        function autoPlay() {
+          if (reduced) return;
+          clearInterval(timer);
+          timer = setInterval(() => goTo(idx + 1), 5000);
+        }
+
+        // Dots
+        slides.forEach((_, i) => {
+          const b = document.createElement('button');
+          b.className = 'dot-btn';
+          b.type = 'button';
+          b.setAttribute('role', 'tab');
+          b.setAttribute('aria-label', `Go to slide ${i + 1}`);
+          b.addEventListener('click', () => {
+            goTo(i);
+            autoPlay();
+          });
+          dotsWrap.appendChild(b);
+        });
+
+        prev.addEventListener('click', () => {
+          goTo(idx - 1);
+          autoPlay();
+        });
+        next.addEventListener('click', () => {
+          goTo(idx + 1);
+          autoPlay();
+        });
+
+        // Pause on hover
+        slider.addEventListener('mouseenter', () => clearInterval(timer));
+        slider.addEventListener('mouseleave', autoPlay);
+
+        update();
+        autoPlay();
+      })();
+
+      // Pricing toggle
+      (function initBillingToggle() {
+        const toggle = $('#billingToggle');
+        const prices = $$('.price');
+        function render() {
+          const yearly = toggle.classList.contains('active');
+          prices.forEach((p) => {
+            const m = Number(p.dataset.monthly);
+            const y = Number(p.dataset.yearly);
+            const v = yearly && y > 0 ? y : m;
+            const valueNode = $('.value', p);
+            if (v === 0) {
+              valueNode.textContent = 'Custom';
+              return;
+            }
+            valueNode.textContent = `$${v}`;
+          });
+          toggle.setAttribute('aria-pressed', yearly ? 'true' : 'false');
+        }
+        toggle.addEventListener('click', () => {
+          toggle.classList.toggle('active');
+          render();
+        });
+        render();
+      })();
+
+      // Signup: client-side success message for demo
+      (function initSignup() {
+        const form = $('#signup');
+        const msg = $('#signup-msg');
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          form.classList.add('success');
+          msg.focus?.();
+          setTimeout(() => {
+            form.reset();
+          }, 100);
+        });
+      })();
+    </script>
+  </body>
+  </html>
+

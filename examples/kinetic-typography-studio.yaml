@@ -1,0 +1,17 @@
+id: kinetic-typography-studio
+title: Kinetic Typography Studio
+prompt: |
+  Title: Kinetic Typography Studio
+  Prompt:
+  Create a single-page app, in a single HTML file, that lets users design and export animated text sequences.
+  Timeline editor with keyframes for position, scale, rotation, opacity, letter/word offsets, and tracking; easing curves with presets and custom Bézier.
+  Animation presets: typewriter, bounce, liquid, glitch, fade-up, cascade by word/letter/line; per-glyph stagger controls.
+  Audio-reactive mode: load a local audio file, auto-detect beats, and snap keyframes to bars/beats; live preview with scrub.
+  Style controls: font picker (system + a few bundled web fonts), weight, italics, fill/outline, gradients, shadows, motion blur toggle, background color or image.
+  Layout tools: safe-area guides, 1:1/9:16/16:9 aspect presets, margins, grid.
+  Export: MP4/WebM/GIF or PNG sequence; include frame rate and resolution options; render without UI chrome.
+  Accessibility: keyboard shortcuts, focus order, ARIA labels on controls; “prefers-reduced-motion” reduces heavy effects.
+  Responsive, touch + mouse support; no external APIs.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/kinetic-typography-studio.png
+tags:
+  - app

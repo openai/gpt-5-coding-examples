@@ -1,0 +1,11 @@
+id: holiday-card-for-kids
+title: Holiday Card for Kids
+prompt: |
+  Create a single-page app, in a single HTML file, that demonstrates a warm and fun holiday card! The card should be interactive and enjoyable for kids!
+  - Have variety of items kids can drop in the UI; a few should be already placed by default
+  - Also have fun sound interactions
+  - Place many cute and fun stuff as much as possible
+  - Animation like snowdrop should be used nicely
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/holiday-card-for-kids.png
+tags:
+  - interactive

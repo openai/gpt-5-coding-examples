@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Customer Journey Flow</title>
+    <style>
+      :root {
+        --bg: #f7f7fb;
+        --grid: rgba(0,0,0,0.05);
+        --panel: rgba(255, 255, 255, 0.9);
+        --border: rgba(0,0,0,0.08);
+        --shadow: 0 8px 24px rgba(0,0,0,0.12);
+        --radius: 12px;
+        --text: #0f172a;
+        --muted: #6b7280;
+        --accent: #2563eb;
+        --node: #ffffff;
+        --handle: #2563eb;
+        --edge: #1f2937;
+      }
+
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background:
+          linear-gradient(0deg, transparent 24px, var(--grid) 25px, transparent 26px) 0 0/ 100% 25px,
+          linear-gradient(90deg, transparent 24px, var(--grid) 25px, transparent 26px) 0 0/ 25px 100%,
+          var(--bg);
+        overflow: hidden;
+      }
+
+      .toolbar {
+        position: fixed;
+        top: env(safe-area-inset-top, 12px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--panel);
+        backdrop-filter: saturate(140%) blur(8px);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 10px 12px;
+        box-shadow: var(--shadow);
+        user-select: none;
+        -webkit-user-select: none;
+        z-index: 10;
+        max-width: min(96vw, 1100px);
+        overflow: auto;
+      }
+      .brand { font-weight: 600; font-size: 14px; color: var(--muted); padding-right: 6px; white-space: nowrap; }
+      .divider { width: 1px; height: 24px; background: var(--border); }
+      .action {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        cursor: pointer;
+      }
+      .primary { background: var(--accent); border-color: rgba(0,0,0,0.05); color: #fff; }
+      .hint { font-size: 12px; color: var(--muted); }
+
+      #canvas {
+        position: fixed; inset: 0; width: 100%; height: 100%;
+      }
+      #edges {
+        position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+      }
+      #nodes {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+      }
+
+      .node {
+        position: absolute;
+        min-width: 160px;
+        max-width: 280px;
+        background: var(--node);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 12px 14px;
+        cursor: grab;
+        user-select: none;
+      }
+      .node:active { cursor: grabbing; }
+      .node .title {
+        font-weight: 600; font-size: 14px; margin: 0 0 8px 0; color: var(--text);
+        outline: none;
+      }
+      .node .title[contenteditable="true"]:empty:before { content: "Stage"; color: var(--muted); }
+      .node .meta { font-size: 12px; color: var(--muted); }
+
+      .handle {
+        position: absolute; width: 12px; height: 12px; border-radius: 50%;
+        background: #fff; border: 2px solid var(--handle);
+        box-shadow: 0 1px 0 rgba(0,0,0,0.12);
+        cursor: crosshair;
+      }
+      .handle.left { left: -8px; top: 50%; transform: translateY(-50%); }
+      .handle.right { right: -8px; top: 50%; transform: translateY(-50%); }
+
+      .edge { stroke: var(--edge); stroke-width: 2; fill: none; }
+      .edge.ghost { stroke-dasharray: 4 4; opacity: 0.6; }
+      .edge-hit { stroke: transparent; stroke-width: 10; fill: none; cursor: pointer; pointer-events: stroke; }
+
+      .panel {
+        position: fixed; left: 12px; bottom: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; box-shadow: var(--shadow); font-size: 12px; color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas" aria-label="Customer Journey canvas">
+      <svg id="edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div id="nodes"></div>
+    </div>
+
+    <div class="toolbar" role="toolbar" aria-label="Customer Journey tools">
+      <div class="brand">Customer Journey Flow</div>
+      <button id="addStage" class="action" title="Add a stage">Add Stage</button>
+      <button id="autoLayout" class="action" title="Arrange left-to-right">Auto-layout</button>
+      <div class="divider" aria-hidden="true"></div>
+      <button id="exportJSON" class="action" title="Copy flow as JSON">Export JSON</button>
+      <button id="reset" class="action" title="Reset to template">Reset</button>
+      <div class="divider" aria-hidden="true"></div>
+      <span class="hint">Tip: drag a handle between stages to connect. Double‑click a title to edit.</span>
+    </div>
+
+    <div class="panel" aria-live="polite">Stages are draggable. Connect with handles. Right arrow markers indicate flow direction.</div>
+
+    <script>
+      (function() {
+        const nodesLayer = document.getElementById('nodes');
+        const edgesSVG = document.getElementById('edges');
+        const canvas = document.getElementById('canvas');
+
+        const state = {
+          nodes: [],
+          edges: [],
+          nextNodeId: 1,
+          nextEdgeId: 1,
+          draggingNode: null,
+          dragOffset: {x:0, y:0},
+          connecting: null, // {fromId, fromSide, path}
+        };
+
+        function initMarkers() {
+          const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+          const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+          marker.setAttribute('id', 'arrow');
+          marker.setAttribute('viewBox', '0 0 10 10');
+          marker.setAttribute('refX', '8');
+          marker.setAttribute('refY', '5');
+          marker.setAttribute('markerWidth', '6');
+          marker.setAttribute('markerHeight', '6');
+          marker.setAttribute('orient', 'auto-start-reverse');
+          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          p.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+          p.setAttribute('fill', 'var(--edge)');
+          marker.appendChild(p);
+          defs.appendChild(marker);
+          edgesSVG.appendChild(defs);
+        }
+
+        function createNode(label, x, y) {
+          const id = 'n' + state.nextNodeId++;
+          const node = { id, x, y, label: label || 'Stage' };
+          state.nodes.push(node);
+          renderNode(node);
+          return node;
+        }
+
+        function renderNode(node) {
+          let el = document.getElementById(node.id);
+          if (!el) {
+            el = document.createElement('div');
+            el.className = 'node';
+            el.id = node.id;
+            el.innerHTML = `
+              <div class="handle left" data-side="left" data-node="${node.id}" title="Drag to connect"></div>
+              <div class="handle right" data-side="right" data-node="${node.id}" title="Drag to connect"></div>
+              <div class="title" contenteditable="true" spellcheck="false"></div>
+              <div class="meta">Stage in the journey</div>
+            `;
+            nodesLayer.appendChild(el);
+
+            // Dragging the node
+            el.addEventListener('pointerdown', (e) => {
+              const target = e.target;
+              if (target.classList.contains('handle') || target.isContentEditable) return;
+              e.preventDefault();
+              state.draggingNode = node.id;
+              const rect = el.getBoundingClientRect();
+              state.dragOffset.x = e.clientX - rect.left;
+              state.dragOffset.y = e.clientY - rect.top;
+              el.setPointerCapture?.(e.pointerId);
+            });
+            el.addEventListener('pointermove', (e) => {
+              if (state.draggingNode !== node.id) return;
+              const parentRect = nodesLayer.getBoundingClientRect();
+              const nx = e.clientX - parentRect.left - state.dragOffset.x;
+              const ny = e.clientY - parentRect.top - state.dragOffset.y;
+              node.x = Math.round(nx);
+              node.y = Math.round(ny);
+              positionNode(el, node);
+              renderEdges();
+            });
+            const endDrag = () => { if (state.draggingNode === node.id) state.draggingNode = null; };
+            el.addEventListener('pointerup', endDrag);
+            el.addEventListener('pointercancel', endDrag);
+
+            // Edit title
+            const title = el.querySelector('.title');
+            title.textContent = node.label;
+            title.addEventListener('input', () => { node.label = title.textContent.trim() || 'Stage'; });
+
+            // Connection handles
+            el.querySelectorAll('.handle').forEach(h => {
+              h.addEventListener('pointerdown', (e) => startConnect(e, node.id, h.dataset.side));
+            });
+          }
+          positionNode(el, node);
+        }
+
+        function positionNode(el, node) {
+          el.style.transform = `translate(${node.x}px, ${node.y}px)`;
+        }
+
+        function getNodeCenterSide(node, side) {
+          const el = document.getElementById(node.id);
+          const rect = el.getBoundingClientRect();
+          const parentRect = nodesLayer.getBoundingClientRect();
+          const x = side === 'left' ? rect.left - parentRect.left : rect.right - parentRect.left;
+          const y = rect.top - parentRect.top + rect.height / 2;
+          return { x, y };
+        }
+
+        function bezierPath(x1, y1, x2, y2) {
+          const dx = Math.max(40, Math.abs(x2 - x1) / 2);
+          const c1x = x1 + (x2 >= x1 ? dx : -dx);
+          const c2x = x2 - (x2 >= x1 ? dx : -dx);
+          return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
+        }
+
+        function renderEdges() {
+          // Reset viewBox to actual pixel size for easy coordinates
+          const r = canvas.getBoundingClientRect();
+          edgesSVG.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+          // Remove all current non-defs children
+          Array.from(edgesSVG.querySelectorAll('g.edge-group')).forEach(n => n.remove());
+
+          state.edges.forEach(edge => {
+            const from = state.nodes.find(n => n.id === edge.from);
+            const to = state.nodes.find(n => n.id === edge.to);
+            if (!from || !to) return;
+            const fromSide = edge.fromSide || (from.x <= to.x ? 'right' : 'left');
+            const toSide = edge.toSide || (from.x <= to.x ? 'left' : 'right');
+            const p1 = getNodeCenterSide(from, fromSide);
+            const p2 = getNodeCenterSide(to, toSide);
+            const d = bezierPath(p1.x, p1.y, p2.x, p2.y);
+
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.classList.add('edge-group');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', d);
+            path.setAttribute('class', 'edge');
+            path.setAttribute('marker-end', 'url(#arrow)');
+            const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            hit.setAttribute('d', d);
+            hit.setAttribute('class', 'edge-hit');
+            hit.setAttribute('data-edge', edge.id);
+            hit.addEventListener('dblclick', () => { deleteEdge(edge.id); });
+            g.appendChild(path); g.appendChild(hit);
+            edgesSVG.appendChild(g);
+          });
+        }
+
+        function startConnect(e, fromId, fromSide) {
+          e.preventDefault();
+          const from = state.nodes.find(n => n.id === fromId);
+          if (!from) return;
+          const p1 = getNodeCenterSide(from, fromSide);
+          const ghost = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          ghost.setAttribute('class', 'edge ghost');
+          edgesSVG.appendChild(ghost);
+          state.connecting = { fromId, fromSide, path: ghost };
+
+          const move = (ev) => {
+            if (!state.connecting) return;
+            const r = nodesLayer.getBoundingClientRect();
+            const x2 = ev.clientX - r.left;
+            const y2 = ev.clientY - r.top;
+            const d = bezierPath(p1.x, p1.y, x2, y2);
+            ghost.setAttribute('d', d);
+          };
+          const up = (ev) => {
+            document.removeEventListener('pointermove', move);
+            document.removeEventListener('pointerup', up);
+            finishConnect(ev);
+          };
+          document.addEventListener('pointermove', move);
+          document.addEventListener('pointerup', up, { once: true });
+        }
+
+        function finishConnect(ev) {
+          const connecting = state.connecting;
+          if (!connecting) return;
+          const ghost = connecting.path;
+          ghost.remove();
+          state.connecting = null;
+
+          const el = document.elementFromPoint(ev.clientX, ev.clientY);
+          if (!el) return;
+          const isHandle = el.classList && el.classList.contains('handle');
+          const toNode = isHandle ? el.getAttribute('data-node') : (el.closest && el.closest('.node') ? el.closest('.node').id : null);
+          if (!toNode || toNode === connecting.fromId) return;
+
+          // Prevent duplicates
+          const exists = state.edges.some(e => e.from === connecting.fromId && e.to === toNode);
+          if (exists) return;
+
+          const edge = { id: 'e' + state.nextEdgeId++, from: connecting.fromId, to: toNode, fromSide: connecting.fromSide };
+          state.edges.push(edge);
+          renderEdges();
+        }
+
+        function deleteEdge(edgeId) {
+          state.edges = state.edges.filter(e => e.id !== edgeId);
+          renderEdges();
+        }
+
+        function addStageAt(x, y) {
+          const node = createNode('Stage', x, y);
+          renderEdges();
+          return node;
+        }
+
+        function fitInitial() {
+          const r = nodesLayer.getBoundingClientRect();
+          const cx = r.width / 2;
+          const cy = r.height / 2;
+          const gap = 220;
+          const n1 = createNode('Awareness', cx - gap, cy - 40);
+          const n2 = createNode('Consideration', cx, cy - 40);
+          const n3 = createNode('Purchase', cx + gap, cy - 40);
+          state.edges.push({ id: 'e' + state.nextEdgeId++, from: n1.id, to: n2.id });
+          state.edges.push({ id: 'e' + state.nextEdgeId++, from: n2.id, to: n3.id });
+          renderEdges();
+        }
+
+        function autoLayout() {
+          const sorted = [...state.nodes];
+          const indegree = new Map(sorted.map(n => [n.id, 0]));
+          state.edges.forEach(e => indegree.set(e.to, (indegree.get(e.to) || 0) + 1));
+          sorted.sort((a, b) => (indegree.get(a.id) - indegree.get(b.id)) || a.id.localeCompare(b.id));
+          const r = nodesLayer.getBoundingClientRect();
+          const startX = 80;
+          const gapX = Math.max(180, (r.width - 160) / Math.max(1, sorted.length));
+          const y = Math.max(40, r.height / 2 - 40);
+          sorted.forEach((n, i) => { n.x = Math.round(startX + i * gapX); n.y = Math.round(y); renderNode(n); });
+          renderEdges();
+        }
+
+        function exportJSON() {
+          const data = { nodes: state.nodes.map(n => ({ id: n.id, x: n.x, y: n.y, label: n.label })), edges: state.edges.map(e => ({ id: e.id, from: e.from, to: e.to })) };
+          const json = JSON.stringify(data, null, 2);
+          navigator.clipboard?.writeText(json).then(() => {
+            alert('Flow JSON copied to clipboard');
+          }).catch(() => {
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'customer-journey.json'; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          });
+        }
+
+        function reset() {
+          state.nodes = []; state.edges = []; state.nextNodeId = 1; state.nextEdgeId = 1;
+          nodesLayer.innerHTML = '';
+          // Keep defs
+          Array.from(edgesSVG.querySelectorAll('g.edge-group')).forEach(n => n.remove());
+          fitInitial();
+        }
+
+        // Buttons
+        document.getElementById('addStage').addEventListener('click', () => {
+          const r = nodesLayer.getBoundingClientRect();
+          addStageAt(Math.round(r.width/2 - 80), Math.round(r.height/2 - 40));
+        });
+        document.getElementById('autoLayout').addEventListener('click', autoLayout);
+        document.getElementById('exportJSON').addEventListener('click', exportJSON);
+        document.getElementById('reset').addEventListener('click', reset);
+
+        window.addEventListener('resize', renderEdges);
+
+        initMarkers();
+        fitInitial();
+      })();
+    </script>
+  </body>
+  </html>
+

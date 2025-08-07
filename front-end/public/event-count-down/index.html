@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Event Countdown</title>
+    <style>
+      :root{
+        --bg-blur: 2px;
+        --accent: 35 100% 60%;
+        --text: 220 20% 96%;
+        --muted: 220 10% 75%;
+        --shadow: 220 40% 5% / .45;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: hsl(var(--text));
+        background: #0b0f1a;
+        overflow: hidden;
+      }
+
+      /* Background layer with subtle parallax */
+      .bg {
+        position: fixed;
+        inset: 0;
+        background-color: #0b0f1a;
+        background-image: var(--bg-image, radial-gradient(1200px 800px at 50% 50%, #16213e 0%, #0b0f1a 60%));
+        background-size: cover;
+        background-position: center;
+        will-change: transform, background-position;
+        transform: translate3d(0,0,0) scale(1.03);
+        filter: saturate(1.05) brightness(0.9);
+      }
+
+      /* Soft vignette + gradient overlay for readability */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(1200px 700px at 70% 30%, transparent, rgba(0,0,0,.35) 60%, rgba(0,0,0,.7) 100%),
+                    linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.6));
+      }
+
+      /* App layout */
+      .app {
+        position: relative;
+        z-index: 1;
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+      }
+
+      /* Top control bar */
+      .controls {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+        gap: .75rem;
+        padding: .9rem clamp(.9rem, 3vw, 1.5rem);
+        align-items: center;
+        backdrop-filter: blur(var(--bg-blur));
+        background: linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.15));
+        border-bottom: 1px solid rgba(255,255,255,.08);
+      }
+      @media (max-width: 900px){
+        .controls { grid-template-columns: 1fr; }
+      }
+
+      label { font-size: .75rem; color: hsl(var(--muted)); display:block; margin: 0 0 .35rem; letter-spacing:.02em; }
+      .field {
+        display: grid;
+        gap: .25rem;
+      }
+      .input, .file-input, .button {
+        appearance: none;
+        width: 100%;
+        padding: .7rem .85rem;
+        border-radius: .6rem;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(20,22,33,.6);
+        color: hsl(var(--text));
+        outline: none;
+        transition: border-color .2s, background-color .2s, transform .06s ease;
+      }
+      .input::placeholder{ color: rgba(255,255,255,.5); }
+      .input:focus{ border-color: hsla(var(--accent)/.8); box-shadow: 0 0 0 .15rem hsla(var(--accent)/.15); }
+      .file-input { padding:.55rem .85rem; }
+      .button {
+        cursor: pointer;
+        font-weight: 600;
+        background: linear-gradient(180deg, hsla(var(--accent)/.85), hsla(var(--accent)/.7));
+        color: #0b0f1a;
+        border-color: hsla(var(--accent)/.9);
+      }
+      .button:hover{ filter: brightness(1.05); }
+      .button:active{ transform: translateY(1px); }
+
+      /* Main stage */
+      .stage {
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        text-align: center;
+        padding: clamp(1rem, 2vw, 2rem);
+        gap: 1.2rem;
+      }
+
+      .event-title {
+        font-size: clamp(1.2rem, 2.8vw, 2rem);
+        font-weight: 700;
+        letter-spacing: .02em;
+        text-shadow: 0 10px 30px rgba(0,0,0,.7);
+      }
+      .event-meta{
+        color: hsl(var(--muted));
+        font-size: clamp(.9rem, 2vw, 1.05rem);
+      }
+
+      /* Countdown */
+      .countdown {
+        display: grid;
+        grid-auto-flow: column;
+        gap: clamp(.6rem, 2.4vw, 1rem);
+        align-items: end;
+        user-select: none;
+      }
+      .unit {
+        display:grid;
+        gap:.45rem;
+        justify-items:center;
+      }
+      .value {
+        --size: clamp(2.8rem, 14vw, 8rem);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        letter-spacing: .03em;
+        font-size: var(--size);
+        padding: clamp(.35rem, .8vw, .6rem) clamp(.5rem, 1.2vw, .9rem);
+        border-radius: .8rem;
+        background: rgba(10,12,20,.55);
+        border: 1px solid rgba(255,255,255,.12);
+        box-shadow:
+          0 1px 0 rgba(255,255,255,.06) inset,
+          0 20px 60px rgba(0,0,0,.45);
+        position: relative;
+        min-width: calc(var(--size) * 1.15);
+      }
+      .label { font-size: .75rem; color: hsl(var(--muted)); letter-spacing: .08em; text-transform: uppercase; }
+
+      /* Value change animation */
+      .value.tick { animation: tick .65s ease both; }
+      @keyframes tick {
+        0% { transform: translateY(0) scale(1); filter: brightness(1); }
+        25% { transform: translateY(-4px) scale(1.02); filter: brightness(1.25); }
+        60% { transform: translateY(1px)  scale(0.998); }
+        100%{ transform: translateY(0)  scale(1); }
+      }
+
+      /* Footer */
+      .footer { display:flex; justify-content:center; gap:.75rem; padding: .8rem; color: hsl(var(--muted)); font-size: .85rem; }
+      .footer a { color: hsl(var(--text)); opacity:.8; }
+
+      /* Helpful when no background selected */
+      .bg::after{
+        content: "";
+        position:absolute; inset:0;
+        background-image: radial-gradient(800px 600px at 30% 10%, rgba(50,100,255,.12), transparent 60%),
+                          radial-gradient(900px 600px at 80% 70%, rgba(255,50,150,.12), transparent 60%);
+        pointer-events:none; mix-blend-mode: screen;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg" id="bg"></div>
+    <div class="overlay"></div>
+    <div class="app">
+      <form class="controls" id="controls">
+        <div class="field">
+          <label for="name">Event name</label>
+          <input class="input" id="name" name="name" type="text" placeholder="My Event" required />
+        </div>
+        <div class="field">
+          <label for="datetime">Date & time</label>
+          <input class="input" id="datetime" name="datetime" type="datetime-local" required />
+        </div>
+        <div class="field">
+          <label for="location">Location</label>
+          <input class="input" id="location" name="location" type="text" placeholder="City, Venue or URL" />
+        </div>
+        <div class="field">
+          <label for="bgUpload">Background image</label>
+          <input class="file-input" id="bgUpload" name="bgUpload" type="file" accept="image/*" />
+        </div>
+        <div class="field" style="align-self:end">
+          <button type="button" id="saveCal" class="button">Save to Calendar</button>
+        </div>
+      </form>
+
+      <main class="stage">
+        <div class="event-title" id="titleOut">Your Event</div>
+        <div class="event-meta" id="metaOut">Select a date to begin</div>
+
+        <div class="countdown" aria-live="polite" aria-atomic="true">
+          <div class="unit">
+            <div class="value" id="days">0</div>
+            <div class="label">Days</div>
+          </div>
+          <div class="unit">
+            <div class="value" id="hours">00</div>
+            <div class="label">Hours</div>
+          </div>
+          <div class="unit">
+            <div class="value" id="minutes">00</div>
+            <div class="label">Minutes</div>
+          </div>
+          <div class="unit">
+            <div class="value" id="seconds">00</div>
+            <div class="label">Seconds</div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <span>Tip: move your mouse or tilt your phone for a subtle parallax effect.</span>
+      </footer>
+    </div>
+
+    <script>
+      (function(){
+        const $ = (sel) => document.querySelector(sel);
+        const titleInput = $('#name');
+        const datetimeInput = $('#datetime');
+        const locationInput = $('#location');
+        const bgUpload = $('#bgUpload');
+        const titleOut = $('#titleOut');
+        const metaOut = $('#metaOut');
+        const daysEl = $('#days');
+        const hoursEl = $('#hours');
+        const minutesEl = $('#minutes');
+        const secondsEl = $('#seconds');
+        const saveBtn = $('#saveCal');
+        const bg = $('#bg');
+
+        // Helpers
+        const pad2 = (n) => String(n).padStart(2,'0');
+        const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+        const niceDate = (date) => date.toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' });
+        const parseLocalDateTime = (value) => {
+          // datetime-local is in local time without timezone. Construct Date accordingly.
+          if(!value) return null;
+          const [datePart, timePart] = value.split('T');
+          if(!datePart || !timePart) return null;
+          const [y,m,d] = datePart.split('-').map(Number);
+          const [hh,mm] = timePart.split(':').map(Number);
+          return new Date(y, (m-1), d, hh||0, mm||0, 0, 0);
+        };
+
+        // Local storage persistence
+        const STORAGE_KEY = 'event-countdown-v1';
+        const saveState = () => {
+          const data = {
+            name: titleInput.value.trim(),
+            datetime: datetimeInput.value,
+            location: locationInput.value.trim(),
+            bg: bg.style.getPropertyValue('--bg-image') || ''
+          };
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+        };
+        const loadState = () => {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if(!raw) return;
+            const data = JSON.parse(raw);
+            if(data.name) titleInput.value = data.name;
+            if(data.datetime) datetimeInput.value = data.datetime;
+            if(data.location) locationInput.value = data.location;
+            if(data.bg) bg.style.setProperty('--bg-image', data.bg);
+            updateMeta();
+          } catch {}
+        };
+
+        function updateMeta(){
+          const name = titleInput.value.trim() || 'Your Event';
+          const dt = parseLocalDateTime(datetimeInput.value);
+          const loc = locationInput.value.trim();
+          titleOut.textContent = name;
+          if(dt){
+            const when = niceDate(dt);
+            metaOut.textContent = loc ? `${when} • ${loc}` : when;
+          } else {
+            metaOut.textContent = 'Select a date to begin';
+          }
+        }
+
+        // Countdown logic
+        let targetDate = null;
+        let lastValues = { d: null, h: null, m: null, s: null };
+        let timerId = null;
+
+        function tick(){
+          if(!targetDate){
+            requestAnimationFrame(() => {});
+            return;
+          }
+          const now = new Date();
+          let diff = targetDate.getTime() - now.getTime();
+          if(diff <= 0){
+            daysEl.textContent = '0';
+            hoursEl.textContent = '00';
+            minutesEl.textContent = '00';
+            secondsEl.textContent = '00';
+            metaOut.textContent = 'It\'s happening now!';
+            return;
+          }
+          const d = Math.floor(diff / 86400000); diff -= d * 86400000;
+          const h = Math.floor(diff / 3600000); diff -= h * 3600000;
+          const m = Math.floor(diff / 60000); diff -= m * 60000;
+          const s = Math.floor(diff / 1000);
+
+          // Update DOM with animation when value changes
+          if(lastValues.d !== d){ animateTo(daysEl, String(d)); lastValues.d = d; }
+          if(lastValues.h !== h){ animateTo(hoursEl, pad2(h)); lastValues.h = h; }
+          if(lastValues.m !== m){ animateTo(minutesEl, pad2(m)); lastValues.m = m; }
+          if(lastValues.s !== s){ animateTo(secondsEl, pad2(s)); lastValues.s = s; }
+        }
+
+        function animateTo(el, text){
+          el.textContent = text;
+          el.classList.remove('tick');
+          // Force reflow to restart animation
+          void el.offsetWidth;
+          el.classList.add('tick');
+        }
+
+        function startCountdown(){
+          if(timerId) clearInterval(timerId);
+          timerId = setInterval(tick, 250);
+          tick();
+        }
+
+        // Background upload
+        bgUpload.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if(!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const url = `url(${JSON.stringify(reader.result)})`;
+            bg.style.setProperty('--bg-image', url);
+            saveState();
+          };
+          reader.readAsDataURL(file);
+        });
+
+        // Parallax effect
+        let parallax = { x: 0, y: 0 };
+        function applyParallax(){
+          const max = 10; // px
+          bg.style.transform = `translate3d(${parallax.x}px, ${parallax.y}px, 0) scale(1.06)`;
+        }
+        window.addEventListener('pointermove', (e) => {
+          const { innerWidth:w, innerHeight:h } = window;
+          const nx = (e.clientX / w) * 2 - 1; // -1..1
+          const ny = (e.clientY / h) * 2 - 1;
+          const strength = 8;
+          parallax.x = clamp(nx * -strength, -12, 12);
+          parallax.y = clamp(ny * -strength, -12, 12);
+          applyParallax();
+        }, { passive: true });
+        // Subtle parallax with device orientation (mobile)
+        window.addEventListener('deviceorientation', (e) => {
+          const strength = 6;
+          const nx = clamp(e.gamma || 0, -30, 30) / 30; // -1..1
+          const ny = clamp(e.beta || 0, -30, 30) / 30;
+          parallax.x = -nx * strength;
+          parallax.y = ny * strength * .6;
+          applyParallax();
+        }, { passive: true });
+
+        // Update metadata and countdown when inputs change
+        ['input','change'].forEach(ev => {
+          titleInput.addEventListener(ev, () => { updateMeta(); saveState(); });
+          locationInput.addEventListener(ev, () => { updateMeta(); saveState(); });
+          datetimeInput.addEventListener(ev, () => {
+            updateMeta();
+            const dt = parseLocalDateTime(datetimeInput.value);
+            targetDate = dt;
+            saveState();
+            startCountdown();
+          });
+        });
+
+        // Calendar (.ics) generation
+        function toICSDateUTC(date){
+          const pad = (n) => String(n).padStart(2,'0');
+          const y = date.getUTCFullYear();
+          const m = pad(date.getUTCMonth()+1);
+          const d = pad(date.getUTCDate());
+          const hh = pad(date.getUTCHours());
+          const mm = pad(date.getUTCMinutes());
+          const ss = pad(date.getUTCSeconds());
+          return `${y}${m}${d}T${hh}${mm}${ss}Z`;
+        }
+        function escapeICS(text){
+          return String(text||'')
+            .replace(/\\/g,'\\\\')
+            .replace(/\n/g,'\\n')
+            .replace(/,/g,'\\,')
+            .replace(/;/g,'\\;');
+        }
+        function makeICS({ title, start, location, durationMinutes = 60 }){
+          const dtstamp = toICSDateUTC(new Date());
+          const dtstart = toICSDateUTC(start);
+          const dtend = toICSDateUTC(new Date(start.getTime() + durationMinutes*60000));
+          const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@event-countdown.local`;
+          const lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Live Event Countdown//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'BEGIN:VEVENT',
+            `UID:${uid}`,
+            `DTSTAMP:${dtstamp}`,
+            `DTSTART:${dtstart}`,
+            `DTEND:${dtend}`,
+            `SUMMARY:${escapeICS(title)}`,
+            location ? `LOCATION:${escapeICS(location)}` : '',
+            'DESCRIPTION:Created with Live Event Countdown',
+            'END:VEVENT',
+            'END:VCALENDAR'
+          ].filter(Boolean);
+          return lines.join('\r\n');
+        }
+        function download(filename, text){
+          const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+        saveBtn.addEventListener('click', () => {
+          const name = titleInput.value.trim() || 'Event';
+          const dt = parseLocalDateTime(datetimeInput.value);
+          if(!dt) { alert('Please choose a date and time first.'); return; }
+          const loc = locationInput.value.trim();
+          const ics = makeICS({ title: name, start: dt, location: loc, durationMinutes: 60 });
+          const fileName = `${name.toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'') || 'event'}.ics`;
+          download(fileName, ics);
+        });
+
+        // Set min datetime to now (rounded to next 5 minutes)
+        const now = new Date();
+        now.setSeconds(0,0);
+        const minutes = now.getMinutes();
+        const rounded = (Math.ceil(minutes / 5) * 5) % 60;
+        if(rounded !== minutes){ now.setMinutes(rounded); }
+        const toLocalInputValue = (date) => {
+          const pad = (n) => String(n).padStart(2,'0');
+          const y = date.getFullYear();
+          const m = pad(date.getMonth()+1);
+          const d = pad(date.getDate());
+          const hh = pad(date.getHours());
+          const mm = pad(date.getMinutes());
+          return `${y}-${m}-${d}T${hh}:${mm}`;
+        };
+        datetimeInput.min = toLocalInputValue(now);
+        if(!datetimeInput.value) datetimeInput.value = toLocalInputValue(new Date(now.getTime() + 86400000)); // default +1 day
+
+        // Init
+        loadState();
+        targetDate = parseLocalDateTime(datetimeInput.value);
+        updateMeta();
+        startCountdown();
+      })();
+    </script>
+  </body>
+</html>
+

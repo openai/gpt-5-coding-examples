@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Neon Cup — Esports Tournament</title>
+    <meta
+      name="description"
+      content="Neon, high-contrast esports tournament landing page."
+    />
+    <style>
+      :root {
+        --bg: #05060a; /* deep black-blue */
+        --panel: #0b1020; /* panel background */
+        --ink: #e6f1ff; /* primary text */
+        --muted: #8aa4c9; /* secondary text */
+        --accent: #00e5ff; /* neon cyan */
+        --accent-2: #ff3af2; /* neon magenta */
+        --accent-3: #15ff7a; /* neon green */
+        --warn: #ffb300;
+        --danger: #ff3b3b;
+        --ok: #2ee6a6;
+        --ring: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent);
+        --radius: 16px;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          "Helvetica Neue", Arial;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.4;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      a {
+        color: var(--accent);
+      }
+      a:hover {
+        color: var(--accent-2);
+      }
+      .container {
+        max-width: 1200px;
+        margin-inline: auto;
+        padding: 24px;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+      .card {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.02)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .card-body {
+        padding: 16px 20px;
+      }
+      .btn {
+        appearance: none;
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #001;
+        font-weight: 700;
+        letter-spacing: 0.25px;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(0, 229, 255, 0.25);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(255, 58, 242, 0.25);
+      }
+      .btn.ghost {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+      }
+      .btn.small {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      /* Header */
+      header.site {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: saturate(140%) blur(8px);
+        background: linear-gradient(
+          180deg,
+          rgba(5, 6, 10, 0.9),
+          rgba(5, 6, 10, 0.6)
+        );
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      header.site .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        max-width: 1200px;
+        margin-inline: auto;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+      }
+      .brand svg {
+        width: 28px;
+        height: 28px;
+        filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.45));
+      }
+      nav a {
+        margin: 0 10px;
+        text-decoration: none;
+        color: var(--muted);
+      }
+      nav a:focus,
+      nav a:hover {
+        color: var(--ink);
+      }
+
+      /* Hero */
+      .hero {
+        position: relative;
+        min-height: 78svh;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      canvas#bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .scanlines {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: linear-gradient(
+          rgba(255, 255, 255, 0.06),
+          rgba(255, 255, 255, 0) 2px
+        );
+        background-size: 100% 3px;
+        mix-blend-mode: overlay;
+        opacity: 0.35;
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 24px;
+      }
+      .headline {
+        font-size: clamp(28px, 6vw, 64px);
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        line-height: 1.05;
+      }
+      .subline {
+        color: var(--muted);
+        margin-top: 10px;
+      }
+      .cta-row {
+        margin-top: 22px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .date-badge {
+        margin-top: 14px;
+      }
+
+      /* Sections */
+      section {
+        scroll-margin-top: 80px;
+      }
+      section h2 {
+        font-size: clamp(22px, 3.5vw, 34px);
+        margin: 0 0 12px;
+        font-weight: 800;
+      }
+      .section-desc {
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+
+      /* Bracket */
+      .bracket-wrap {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .bracket-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .bracket {
+        display: grid;
+        gap: 16px;
+        overflow: auto;
+        padding: 12px;
+        border-radius: var(--radius);
+        background: linear-gradient(180deg, #080b16, #070a14);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .round {
+        display: grid;
+        gap: 12px;
+      }
+      .match {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        position: relative;
+      }
+      .team {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(0, 229, 255, 0.07);
+        border: 1px solid rgba(0, 229, 255, 0.18);
+      }
+      .team.loser {
+        background: rgba(255, 58, 242, 0.06);
+        border-color: rgba(255, 58, 242, 0.15);
+        opacity: 0.7;
+      }
+      .team .name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+      }
+      .team img {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+      }
+      .match .meta {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      .match:hover {
+        outline: 2px solid rgba(0, 229, 255, 0.35);
+      }
+      .auto-advancing {
+        box-shadow: 0 0 0 2px rgba(21, 255, 122, 0.35) inset;
+      }
+      .round-title {
+        font-weight: 800;
+        color: var(--muted);
+      }
+      @media (min-width: 900px) {
+        .bracket {
+          grid-template-columns: repeat(4, minmax(220px, 1fr));
+        }
+      }
+
+      /* Schedule */
+      .schedule-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .schedule-list {
+        display: grid;
+        gap: 10px;
+      }
+      .slot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .slot .left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .slot .time {
+        font-weight: 800;
+      }
+      .slot .stage {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      /* Teams */
+      .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+      }
+      .team-card {
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        display: grid;
+        gap: 10px;
+      }
+      .team-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .team-logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 24px rgba(0, 229, 255, 0.35) inset;
+      }
+      .flag {
+        font-size: 18px;
+      }
+      .roster {
+        display: grid;
+        gap: 6px;
+        font-size: 0.95rem;
+      }
+      .form {
+        display: flex;
+        gap: 6px;
+      }
+      .form .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .compare-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .compare-drawer {
+        position: sticky;
+        bottom: 12px;
+        z-index: 10;
+        background: linear-gradient(90deg, #0b1020, #070a14);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        padding: 12px;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      /* Stream */
+      .player {
+        aspect-ratio: 16/9;
+        width: 100%;
+        border-radius: 16px;
+        background: #000;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .ticker {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+      }
+      .sponsors {
+        margin-top: 10px;
+        overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .sponsors .strip {
+        display: flex;
+        gap: 24px;
+        padding: 10px;
+        animation: scroll 24s linear infinite;
+      }
+      .sponsor {
+        min-width: 160px;
+        text-align: center;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      @keyframes scroll {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .sponsors .strip {
+          animation: none;
+        }
+      }
+
+      /* Venue */
+      .venue-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      @media (min-width: 900px) {
+        .venue-grid {
+          grid-template-columns: 1.2fr 0.8fr;
+        }
+      }
+      .map {
+        aspect-ratio: 16/9;
+        width: 100%;
+        border-radius: 16px;
+        background: conic-gradient(from 0deg at 70% 30%, #0a1534, #0a204a);
+        position: relative;
+        overflow: hidden;
+      }
+      .map .pin {
+        position: absolute;
+        left: 50%;
+        top: 45%;
+        transform: translate(-50%, -50%);
+        width: 24px;
+        height: 24px;
+        background: var(--danger);
+        border-radius: 50%;
+        box-shadow: 0 0 0 6px rgba(255, 59, 59, 0.25);
+      }
+      .notes {
+        color: var(--muted);
+      }
+
+      /* Social */
+      .social-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+      .highlight {
+        aspect-ratio: 16/9;
+        border-radius: 12px;
+        background: radial-gradient(
+          60% 60% at 50% 50%,
+          rgba(0, 229, 255, 0.15),
+          rgba(255, 58, 242, 0.08) 60%,
+          transparent 70%
+        );
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: grid;
+        place-items: center;
+      }
+
+      /* Footer */
+      footer {
+        margin-top: 24px;
+        padding: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: #070a14;
+      }
+      .faq {
+        display: grid;
+        gap: 8px;
+      }
+      .mobile-cta {
+        position: fixed;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        display: none;
+      }
+      @media (max-width: 760px) {
+        .mobile-cta {
+          display: block;
+        }
+      }
+
+      /* Utilities */
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site" aria-label="Primary">
+      <div class="wrap">
+        <div class="brand" aria-label="Neon Cup">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <defs>
+              <linearGradient id="g" x1="0" x2="1">
+                <stop offset="0%" stop-color="var(--accent)" />
+                <stop offset="100%" stop-color="var(--accent-2)" />
+              </linearGradient>
+            </defs>
+            <path
+              fill="url(#g)"
+              d="M12 2l3.5 7.2L23 10l-5.5 4.9L19 22l-7-3.8L5 22l1.5-7.1L1 10l7.5-.8z"
+            />
+          </svg>
+          <span>NEON CUP</span>
+        </div>
+        <nav aria-label="Site">
+          <a href="#bracket">Bracket</a>
+          <a href="#schedule">Schedule</a>
+          <a href="#teams">Teams</a>
+          <a href="#stream">Watch</a>
+          <a href="#venue">Venue</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero" aria-label="Hero">
+        <canvas id="bg" aria-hidden="true"></canvas>
+        <div class="scanlines" aria-hidden="true"></div>
+        <div class="hero-inner container">
+          <div class="tag date-badge" id="dateBadge" aria-live="polite">
+            Aug 22–24 • San Francisco
+          </div>
+          <h1 class="headline">Neon Cup International</h1>
+          <p class="subline">Top teams. Bright lights. Fast plays.</p>
+          <div
+            class="cta-row"
+            role="group"
+            aria-label="Primary calls to action"
+          >
+            <button class="btn" id="ctaRegister">Register Team</button>
+            <button class="btn ghost" id="ctaTickets">Get Tickets</button>
+            <button class="btn ghost" id="ctaWatch">Watch Live</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- BRACKET -->
+      <section id="bracket" class="container" aria-labelledby="h-bracket">
+        <h2 id="h-bracket">Interactive Bracket</h2>
+        <p class="section-desc">
+          8 or 16 teams. Hover to inspect. Demo mode auto-advances matches.
+        </p>
+        <div class="bracket-wrap">
+          <div class="row bracket-controls">
+            <label class="tag" for="sizeSelect"
+              >Bracket Size
+              <select id="sizeSelect" aria-label="Bracket size">
+                <option value="8">8</option>
+                <option value="16" selected>16</option>
+              </select>
+            </label>
+            <button class="btn small" id="demoToggle" aria-pressed="false">
+              Start Demo
+            </button>
+          </div>
+          <div class="bracket" id="bracketGrid" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- SCHEDULE -->
+      <section id="schedule" class="container" aria-labelledby="h-schedule">
+        <h2 id="h-schedule">Schedule</h2>
+        <p class="section-desc">
+          Timezone-aware. Filter by stage or day. Export to your calendar.
+        </p>
+        <div class="row schedule-controls">
+          <label class="tag"
+            >Stage
+            <select id="filterStage" aria-label="Filter by stage">
+              <option value="all">All</option>
+              <option value="Groups">Groups</option>
+              <option value="Playoffs">Playoffs</option>
+              <option value="Finals">Finals</option>
+            </select>
+          </label>
+          <label class="tag"
+            >Day
+            <select id="filterDay" aria-label="Filter by day">
+              <option value="all">All</option>
+              <option value="2025-08-22">Aug 22</option>
+              <option value="2025-08-23">Aug 23</option>
+              <option value="2025-08-24">Aug 24</option>
+            </select>
+          </label>
+          <button class="btn small" id="exportICS">
+            Add to calendar (.ics)
+          </button>
+          <span class="muted" id="tzLabel"></span>
+        </div>
+        <div class="schedule-list" id="scheduleList" role="list"></div>
+      </section>
+
+      <!-- TEAMS -->
+      <section id="teams" class="container" aria-labelledby="h-teams">
+        <h2 id="h-teams">Teams</h2>
+        <p class="section-desc">
+          Tap two teams to quick-compare. Flags indicate region. Recent form
+          shows last 5.
+        </p>
+        <div class="team-grid" id="teamGrid"></div>
+        <div class="compare-drawer" id="compareDrawer" aria-live="polite">
+          <div id="compareNames" class="muted"></div>
+          <button class="btn small" id="compareBtn">Compare</button>
+        </div>
+      </section>
+
+      <!-- STREAM -->
+      <section id="stream" class="container" aria-labelledby="h-stream">
+        <h2 id="h-stream">Live Stream</h2>
+        <div class="player" role="img" aria-label="Stream preview">
+          <!-- Placeholder player -->
+          <svg width="88" height="88" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="var(--ink)" d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+        <div class="ticker" aria-live="polite">
+          <span class="tag">Now</span><span id="nowMatch">TBD</span>
+          <span class="tag">Next</span><span id="nextMatch">TBD</span>
+        </div>
+        <div class="sponsors" aria-label="Sponsors">
+          <div class="strip" id="sponsorStrip">
+            <div class="sponsor">CyberFuel</div>
+            <div class="sponsor">HexWare</div>
+            <div class="sponsor">Photon ISP</div>
+            <div class="sponsor">GG Chairs</div>
+            <div class="sponsor">Neon SSD</div>
+            <div class="sponsor">AimLabs</div>
+            <!-- clone for seamless scroll -->
+            <div class="sponsor">CyberFuel</div>
+            <div class="sponsor">HexWare</div>
+            <div class="sponsor">Photon ISP</div>
+            <div class="sponsor">GG Chairs</div>
+            <div class="sponsor">Neon SSD</div>
+            <div class="sponsor">AimLabs</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VENUE -->
+      <section id="venue" class="container" aria-labelledby="h-venue">
+        <h2 id="h-venue">Venue & Travel</h2>
+        <div class="venue-grid">
+          <div class="card">
+            <div class="card-header">
+              <strong>Mission Bay Arena</strong
+              ><span class="muted">San Francisco, CA</span>
+            </div>
+            <div class="card-body">
+              <div class="map" role="img" aria-label="Map preview">
+                <div class="pin" title="Venue"></div>
+              </div>
+              <div class="row" style="margin-top: 10px">
+                <a class="tag" href="#" aria-label="Directions by car"
+                  >Directions (Maps)</a
+                >
+                <a class="tag" href="#" aria-label="Public transit options"
+                  >Transit</a
+                >
+                <a class="tag" href="#" aria-label="Parking information"
+                  >Parking</a
+                >
+              </div>
+              <p class="notes" style="margin-top: 12px">
+                Accessibility: ADA seating, ramps, and assistive listening
+                devices available. Safety: bag check, no glass, clear signage,
+                and on‑site medical staff.
+              </p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <strong>Hotels</strong><span class="muted">Partner rates</span>
+            </div>
+            <div class="card-body">
+              <ul>
+                <li><a href="#">Harbor Lights Hotel</a> — 0.3 mi</li>
+                <li><a href="#">Pierline Suites</a> — 0.7 mi</li>
+                <li><a href="#">Metro Garden Inn</a> — 1.1 mi</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SOCIAL PROOF -->
+      <section id="social" class="container" aria-labelledby="h-social">
+        <h2 id="h-social">Social Proof</h2>
+        <div class="social-grid">
+          <div class="card">
+            <div class="card-header"><strong>Testimonials</strong></div>
+            <div class="card-body">
+              <p>“The production value is insane.” — @FragQueen</p>
+              <p>“Best LAN of the year.” — @ClutchCity</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><strong>Followers</strong></div>
+            <div class="card-body row">
+              <div class="tag">Twitch • 412k</div>
+              <div class="tag">YouTube • 295k</div>
+              <div class="tag">X • 180k</div>
+              <div class="tag">TikTok • 520k</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><strong>Recent Highlights</strong></div>
+            <div
+              class="card-body grid"
+              style="grid-template-columns: repeat(3, 1fr)"
+            >
+              <div class="highlight">Ace ✦</div>
+              <div class="highlight">Clutch ✦</div>
+              <div class="highlight">Wallbang ✦</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer id="faq" aria-labelledby="h-faq">
+        <div class="container">
+          <h2 id="h-faq">FAQ, Rules & Contact</h2>
+          <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 16px">
+            <div class="card">
+              <div class="card-header"><strong>FAQs</strong></div>
+              <div class="card-body faq">
+                <details>
+                  <summary>How do I register?</summary>
+                  <p>
+                    Click “Register Team” and complete the form. Team captain
+                    must be 18+.
+                  </p>
+                </details>
+                <details>
+                  <summary>Game version and servers?</summary>
+                  <p>
+                    Latest stable release. NA West servers. Patch notes
+                    announced one week prior.
+                  </p>
+                </details>
+                <details>
+                  <summary>Prize pool?</summary>
+                  <p>$100,000 total. 1st $60k, 2nd $25k, 3rd–4th $7.5k each.</p>
+                </details>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><strong>Docs</strong></div>
+              <div
+                class="card-body grid"
+                style="grid-template-columns: 1fr 1fr"
+              >
+                <a class="tag" href="#rules.pdf" download>Rules (PDF)</a>
+                <a class="tag" href="#code-of-conduct">Code of Conduct</a>
+                <a class="tag" href="#bracket">Bracket</a>
+                <a class="tag" href="#schedule">Schedule</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 12px">
+            <div class="card-header"><strong>Contact</strong></div>
+            <div class="card-body">
+              <form id="contactForm" aria-label="Contact form">
+                <div
+                  class="grid"
+                  style="
+                    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                    gap: 10px;
+                  "
+                >
+                  <label>
+                    Name
+                    <input
+                      required
+                      name="name"
+                      style="width: 100%"
+                      placeholder="Your name"
+                  /></label>
+                  <label>
+                    Email
+                    <input
+                      required
+                      type="email"
+                      name="email"
+                      style="width: 100%"
+                      placeholder="you@example.com"
+                  /></label>
+                </div>
+                <label style="display: block; margin-top: 8px">
+                  Message
+                  <textarea
+                    required
+                    name="msg"
+                    rows="4"
+                    style="width: 100%"
+                    placeholder="How can we help?"
+                  ></textarea>
+                </label>
+                <div class="row" style="margin-top: 10px">
+                  <button class="btn" type="submit">Send</button
+                  ><span
+                    id="contactToast"
+                    class="muted"
+                    role="status"
+                    aria-live="polite"
+                  ></span>
+                </div>
+              </form>
+            </div>
+          </div>
+          <p class="muted" style="margin-top: 12px">
+            © 2025 Neon Cup • All rights reserved.
+          </p>
+        </div>
+      </footer>
+
+      <!-- Mobile sticky CTA -->
+      <div class="mobile-cta" aria-hidden="true">
+        <button class="btn" style="width: 100%">Buy Tickets</button>
+      </div>
+    </main>
+
+    <script>
+      // ---------- Utilities ----------
+      const $ = (sel, el = document) => el.querySelector(sel);
+      const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
+
+      // Respect reduced motion
+      const prefersReduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      // ---------- Hero Canvas BG (2D neon grid + particles + scanlines) ----------
+      (function bg() {
+        const c = document.getElementById("bg");
+        const ctx = c.getContext("2d");
+        let w,
+          h,
+          t = 0;
+        const resize = () => {
+          w = c.width = c.clientWidth;
+          h = c.height = c.clientHeight;
+        };
+        resize();
+        window.addEventListener("resize", resize);
+
+        const particles = Array.from(
+          { length: prefersReduced ? 30 : 120 },
+          () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            r: Math.random() * 2 + 0.5,
+          })
+        );
+
+        function frame() {
+          t += 0.01;
+          ctx.clearRect(0, 0, w, h);
+          // gradient backdrop
+          const g = ctx.createLinearGradient(0, 0, w, h);
+          g.addColorStop(0, "#041225");
+          g.addColorStop(1, "#0a0420");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+          // moving neon grid
+          ctx.strokeStyle = "rgba(0,229,255,.15)";
+          ctx.lineWidth = 1;
+          const spacing = 32;
+          const offset = (t * 40) % spacing;
+          for (let x = -spacing; x < w + spacing; x += spacing) {
+            ctx.beginPath();
+            ctx.moveTo(x + offset, 0);
+            ctx.lineTo(x + offset, h);
+            ctx.stroke();
+          }
+          for (let y = -spacing; y < h + spacing; y += spacing) {
+            ctx.beginPath();
+            ctx.moveTo(0, y + offset);
+            ctx.lineTo(w, y + offset);
+            ctx.stroke();
+          }
+          // particles
+          particles.forEach((p) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0 || p.x > w) p.vx *= -1;
+            if (p.y < 0 || p.y > h) p.vy *= -1;
+            const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 12);
+            glow.addColorStop(0, "rgba(0,229,255,.35)");
+            glow.addColorStop(1, "transparent");
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#00e5ff";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          if (!prefersReduced) requestAnimationFrame(frame);
+        }
+        frame();
+      })();
+
+      // ---------- Bracket ----------
+      const TEAMS16 = [
+        { name: "Apex Nova", flag: "🇺🇸" },
+        { name: "Zenith 5", flag: "🇨🇦" },
+        { name: "Crimson Fox", flag: "🇯🇵" },
+        { name: "Omega", flag: "🇸🇪" },
+        { name: "Volt Vipers", flag: "🇧🇷" },
+        { name: "Orion", flag: "🇩🇪" },
+        { name: "Lotus", flag: "🇰🇷" },
+        { name: "Titanfall", flag: "🇫🇷" },
+        { name: "Nebula", flag: "🇬🇧" },
+        { name: "Mirage", flag: "🇪🇸" },
+        { name: "Glacier", flag: "🇳🇴" },
+        { name: "Quasar", flag: "🇮🇳" },
+        { name: "Phoenix", flag: "🇦🇺" },
+        { name: "Spectre", flag: "🇵🇱" },
+        { name: "Aurora", flag: "🇮🇹" },
+        { name: "Monsoon", flag: "🇲🇽" },
+      ];
+      const TEAMS8 = TEAMS16.slice(0, 8);
+
+      let demoTimer = null;
+
+      function buildBracket(size = 16) {
+        const grid = document.getElementById("bracketGrid");
+        grid.innerHTML = "";
+        const teams = size === 16 ? TEAMS16 : TEAMS8;
+        const rounds =
+          size === 16
+            ? ["Round of 16", "Quarterfinals", "Semifinals", "Grand Final"]
+            : ["Quarterfinals", "Semifinals", "Grand Final"];
+        let matches = [];
+        // build initial matches
+        for (let i = 0; i < teams.length; i += 2) {
+          matches.push({
+            a: teams[i],
+            b: teams[i + 1],
+            time: `2025-08-23T${String(10 + ((i / 2) % 8)).padStart(
+              2,
+              "0"
+            )}:00:00Z`,
+            scoreA: null,
+            scoreB: null,
+          });
+        }
+        // render rounds columns
+        rounds.forEach((r, ri) => {
+          const col = document.createElement("div");
+          col.className = "round";
+          const title = document.createElement("div");
+          title.className = "round-title";
+          title.textContent = r;
+          col.appendChild(title);
+          const count = Math.pow(2, rounds.length - ri - 1);
+          for (let i = 0; i < count; i++) {
+            const m =
+              ri === 0
+                ? matches[i]
+                : {
+                    a: { name: "TBD" },
+                    b: { name: "TBD" },
+                    time: matches[i]?.time || "",
+                  };
+            col.appendChild(renderMatch(m));
+          }
+          grid.appendChild(col);
+        });
+      }
+
+      function renderMatch(m) {
+        const el = document.createElement("div");
+        el.className = "match";
+        el.tabIndex = 0;
+        el.setAttribute("role", "group");
+        el.setAttribute(
+          "aria-label",
+          `Match ${m.a?.name || "TBD"} vs ${m.b?.name || "TBD"}`
+        );
+        const teamA = document.createElement("div");
+        teamA.className = "team";
+        teamA.innerHTML = `<div class="name"><img alt="logo" loading="lazy" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E%3Crect width='18' height='18' rx='4' fill='%2300e5ff'/%3E%3C/svg%3E">${
+          m.a.flag || ""
+        } ${m.a.name}</div><div class="score">${m.scoreA ?? ""}</div>`;
+        const teamB = document.createElement("div");
+        teamB.className = "team";
+        teamB.innerHTML = `<div class="name"><img alt="logo" loading="lazy" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E%3Crect width='18' height='18' rx='4' fill='%23ff3af2'/%3E%3C/svg%3E">${
+          m.b.flag || ""
+        } ${m.b.name}</div><div class="score">${m.scoreB ?? ""}</div>`;
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = m.time ? new Date(m.time).toLocaleString() : "TBD";
+        el.append(teamA, teamB, meta);
+        el.addEventListener(
+          "mouseenter",
+          () => (el.style.outline = "2px solid rgba(0,229,255,.35)")
+        );
+        el.addEventListener("mouseleave", () => (el.style.outline = "none"));
+        return el;
+      }
+
+      function startDemo() {
+        const grid = document.getElementById("bracketGrid");
+        demoTimer = setInterval(() => {
+          const matches = $$(".match", grid);
+          const pick = matches[Math.floor(Math.random() * matches.length)];
+          if (!pick) return;
+          pick.classList.add("auto-advancing");
+          // random winner
+          const teams = $$(".team", pick);
+          const winnerIdx = Math.random() < 0.5 ? 0 : 1;
+          const loserIdx = winnerIdx ? 0 : 1;
+          teams[winnerIdx].classList.remove("loser");
+          teams[loserIdx].classList.add("loser");
+          $(".score", teams[winnerIdx]).textContent = "2";
+          $(".score", teams[loserIdx]).textContent = "0";
+          setTimeout(() => pick.classList.remove("auto-advancing"), 1000);
+        }, 1500);
+      }
+      function stopDemo() {
+        clearInterval(demoTimer);
+        demoTimer = null;
+      }
+
+      $("#sizeSelect").addEventListener("change", (e) =>
+        buildBracket(Number(e.target.value))
+      );
+      $("#demoToggle").addEventListener("click", (e) => {
+        const running = !!demoTimer;
+        if (running) {
+          stopDemo();
+          e.target.textContent = "Start Demo";
+          e.target.setAttribute("aria-pressed", "false");
+        } else {
+          startDemo();
+          e.target.textContent = "Stop Demo";
+          e.target.setAttribute("aria-pressed", "true");
+        }
+      });
+
+      buildBracket(16);
+
+      // ---------- Schedule (timezone aware + filters + ICS export) ----------
+      const SLOTS = [
+        {
+          id: "m1",
+          stage: "Groups",
+          day: "2025-08-22",
+          start: "2025-08-22T17:00:00Z",
+          end: "2025-08-22T18:00:00Z",
+          a: "Apex Nova",
+          b: "Zenith 5",
+        },
+        {
+          id: "m2",
+          stage: "Groups",
+          day: "2025-08-22",
+          start: "2025-08-22T19:00:00Z",
+          end: "2025-08-22T20:00:00Z",
+          a: "Crimson Fox",
+          b: "Omega",
+        },
+        {
+          id: "m3",
+          stage: "Playoffs",
+          day: "2025-08-23",
+          start: "2025-08-23T17:00:00Z",
+          end: "2025-08-23T18:30:00Z",
+          a: "Volt Vipers",
+          b: "Orion",
+        },
+        {
+          id: "m4",
+          stage: "Playoffs",
+          day: "2025-08-23",
+          start: "2025-08-23T19:30:00Z",
+          end: "2025-08-23T21:00:00Z",
+          a: "Lotus",
+          b: "Titanfall",
+        },
+        {
+          id: "m5",
+          stage: "Finals",
+          day: "2025-08-24",
+          start: "2025-08-24T19:00:00Z",
+          end: "2025-08-24T21:00:00Z",
+          a: "Semifinal W1",
+          b: "Semifinal W2",
+        },
+      ];
+
+      function renderSchedule() {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        $("#tzLabel").textContent = `Showing times in ${tz}`;
+        const stage = $("#filterStage").value;
+        const day = $("#filterDay").value;
+        const list = $("#scheduleList");
+        list.innerHTML = "";
+        SLOTS.filter(
+          (s) =>
+            (stage === "all" || s.stage === stage) &&
+            (day === "all" || s.day === day)
+        ).forEach((s) => {
+          const d1 = new Date(s.start);
+          const d2 = new Date(s.end);
+          const el = document.createElement("div");
+          el.className = "slot";
+          el.setAttribute("role", "listitem");
+          el.innerHTML = `
+      <div class="left">
+        <div>
+          <div class="time">${d1.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })} – ${d2.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</div>
+          <div class="stage">${s.stage} • ${new Date(
+            s.day
+          ).toLocaleDateString()}</div>
+        </div>
+        <div class="tag">${s.a} vs ${s.b}</div>
+      </div>
+      <div class="row">
+        <button class="btn small" data-ics="${s.id}">Add</button>
+      </div>`;
+          list.appendChild(el);
+        });
+      }
+
+      $("#filterStage").addEventListener("change", renderSchedule);
+      $("#filterDay").addEventListener("change", renderSchedule);
+
+      function buildICS(events) {
+        const lines = [
+          "BEGIN:VCALENDAR",
+          "VERSION:2.0",
+          "PRODID:-//Neon Cup//EN",
+        ];
+        events.forEach((s) => {
+          const uid = `${s.id}@neoncup.local`;
+          const start = s.start.replace(/[-:]/g, "").replace(".000", "");
+          const end = s.end.replace(/[-:]/g, "").replace(".000", "");
+          lines.push("BEGIN:VEVENT");
+          lines.push(`UID:${uid}`);
+          lines.push(`DTSTAMP:${start}`);
+          lines.push(`DTSTART:${start}`);
+          lines.push(`DTEND:${end}`);
+          lines.push(`SUMMARY:${s.a} vs ${s.b} — ${s.stage}`);
+          lines.push("LOCATION:Mission Bay Arena, San Francisco");
+          lines.push("DESCRIPTION:Neon Cup match");
+          lines.push("END:VEVENT");
+        });
+        lines.push("END:VCALENDAR");
+        return lines.join("\r\n");
+      }
+
+      $("#scheduleList").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-ics]");
+        if (!btn) return;
+        const id = btn.getAttribute("data-ics");
+        const ev = SLOTS.find((s) => s.id === id);
+        const blob = new Blob([buildICS([ev])], { type: "text/calendar" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${id}.ics`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      $("#exportICS").addEventListener("click", () => {
+        const stage = $("#filterStage").value;
+        const day = $("#filterDay").value;
+        const picks = SLOTS.filter(
+          (s) =>
+            (stage === "all" || s.stage === stage) &&
+            (day === "all" || s.day === day)
+        );
+        const blob = new Blob([buildICS(picks)], { type: "text/calendar" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `neon-cup-${Date.now()}.ics`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      renderSchedule();
+
+      // ---------- Teams + Quick Compare ----------
+      const FORM = ["W", "W", "L", "W", "W"];
+      const TEAMS = TEAMS16.map((t, i) => ({
+        ...t,
+        id: "t" + i,
+        logo: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Crect width='36' height='36' rx='8' fill='%23${
+          i % 2 ? "ff3af2" : "00e5ff"
+        }'/%3E%3C/svg%3E`,
+        roster: [
+          { name: `${t.name.split(" ")[0]}r`, role: "IGL" },
+          { name: `${t.name.split(" ")[0]}x`, role: "Entry" },
+          { name: `${t.name.split(" ")[0]}y`, role: "Flex" },
+          { name: `${t.name.split(" ")[0]}z`, role: "Support" },
+          { name: `${t.name.split(" ")[0]}q`, role: "Anchor" },
+        ],
+        form: Array.from({ length: 5 }, (_, k) => FORM[(i + k) % FORM.length]),
+      }));
+
+      const selected = new Set();
+
+      function renderTeams() {
+        const grid = $("#teamGrid");
+        grid.innerHTML = "";
+        TEAMS.forEach((t) => {
+          const card = document.createElement("div");
+          card.className = "team-card";
+          card.setAttribute("data-id", t.id);
+          card.innerHTML = `
+      <div class="team-head"><img class="team-logo" src="${t.logo}" alt="${
+            t.name
+          } logo" loading="lazy"/><div><strong>${
+            t.name
+          }</strong><div class="muted">${t.flag}</div></div></div>
+      <div class="roster">${t.roster
+        .map(
+          (p) => `<div>${p.name} — <span class="muted">${p.role}</span></div>`
+        )
+        .join("")}</div>
+      <div class="form">${t.form
+        .map(
+          (f) =>
+            `<div class="dot" title="${
+              f === "W" ? "Win" : "Loss"
+            }" style="background:${
+              f === "W" ? "var(--ok)" : "var(--danger)"
+            }"></div>`
+        )
+        .join("")}</div>
+      <label class="compare-toggle"><input type="checkbox" aria-label="Select ${
+        t.name
+      } for compare"/> Compare</label>
+    `;
+          grid.appendChild(card);
+        });
+      }
+
+      $("#teamGrid").addEventListener("change", (e) => {
+        const card = e.target.closest(".team-card");
+        if (!card) return;
+        const id = card.getAttribute("data-id");
+        if (e.target.checked) {
+          selected.add(id);
+        } else {
+          selected.delete(id);
+        }
+        const drawer = $("#compareDrawer");
+        if (selected.size >= 2) {
+          const picks = Array.from(selected)
+            .slice(0, 2)
+            .map((id) => TEAMS.find((t) => t.id === id).name);
+          $("#compareNames").textContent = `${picks[0]} vs ${picks[1]}`;
+          drawer.style.display = "flex";
+        } else drawer.style.display = "none";
+      });
+
+      $("#compareBtn").addEventListener("click", () => {
+        const [a, b] = Array.from(selected)
+          .slice(0, 2)
+          .map((id) => TEAMS.find((t) => t.id === id));
+        if (!a || !b) return;
+        const msg = `${a.name} (form ${a.form.join("")}) vs ${
+          b.name
+        } (form ${b.form.join("")})`;
+        alert(msg);
+      });
+
+      renderTeams();
+
+      // ---------- Stream Now/Next ticker ----------
+      function updateTicker() {
+        const now = Date.now();
+        const upcoming = SLOTS.map((s) => ({
+          s,
+          t: new Date(s.start).getTime(),
+        }))
+          .sort((x, y) => x.t - y.t)
+          .filter((x) => x.t > now);
+        const current = SLOTS.find(
+          (s) => new Date(s.start) <= new Date() && new Date(s.end) > new Date()
+        );
+        $("#nowMatch").textContent = current
+          ? `${current.a} vs ${current.b}`
+          : "Pre-show";
+        $("#nextMatch").textContent = upcoming[0]
+          ? `${upcoming[0].s.a} vs ${upcoming[0].s.b}`
+          : "Completed";
+      }
+      updateTicker();
+      setInterval(updateTicker, 60 * 1000);
+
+      // ---------- Contact form ----------
+      $("#contactForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        $("#contactToast").textContent =
+          "Thanks. We will reply within 24 hours.";
+      });
+
+      // ---------- CTA handlers ----------
+      $("#ctaRegister").addEventListener("click", () =>
+        alert("Team registration opens soon.")
+      );
+      $("#ctaTickets").addEventListener("click", () =>
+        alert("Tickets available Friday.")
+      );
+      $("#ctaWatch").addEventListener("click", () =>
+        document
+          .getElementById("stream")
+          .scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth" })
+      );
+    </script>
+  </body>
+</html>

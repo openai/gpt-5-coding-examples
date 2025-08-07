@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Holidays! - Playful Card</title>
+  <style>
+    /* --- Base & Theme --- */
+    :root {
+      --sky-top: #ffecd2;         /* warm sunrise */
+      --sky-bottom: #a1c4fd;      /* cool winter blue */
+      --ground: #ffffff;
+      --accent: #ff4d6d;          /* candy red */
+      --accent-2: #1fd1a5;        /* mint green */
+      --gold: #ffd166;
+      --dark: #2a2a2a;
+      --shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Comic Sans MS", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+      color: #133046;
+      background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #app { display: flex; flex-direction: column; height: 100%; }
+
+    /* --- Top Bar --- */
+    .topbar {
+      display: flex; align-items: center; gap: .5rem; padding: .6rem .8rem;
+      backdrop-filter: blur(6px) saturate(115%);
+      background: rgba(255,255,255,0.45);
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+      box-shadow: var(--shadow);
+      z-index: 5;
+    }
+    .title {
+      font-weight: 900; letter-spacing: .5px; font-size: clamp(18px, 2.4vw, 32px);
+      display: inline-flex; align-items: center; gap: .5rem; color: #c81d25; text-shadow: 0 2px 0 rgba(255,255,255,.8);
+    }
+    .title .sparkle { font-size: 1.2em; animation: sparkle-tilt 2.4s ease-in-out infinite; }
+    @keyframes sparkle-tilt { 0%,100%{ transform: rotate(0deg) } 50%{ transform: rotate(12deg) } }
+
+    .spacer { flex: 1; }
+    .btn {
+      appearance: none; border: none; padding: .5rem .7rem; border-radius: 999px; cursor: pointer;
+      font-weight: 700; background: #ffffff; color: #0f172a; box-shadow: var(--shadow);
+      transition: transform .08s ease, box-shadow .2s ease, background .3s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px) scale(.98); }
+    .btn.primary { background: linear-gradient(135deg, #ff7a7a, #ffd1a9); color: #4a0f0f; }
+    .btn.gold { background: linear-gradient(135deg, #ffe082, #ffca28); color: #5b3700; }
+    .btn.mint { background: linear-gradient(135deg, #a8e6cf, #7bdcb5); color: #0b3b2e; }
+
+    /* --- Scene --- */
+    #scene-wrap { position: relative; flex: 1; padding: .6rem .8rem; }
+    #scene {
+      position: relative; height: 100%; width: 100%; overflow: hidden; border-radius: 16px;
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, rgba(255,255,255,.3), rgba(255,255,255,.1));
+      border: 1px solid rgba(255,255,255,0.5);
+      isolation: isolate;
+    }
+
+    /* Ground snow drifts */
+    #scene::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; pointer-events: none;
+      background:
+        radial-gradient(120% 60% at 20% 110%, rgba(255,255,255,0.95) 40%, transparent 41%) bottom left/60% 100% no-repeat,
+        radial-gradient(120% 60% at 80% 110%, rgba(255,255,255,0.95) 40%, transparent 41%) bottom right/60% 100% no-repeat,
+        linear-gradient(180deg, rgba(255,255,255,0.97), rgba(255,255,255,0.92));
+      filter: drop-shadow(0 -2px 10px rgba(255,255,255,0.6));
+    }
+
+    /* Snowfall layer */
+    #snow { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+    .snowflake {
+      position: absolute; top: -10vh; color: #fff; opacity: .95; text-shadow: 0 0 6px rgba(255,255,255,.8);
+      will-change: transform, opacity;
+      animation: snow-fall var(--dur) linear var(--delay) infinite, snow-sway 6s ease-in-out var(--delay) infinite;
+      font-size: var(--size);
+    }
+    @keyframes snow-fall {
+      0% { transform: translateY(-10vh) translateX(0) scale(1); opacity: 0; }
+      5% { opacity: .95; }
+      100% { transform: translateY(110vh) translateX(var(--drift)) scale(1); opacity: .98; }
+    }
+    @keyframes snow-sway { 0%,100%{ transform: translateX(0) } 50%{ transform: translateX(12px) } }
+
+    /* Sparkles on drop */
+    .sparkle {
+      position: absolute; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; z-index: 3;
+      background: radial-gradient(circle at 30% 30%, #fff, #fff0 70%);
+      box-shadow: 0 0 10px 2px rgba(255,255,255,.8);
+      animation: sparkle-pop .8s ease-out forwards;
+    }
+    @keyframes sparkle-pop {
+      0% { transform: translate(0,0) scale(0); opacity: 1 }
+      80% { transform: translate(var(--dx), var(--dy)) scale(1.2); opacity: .9 }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0 }
+    }
+
+    /* --- Stickers & Palette --- */
+    .sticker {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%);
+      transform-origin: center bottom; cursor: grab; z-index: 2; touch-action: none;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.1)) drop-shadow(0 6px 10px rgba(0,0,0,.15));
+      transition: filter .2s ease;
+    }
+    .sticker.dragging { cursor: grabbing; filter: drop-shadow(0 2px 0 rgba(0,0,0,.12)) drop-shadow(0 10px 20px rgba(0,0,0,.25)); }
+    .sticker .emoji { font-size: 64px; line-height: 1; }
+    .sticker svg { display: block; width: 120px; height: auto; }
+    .sticker.small svg { width: 90px; }
+    .sticker.large svg { width: 140px; }
+
+    /* Selection ring (when tapped) */
+    .sticker.selected::before {
+      content: ""; position: absolute; left: 50%; bottom: 4px; width: 90px; height: 16px; transform: translateX(-50%);
+      background: radial-gradient(closest-side, rgba(0,0,0,.15), rgba(0,0,0,0)); z-index: -1;
+    }
+
+    /* Palette tray */
+    #tray {
+      display: flex; gap: .6rem; overflow-x: auto; padding: .5rem .6rem; align-items: center;
+      background: rgba(255,255,255,0.6); border-top: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 -6px 18px rgba(0,0,0,0.08);
+    }
+    .palette-item {
+      background: #fff; min-width: 70px; min-height: 70px; border-radius: 14px; display: grid; place-items: center;
+      padding: .25rem; box-shadow: var(--shadow); cursor: grab; position: relative;
+    }
+    .palette-item:active { cursor: grabbing; }
+    .palette-item .emoji { font-size: 40px; }
+    .palette-item .label { position: absolute; bottom: 4px; font-size: 10px; color: #334155; background: rgba(255,255,255,.85); padding: .1rem .4rem; border-radius: 999px; }
+
+    /* Help bubble */
+    #help {
+      position: absolute; right: 12px; top: 12px; z-index: 10; font-size: 12px; color: #143; background: rgba(255,255,255,.9);
+      padding: .35rem .5rem; border-radius: 999px; box-shadow: var(--shadow);
+    }
+
+    /* Light strings animation */
+    .bulb { filter: drop-shadow(0 0 4px rgba(255,255,255,.7)); }
+    .blink .bulb { animation: bulb-blink 1.2s ease-in-out infinite; }
+    .blink .bulb:nth-child(odd) { animation-delay: .6s; }
+    @keyframes bulb-blink { 0%,100%{ opacity: .9 } 50%{ opacity: .2 } }
+
+    /* Footer note (mobile safe-zone) */
+    .footer-note { font-size: 12px; padding: .25rem .8rem; color: #1f2937; background: rgba(255,255,255,.5); }
+
+    /* Make scrollbars friendly */
+    #tray::-webkit-scrollbar { height: 10px; }
+    #tray::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div id="app" role="application" aria-label="Holiday Card Playground">
+    <div class="topbar">
+      <div class="title" aria-label="Happy Holidays title">
+        <span class="sparkle">❄️</span>
+        <span>Happy Holidays!</span>
+        <span class="sparkle">✨</span>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn primary" id="btnJingle" aria-label="Play Jingle">Play Jingle</button>
+      <button class="btn gold" id="btnMusic" aria-label="Toggle Music">Music: Off</button>
+      <button class="btn mint" id="btnMute" aria-label="Mute or Unmute">Sound: On</button>
+      <button class="btn" id="btnReset" aria-label="Reset Card">Reset</button>
+      <button class="btn" id="btnRandom" aria-label="Randomize Decorations">Randomize</button>
+    </div>
+
+    <div id="scene-wrap">
+      <div id="scene" aria-live="polite">
+        <div id="help">Tip: Drag stickers in, pinch/scroll to resize, double-tap to flip!</div>
+        <div id="snow" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div id="tray" aria-label="Stickers Tray">
+      <!-- Stickers palette: some emoji + some SVG-rich -->
+      <div class="palette-item" data-type="tree" aria-label="Tree"><svg viewBox="0 0 140 160" width="56" aria-hidden="true">
+          <defs>
+            <linearGradient id="leafG" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#2dd36f"/>
+              <stop offset="1" stop-color="#167d3e"/>
+            </linearGradient>
+          </defs>
+          <g>
+            <polygon points="70,10 120,70 20,70" fill="url(#leafG)"/>
+            <polygon points="70,40 130,110 10,110" fill="url(#leafG)"/>
+            <polygon points="70,80 120,140 20,140" fill="url(#leafG)"/>
+            <rect x="60" y="140" width="20" height="18" fill="#8d5524"/>
+          </g>
+        </svg><div class="label">Tree</div></div>
+      <div class="palette-item" data-type="snowman" aria-label="Snowman"><span class="emoji">⛄</span><div class="label">Snowman</div></div>
+      <div class="palette-item" data-type="gift" aria-label="Gift"><span class="emoji">🎁</span><div class="label">Gift</div></div>
+      <div class="palette-item" data-type="star" aria-label="Star"><span class="emoji">⭐</span><div class="label">Star</div></div>
+      <div class="palette-item" data-type="candy" aria-label="Candy Cane"><span class="emoji">🍭</span><div class="label">Candy</div></div>
+      <div class="palette-item" data-type="penguin" aria-label="Penguin"><span class="emoji">🐧</span><div class="label">Penguin</div></div>
+      <div class="palette-item" data-type="reindeer" aria-label="Reindeer"><span class="emoji">🦌</span><div class="label">Reindeer</div></div>
+      <div class="palette-item" data-type="hat" aria-label="Santa Hat"><span class="emoji">🎅</span><div class="label">Santa Hat</div></div>
+      <div class="palette-item" data-type="cookie" aria-label="Gingerbread"><span class="emoji">🍪</span><div class="label">Cookie</div></div>
+      <div class="palette-item" data-type="bell" aria-label="Bell"><span class="emoji">🔔</span><div class="label">Bell</div></div>
+      <div class="palette-item" data-type="wreath" aria-label="Wreath"><span class="emoji">🎀</span><div class="label">Wreath</div></div>
+      <div class="palette-item" data-type="sled" aria-label="Sled"><span class="emoji">🛷</span><div class="label">Sled</div></div>
+      <div class="palette-item" data-type="stocking" aria-label="Stocking"><span class="emoji">🧦</span><div class="label">Stocking</div></div>
+      <div class="palette-item" data-type="flake" aria-label="Snowflake"><span class="emoji">❄️</span><div class="label">Flake</div></div>
+      <div class="palette-item" data-type="heart" aria-label="Heart"><span class="emoji">❤️</span><div class="label">Heart</div></div>
+      <div class="palette-item" data-type="mittens" aria-label="Mittens"><span class="emoji">🧤</span><div class="label">Mittens</div></div>
+      <div class="palette-item" data-type="lights" aria-label="Light String"><span class="emoji">💡</span><div class="label">Lights</div></div>
+    </div>
+
+    <div class="footer-note">Drag stickers into the snowy scene. Click items for surprises. Wheel/Pinch to resize, double-click to flip. Have fun! ❄️</div>
+  </div>
+
+  <script>
+    ;(() => {
+      const scene = document.getElementById('scene');
+      const tray = document.getElementById('tray');
+      const snow = document.getElementById('snow');
+      const btnJingle = document.getElementById('btnJingle');
+      const btnMute = document.getElementById('btnMute');
+      const btnReset = document.getElementById('btnReset');
+      const btnRandom = document.getElementById('btnRandom');
+      const btnMusic = document.getElementById('btnMusic');
+
+      /* ---------- Snow generation ---------- */
+      const makeSnow = (count = 160) => {
+        const w = scene.clientWidth || window.innerWidth;
+        for (let i = 0; i < count; i++) {
+          const s = document.createElement('span');
+          s.className = 'snowflake';
+          s.textContent = Math.random() < 0.6 ? '✦' : (Math.random() < .5 ? '❄' : '•');
+          const size = (Math.random() * 0.9 + 0.6) * 14; // 8 - 22px roughly
+          const left = Math.random() * w;
+          const dur = (Math.random() * 20 + 12) + 's';
+          const delay = (-Math.random() * 20) + 's';
+          const drift = (Math.random() * 120 - 60) + 'px';
+          s.style.left = left + 'px';
+          s.style.setProperty('--size', size + 'px');
+          s.style.setProperty('--dur', dur);
+          s.style.setProperty('--delay', delay);
+          s.style.setProperty('--drift', drift);
+          snow.appendChild(s);
+        }
+      };
+
+      /* ---------- Audio ---------- */
+      const Sound = (() => {
+        let ctx = null;
+        let masterGain = null;
+        let globalMute = false;
+        let bgInterval = null;
+        function init() {
+          if (!ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            ctx = new AudioContext();
+            masterGain = ctx.createGain();
+            masterGain.gain.value = 0.7; // overall volume
+            masterGain.connect(ctx.destination);
+          }
+        }
+        function unlock() {
+          init();
+          if (ctx && ctx.state === 'suspended') ctx.resume();
+        }
+        function setMute(v) { globalMute = !!v; masterGain && (masterGain.gain.value = globalMute ? 0 : 0.7); }
+        function beep({freq=440, duration=0.18, type='sine', vol=0.2, attack=0.005, release=0.08, when=null, pan=0}={}) {
+          init(); if (!ctx || globalMute) return;
+          const t = when ?? ctx.currentTime;
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          const p = (ctx.createStereoPanner ? ctx.createStereoPanner() : null);
+          o.type = type; o.frequency.setValueAtTime(freq, t);
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(vol, t + attack);
+          g.gain.setTargetAtTime(0.0001, t + attack + duration, release);
+          if (p) { p.pan.value = pan; o.connect(g); g.connect(p); p.connect(masterGain); } else { o.connect(g); g.connect(masterGain); }
+          o.start(t);
+          o.stop(t + attack + duration + release * 4);
+        }
+        function plop() {
+          beep({freq: 880, duration: 0.06, type: 'sine', vol: 0.15});
+          beep({freq: 220, duration: 0.22, type: 'sine', vol: 0.25});
+        }
+        function whoosh() {
+          init(); if (!ctx || globalMute) return;
+          const t = ctx.currentTime;
+          const o = ctx.createOscillator(); o.type = 'sawtooth';
+          const g = ctx.createGain(); g.gain.value = 0.0;
+          const f = ctx.createBiquadFilter(); f.type = 'lowpass';
+          o.frequency.setValueAtTime(600, t);
+          o.frequency.exponentialRampToValueAtTime(120, t + 0.25);
+          g.gain.linearRampToValueAtTime(0.1, t + 0.05);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+          o.connect(f); f.connect(g); g.connect(masterGain);
+          o.start(t); o.stop(t + 0.36);
+        }
+        function bell() {
+          beep({freq: 1318.5, duration: 0.4, type: 'sine', vol: 0.2}); // E6
+          beep({freq: 988, duration: 0.5, type: 'sine', vol: 0.12});
+        }
+        function twinkle() {
+          const base = 659.25; // E5
+          const seq = [0, 4, 7, 12, 7, 4, 0];
+          const dt = 0.13;
+          init(); if (!ctx || globalMute) return;
+          const t0 = ctx.currentTime + 0.01;
+          seq.forEach((st, i) => beep({freq: base * Math.pow(2, st/12), duration: 0.12, vol: 0.14, when: t0 + dt * i}));
+        }
+        function jingle(whenOffset = 0) {
+          init(); if (!ctx || globalMute) return;
+          const t0 = ctx.currentTime + whenOffset;
+          const notes = [659,659,659, 659,659,659, 659,784,523,587,659, 698,698,698, 698,659,659,659, 587,587,659,587,784];
+          const d = 0.16; // beat
+          notes.forEach((f, i) => beep({freq: f, duration: 0.12, vol: 0.15, when: t0 + i * d}));
+        }
+        function startMusic() { stopMusic(); if (globalMute) return; jingle(); bgInterval = setInterval(() => jingle(), 6000); }
+        function stopMusic() { if (bgInterval) clearInterval(bgInterval); bgInterval = null; }
+        return { unlock, setMute, plop, whoosh, bell, twinkle, jingle, startMusic, stopMusic };
+      })();
+
+      /* ---------- Utilities ---------- */
+      const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+      const uid = (() => { let i = 0; return () => (++i).toString(36) + Date.now().toString(36).slice(-3); })();
+      const sceneRect = () => scene.getBoundingClientRect();
+
+      function spawnSparkles(x, y, n = 12) {
+        const colors = ['#fff', '#ffd166', '#a0e7e5', '#ff6b6b', '#bdb2ff', '#caffbf'];
+        for (let i = 0; i < n; i++) {
+          const sp = document.createElement('span');
+          sp.className = 'sparkle';
+          const angle = Math.random()*Math.PI*2; const dist = 24 + Math.random()*36;
+          const dx = Math.cos(angle)*dist; const dy = Math.sin(angle)*dist;
+          sp.style.left = x + 'px'; sp.style.top = y + 'px';
+          sp.style.setProperty('--dx', dx + 'px'); sp.style.setProperty('--dy', dy + 'px');
+          sp.style.background = `radial-gradient(circle at 30% 30%, ${colors[i%colors.length]}, transparent 70%)`;
+          scene.appendChild(sp);
+          setTimeout(() => sp.remove(), 900);
+        }
+      }
+
+      /* ---------- Sticker Factory ---------- */
+      const StickerFactory = {
+        create(type) {
+          const el = document.createElement('div');
+          el.className = 'sticker';
+          el.dataset.type = type;
+          el.dataset.id = uid();
+          el.dataset.scale = '1';
+          el.dataset.rot = '0';
+          el.dataset.flip = '1';
+          let content;
+          switch (type) {
+            case 'tree': content = this.svgTree(); break;
+            case 'snowman': content = this.svgSnowman(); break;
+            case 'lights': content = this.svgLights(); el.classList.add('large'); break;
+            case 'gift': content = `<div class="emoji" aria-label="Gift">🎁</div>`; break;
+            case 'star': content = `<div class="emoji" aria-label="Star">⭐</div>`; break;
+            case 'candy': content = this.svgCandyCane(); break;
+            case 'bell': content = `<div class="emoji" aria-label="Bell">🔔</div>`; break;
+            case 'penguin': content = `<div class="emoji" aria-label="Penguin">🐧</div>`; break;
+            case 'reindeer': content = `<div class="emoji" aria-label="Reindeer">🦌</div>`; break;
+            case 'hat': content = this.svgHat(); break;
+            case 'cookie': content = this.svgCookie(); break;
+            case 'wreath': content = this.svgWreath(); break;
+            case 'sled': content = this.svgSled(); break;
+            case 'stocking': content = this.svgStocking(); break;
+            case 'flake': content = this.svgFlake(); break;
+            case 'heart': content = `<div class="emoji" aria-label="Heart">❤️</div>`; break;
+            case 'mittens': content = this.svgMittens(); break;
+            default: content = `<div class="emoji">✨</div>`; break;
+          }
+          el.innerHTML = content;
+          // Click interactions per type
+          el.addEventListener('click', (e) => {
+            if (isDragging) return; // ignore click after drag
+            const t = e.currentTarget.dataset.type;
+            if (t === 'bell') Sound.bell();
+            if (t === 'tree') { el.classList.toggle('blink'); Sound.twinkle(); }
+            if (t === 'star') { Sound.twinkle(); punch(el); }
+            if (t === 'gift') { Sound.twinkle(); }
+            if (t === 'snowman') { Sound.plop(); wiggle(el); }
+          });
+          el.addEventListener('dblclick', () => { // flip
+            el.dataset.flip = (parseFloat(el.dataset.flip) * -1).toString();
+            applyTransform(el);
+          });
+          el.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = Math.sign(e.deltaY);
+            const scale = clamp(parseFloat(el.dataset.scale) * (delta < 0 ? 1.06 : 0.94), 0.5, 2.5);
+            el.dataset.scale = scale.toFixed(2);
+            // Hold Alt key to rotate instead
+            if (e.altKey || e.ctrlKey) {
+              const rot = parseFloat(el.dataset.rot) + (delta < 0 ? -8 : 8);
+              el.dataset.rot = rot.toString();
+            }
+            applyTransform(el);
+          }, { passive: false });
+          makeDraggable(el);
+          return el;
+        },
+        svgTree() {
+          return `
+            <svg viewBox="0 0 200 240" aria-label="Tree">
+              <defs>
+                <linearGradient id="tg" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#2bd47d"/>
+                  <stop offset="1" stop-color="#0b6b3a"/>
+                </linearGradient>
+                <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0" stop-color="#fff"/>
+                  <stop offset="1" stop-color="#fff0"/>
+                </radialGradient>
+              </defs>
+              <polygon points="100,10 170,90 30,90" fill="url(#tg)"/>
+              <polygon points="100,50 190,150 10,150" fill="url(#tg)"/>
+              <polygon points="100,110 170,190 30,190" fill="url(#tg)"/>
+              <rect x="86" y="190" width="28" height="30" rx="4" fill="#8d5524"/>
+              <g class="lights">
+                ${[...Array(8)].map((_,i)=>{
+                  const x=40 + i*18; const y = i%2?120:100; const colors=['#ff6b6b','#ffd166','#6cf','#caffbf'];
+                  const c = colors[i%colors.length];
+                  return `<circle class='bulb' cx='${x+40}' cy='${y}' r='5' fill='${c}'/>`;
+                }).join('')}
+              </g>
+              <g class="star" transform="translate(100,6)">
+                <polygon points="0,-12 3,-3 12,0 3,3 0,12 -3,3 -12,0 -3,-3" fill="#ffd166"/>
+                <circle r="8" fill="url(#glow)"/>
+              </g>
+            </svg>`;
+        },
+        svgSnowman() {
+          return `
+            <svg viewBox="0 0 200 240" aria-label="Snowman">
+              <defs>
+                <radialGradient id="snowG" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stop-color="#fff"/>
+                  <stop offset="100%" stop-color="#e8f1ff"/>
+                </radialGradient>
+              </defs>
+              <circle cx="100" cy="160" r="48" fill="url(#snowG)"/>
+              <circle cx="100" cy="100" r="36" fill="url(#snowG)"/>
+              <circle cx="100" cy="52" r="24" fill="url(#snowG)"/>
+              <circle cx="92" cy="48" r="3" fill="#222"/>
+              <circle cx="108" cy="48" r="3" fill="#222"/>
+              <polygon points="100,56 124,62 100,66" fill="#ff7a00"/>
+              <path d="M82 66 Q100 74 118 66" stroke="#333" stroke-width="3" fill="none"/>
+              <rect x="78" y="22" width="44" height="12" fill="#222"/>
+              <rect x="86" y="6" width="28" height="18" fill="#111"/>
+              <path d="M62 100 L34 92" stroke="#a05a2c" stroke-width="6"/>
+              <path d="M138 100 L166 92" stroke="#a05a2c" stroke-width="6"/>
+              ${[120,144,168].map((y,i)=>`<circle cx="100" cy="${y}" r="4" fill="#333"/>`).join('')}
+              <path d="M72 120 q28 20 56 0" stroke="#d7263d" stroke-width="8" fill="none"/>
+            </svg>`;
+        },
+        svgCandyCane() {
+          return `
+            <svg viewBox="0 0 120 180" aria-label="Candy Cane">
+              <defs>
+                <linearGradient id="cg" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0" stop-color="#fff"/>
+                  <stop offset="1" stop-color="#fff"/>
+                </linearGradient>
+              </defs>
+              <path d="M60 20 q40 0 40 40 v76 a20 20 0 0 1 -40 0 v-86 a10 10 0 0 0 -20 0 v16 a10 10 0 0 1 -20 0 v-16 q0 -30 40 -30z"
+                fill="url(#cg)" stroke="#e11d48" stroke-width="10" stroke-linecap="round"/>
+              <g stroke="#e11d48" stroke-width="10" stroke-linecap="round">
+                <path d="M42 44 l50 0"/>
+                <path d="M42 64 l50 0"/>
+                <path d="M42 84 l50 0"/>
+                <path d="M42 104 l50 0"/>
+                <path d="M42 124 l50 0"/>
+              </g>
+            </svg>`;
+        },
+        svgHat() {
+          return `
+            <svg viewBox="0 0 160 120" aria-label="Santa Hat">
+              <path d="M10 96 h140 a12 12 0 0 1 0 24 h-140 a12 12 0 0 1 0 -24z" fill="#fff"/>
+              <path d="M16 96 C36 58, 76 26, 122 16 C98 38, 90 50, 136 74 L16 96z" fill="#e11d48"/>
+              <circle cx="136" cy="74" r="18" fill="#fff"/>
+            </svg>`;
+        },
+        svgCookie() {
+          return `
+            <svg viewBox="0 0 140 140" aria-label="Gingerbread Cookie">
+              <defs><radialGradient id="cg2" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#d9995f"/><stop offset="1" stop-color="#b87333"/></radialGradient></defs>
+              <circle cx="70" cy="70" r="62" fill="url(#cg2)"/>
+              <circle cx="50" cy="56" r="6" fill="#3b1f0a"/>
+              <circle cx="90" cy="56" r="6" fill="#3b1f0a"/>
+              <path d="M46 86 q24 16 48 0" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>
+              <circle cx="70" cy="30" r="8" fill="#fff"/>
+              <circle cx="70" cy="110" r="8" fill="#fff"/>
+              <circle cx="26" cy="70" r="8" fill="#fff"/>
+              <circle cx="114" cy="70" r="8" fill="#fff"/>
+            </svg>`;
+        },
+        svgWreath() {
+          return `
+            <svg viewBox="0 0 160 160" aria-label="Wreath">
+              <defs>
+                <radialGradient id="wrG" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#2bd47d"/><stop offset="1" stop-color="#0b6b3a"/></radialGradient>
+              </defs>
+              <circle cx="80" cy="80" r="66" fill="url(#wrG)"/>
+              <circle cx="80" cy="80" r="36" fill="#a7f3d0"/>
+              <circle cx="80" cy="80" r="26" fill="#fff"/>
+              ${[...Array(12)].map((_,i)=>`<circle cx="${80+Math.cos(i/12*6.283)*50}" cy="${80+Math.sin(i/12*6.283)*50}" r="6" fill="#ff4d6d"/>`).join('')}
+              <path d="M80 98 l-18 22 h36 z" fill="#ff4d6d"/>
+            </svg>`;
+        },
+        svgSled() {
+          return `
+            <svg viewBox="0 0 200 120" aria-label="Sled">
+              <g fill="none" stroke="#8b5e34" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 84 h168"/>
+                <path d="M40 84 v-30 h80 v30"/>
+                <path d="M156 54 h20"/>
+                <path d="M28 84 q8 20 28 20 h96 q20 0 28 -20"/>
+              </g>
+            </svg>`;
+        },
+        svgStocking() {
+          return `
+            <svg viewBox="0 0 140 180" aria-label="Stocking">
+              <path d="M30 20 h80 v26 a10 10 0 0 1 -10 10 h-60 a10 10 0 0 1 -10 -10z" fill="#fff"/>
+              <path d="M50 56 v54 a26 26 0 0 0 26 26 h0 a26 26 0 0 1 26 26 v6 h-56 a18 18 0 0 1 -18 -18 v-94z" fill="#ef4444"/>
+              <circle cx="76" cy="120" r="8" fill="#fff"/>
+              <circle cx="76" cy="142" r="8" fill="#fff"/>
+            </svg>`;
+        },
+        svgFlake() {
+          return `
+            <svg viewBox="0 0 160 160" aria-label="Snowflake">
+              <g fill="none" stroke="#60a5fa" stroke-width="6" stroke-linecap="round">
+                <path d="M80 20 v120"/>
+                <path d="M20 80 h120"/>
+                <path d="M36 36 l88 88"/>
+                <path d="M36 124 l88 -88"/>
+                ${[20,80,140].map(x=>`<path d="M${x} 80 l-10 -10 M${x} 80 l-10 10 M${x} 80 l10 -10 M${x} 80 l10 10"/>`).join('')}
+              </g>
+            </svg>`;
+        },
+        svgMittens() {
+          return `
+            <svg viewBox="0 0 200 160" aria-label="Mittens">
+              <g>
+                <path d="M40 90 a26 26 0 0 1 52 0 v10 h-52z" fill="#ef4444"/>
+                <rect x="40" y="100" width="52" height="20" rx="10" fill="#fff"/>
+                <path d="M108 90 a26 26 0 0 1 52 0 v10 h-52z" fill="#06b6d4"/>
+                <rect x="108" y="100" width="52" height="20" rx="10" fill="#fff"/>
+              </g>
+            </svg>`;
+        },
+        svgLights() {
+          // a cute light string that can blink when clicked (class 'blink' toggled externally)
+          return `
+            <svg viewBox="0 0 300 120" aria-label="String Lights">
+              <path d="M10 20 q90 60 180 0 q60 -40 100 20" fill="none" stroke="#065f46" stroke-width="6"/>
+              ${[20,60,100,140,180,220,260,290].map((x,i)=>{
+                const y = 20 + (i%2?30:40);
+                const colors=['#ffd166','#ff6b6b','#7ee0ff','#caffbf'];
+                const c = colors[i%colors.length];
+                return `<ellipse class='bulb' cx='${x}' cy='${y}' rx='10' ry='14' fill='${c}' stroke='#065f46' stroke-width='3'/>`;
+              }).join('')}
+            </svg>`;
+        }
+      };
+
+      /* ---------- Drag & Place ---------- */
+      let isDragging = false;
+      let dragInfo = null; // { el, startX, startY, offsetX, offsetY }
+      let zCounter = 10;
+
+      function makeDraggable(el) {
+        el.addEventListener('pointerdown', (e) => startDrag(el, e));
+      }
+
+      function startDrag(el, e, isNew=false) {
+        Sound.unlock();
+        if (e.button === 2) return; // ignore right-click
+        isDragging = true; el.classList.add('dragging'); el.classList.add('selected');
+        el.style.zIndex = (++zCounter).toString();
+        const r = sceneRect();
+        const x = e.clientX - r.left; const y = e.clientY - r.top;
+        const cur = getPos(el);
+        dragInfo = {
+          el, startX: x, startY: y, offsetX: x - cur.x, offsetY: y - cur.y
+        };
+        el.setPointerCapture(e.pointerId);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp, { once: true });
+        Sound.whoosh();
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging || !dragInfo) return;
+        const r = sceneRect();
+        let x = e.clientX - r.left - dragInfo.offsetX + dragInfo.offsetX; // simplify math, keep structure
+        let y = e.clientY - r.top - dragInfo.offsetY + dragInfo.offsetY;
+        x = clamp(e.clientX - r.left - dragInfo.offsetX + dragInfo.offsetX, 10, r.width - 10);
+        y = clamp(e.clientY - r.top - dragInfo.offsetY + dragInfo.offsetY, 10, r.height - 10);
+        setPos(dragInfo.el, x, y);
+      }
+
+      function onPointerUp(e) {
+        if (!dragInfo) return; const el = dragInfo.el; dragInfo = null;
+        isDragging = false; el.classList.remove('dragging');
+        setTimeout(()=> el.classList.remove('selected'), 400);
+        const r = sceneRect();
+        const x = clamp(e.clientX - r.left, 0, r.width);
+        const y = clamp(e.clientY - r.top, 0, r.height);
+        Sound.plop(); spawnSparkles(x, y, 10);
+        saveState();
+      }
+
+      function setPos(el, x, y) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+      function getPos(el) { return { x: parseFloat(el.style.left) || scene.clientWidth*0.5, y: parseFloat(el.style.top) || scene.clientHeight*0.8 }; }
+      function applyTransform(el) {
+        const s = parseFloat(el.dataset.scale||'1');
+        const r = parseFloat(el.dataset.rot||'0');
+        const f = parseFloat(el.dataset.flip||'1');
+        el.style.transform = `translate(-50%, -100%) scale(${f<0?-s:s}, ${s}) rotate(${r}deg)`;
+      }
+
+      // Create sticker and place into the scene
+      function addSticker(type, x, y, opts={}) {
+        const el = StickerFactory.create(type);
+        scene.appendChild(el);
+        setPos(el, x, y);
+        if (opts.scale) el.dataset.scale = String(opts.scale);
+        if (opts.rot) el.dataset.rot = String(opts.rot);
+        if (opts.flip) el.dataset.flip = String(opts.flip);
+        applyTransform(el);
+        return el;
+      }
+
+      // Palette interactions
+      tray.querySelectorAll('.palette-item').forEach(p => {
+        p.addEventListener('pointerdown', (e) => {
+          e.preventDefault(); Sound.unlock();
+          const type = p.dataset.type;
+          const r = sceneRect();
+          const x = clamp((e.clientX|| (r.left + r.width/2)) - r.left, 40, r.width - 40);
+          const y = clamp(((e.clientY|| (r.top + r.height * .8)) - r.top), 40, r.height - 20);
+          const el = addSticker(type, x, y);
+          startDrag(el, e, true);
+        });
+      });
+
+      // Punch and wiggle animations
+      function punch(el) {
+        el.animate([
+          { transform: el.style.transform + ' scale(1.0)' },
+          { transform: el.style.transform + ' scale(1.2)' },
+          { transform: el.style.transform + ' scale(1.0)' },
+        ], { duration: 250, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+      function wiggle(el) {
+        el.animate([
+          { transform: el.style.transform + ' rotate(-4deg)' },
+          { transform: el.style.transform + ' rotate(4deg)' },
+          { transform: el.style.transform + ' rotate(-3deg)' },
+          { transform: el.style.transform + ' rotate(3deg)' },
+          { transform: el.style.transform + ' rotate(0deg)' },
+        ], { duration: 500, easing: 'ease-in-out' });
+      }
+
+      /* ---------- State (localStorage) ---------- */
+      function saveState() {
+        const data = [...scene.querySelectorAll('.sticker')].map(el => ({
+          id: el.dataset.id, type: el.dataset.type, x: parseFloat(el.style.left)||0, y: parseFloat(el.style.top)||0,
+          scale: parseFloat(el.dataset.scale||'1'), rot: parseFloat(el.dataset.rot||'0'), flip: parseFloat(el.dataset.flip||'1'),
+          blink: el.classList.contains('blink')
+        }));
+        localStorage.setItem('holiday-card-v1', JSON.stringify(data));
+      }
+      function loadState() {
+        const raw = localStorage.getItem('holiday-card-v1');
+        if (!raw) return false;
+        try {
+          const data = JSON.parse(raw);
+          scene.querySelectorAll('.sticker').forEach(s => s.remove());
+          data.forEach(item => {
+            const el = addSticker(item.type, item.x, item.y, item);
+            if (item.blink) el.classList.add('blink');
+          });
+          return true;
+        } catch (e) { console.warn('Failed to load saved state', e); return false; }
+      }
+      function resetToDefault() {
+        scene.querySelectorAll('.sticker').forEach(s => s.remove());
+        const r = sceneRect();
+        const mid = r.width/2; const bottom = r.height*0.92;
+        const left = r.width*0.25; const right = r.width*0.75;
+        const tree = addSticker('tree', mid, bottom, { scale: 1.2 }); tree.classList.add('blink');
+        addSticker('snowman', left, bottom, { scale: 1.1 });
+        addSticker('gift', right, bottom, { scale: 1 });
+        addSticker('star', mid, r.height*0.42, { scale: 1 });
+        addSticker('lights', mid, r.height*0.18, { scale: 1.1 });
+        addSticker('flake', r.width*0.15, r.height*0.35, { scale: .9 });
+        addSticker('penguin', r.width*0.12, bottom, { scale: 1 });
+        addSticker('bell', r.width*0.86, r.height*0.32, { scale: 1 });
+        saveState();
+      }
+
+      /* ---------- Buttons ---------- */
+      btnJingle.addEventListener('click', () => { Sound.unlock(); Sound.jingle(); });
+      let musicOn = false;
+      btnMusic.addEventListener('click', () => {
+        Sound.unlock(); musicOn = !musicOn; btnMusic.textContent = `Music: ${musicOn ? 'On' : 'Off'}`;
+        if (musicOn) Sound.startMusic(); else Sound.stopMusic();
+      });
+      let muted = false;
+      btnMute.addEventListener('click', () => { muted = !muted; Sound.setMute(muted); btnMute.textContent = `Sound: ${muted ? 'Off' : 'On'}`; });
+      btnReset.addEventListener('click', () => { resetToDefault(); });
+      btnRandom.addEventListener('click', () => {
+        const types = ['gift','star','candy','penguin','reindeer','hat','cookie','wreath','sled','stocking','flake','heart','mittens'];
+        const r = sceneRect();
+        const n = 4 + Math.floor(Math.random()*4);
+        for (let i=0;i<n;i++) {
+          const t = types[Math.floor(Math.random()*types.length)];
+          const x = 30 + Math.random()*(r.width-60); const y = 60 + Math.random()*(r.height*0.7);
+          addSticker(t, x, y, { scale: 0.8 + Math.random()*0.8, rot: Math.random()*20-10 });
+          Sound.plop();
+        }
+        saveState();
+      });
+
+      /* ---------- Gestures: pinch-to-zoom on selected sticker ---------- */
+      // Basic pinch scale for touch devices
+      let pinch = { active: false, startDist: 0, startScale: 1, target: null };
+      scene.addEventListener('touchstart', (e) => {
+        const touches = e.touches;
+        if (touches.length === 2) {
+          const el = [...scene.querySelectorAll('.sticker.selected')].pop();
+          if (!el) return;
+          pinch.active = true; pinch.startScale = parseFloat(el.dataset.scale||'1'); pinch.target = el;
+          const dx = touches[0].clientX - touches[1].clientX;
+          const dy = touches[0].clientY - touches[1].clientY;
+          pinch.startDist = Math.hypot(dx, dy);
+        }
+      }, { passive: true });
+      scene.addEventListener('touchmove', (e) => {
+        if (pinch.active && e.touches.length === 2 && pinch.target) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const d = Math.hypot(dx, dy);
+          const scale = clamp(pinch.startScale * (d / pinch.startDist), 0.5, 2.5);
+          pinch.target.dataset.scale = String(scale);
+          applyTransform(pinch.target);
+        }
+      }, { passive: false });
+      scene.addEventListener('touchend', () => { if (pinch.active) { pinch.active = false; saveState(); } }, { passive: true });
+
+      /* ---------- Init ---------- */
+      makeSnow(160);
+      if (!loadState()) resetToDefault();
+
+      // Save layouts on window resize (re-normalization is not applied; keep positions)
+      window.addEventListener('resize', () => {
+        // no-op for simplicity; layout remains as-is
+      });
+    })();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Brutalist Dev Platform</title>
+    <meta
+      name="description"
+      content="A brutalist, fast, monochrome developer platform landing page."
+    />
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --fg: #eaeaea;
+        --muted: #9a9a9a;
+        --border: #2a2a2a;
+        --accent: #ffffff;
+        --code-bg: #0f0f0f;
+        --col-gap: 8px;
+      }
+      html[data-theme="light"] {
+        --bg: #ffffff;
+        --fg: #0a0a0a;
+        --muted: #575757;
+        --border: #cfcfcf;
+        --accent: #000000;
+        --code-bg: #f5f5f5;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font: 16px/1.4 ui-monospace, Menlo, Consolas, "Liberation Mono",
+          monospace;
+        cursor: crosshair;
+        letter-spacing: 0.2px;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+        border-bottom: 1px solid var(--border);
+      }
+      a:focus,
+      button:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: var(--col-gap);
+        padding: 16px;
+        position: relative;
+      }
+      .outline {
+        border: 1px solid var(--border);
+      }
+      .box {
+        border: 1px solid var(--border);
+        padding: 16px;
+      }
+      .no-radius,
+      button,
+      input,
+      textarea {
+        border-radius: 0;
+      }
+      .btn {
+        display: inline-block;
+        padding: 12px 16px;
+        border: 1px solid var(--fg);
+        background: transparent;
+        color: var(--fg);
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+      .btn:hover {
+        background: var(--fg);
+        color: var(--bg);
+      }
+      .btn.secondary {
+        border-color: var(--border);
+        color: var(--muted);
+      }
+      .btn.secondary:hover {
+        color: var(--bg);
+      }
+      .big {
+        font-size: clamp(28px, 6vw, 72px);
+        line-height: 1;
+      }
+      .lead {
+        font-size: clamp(14px, 2.4vw, 22px);
+        color: var(--muted);
+      }
+      header.wrap {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: color-mix(in oklab, var(--bg) 92%, transparent);
+        backdrop-filter: blur(2px);
+      }
+      header .brand {
+        grid-column: span 4;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      header nav {
+        grid-column: span 6;
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        align-items: center;
+      }
+      header .actions {
+        grid-column: span 2;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .grid-overlay {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        background-image: repeating-linear-gradient(
+            to right,
+            rgba(200, 200, 200, 0.08) 0 1px,
+            transparent 1px calc(100% / 12)
+          ),
+          repeating-linear-gradient(
+            to bottom,
+            rgba(200, 200, 200, 0.06) 0 1px,
+            transparent 1px calc(100vh / 12)
+          );
+      }
+
+      .hero {
+        position: relative;
+        min-height: 68vh;
+        overflow: hidden;
+      }
+      .hero .content {
+        position: relative;
+        z-index: 3;
+        grid-column: 1 / span 10;
+        padding-top: 6vh;
+      }
+      .hero .cta {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .terminal-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border: 1px solid var(--border);
+        display: grid;
+      }
+      .terminal-bg pre {
+        margin: 0;
+        padding: 16px;
+        color: var(--muted);
+        white-space: pre-wrap;
+        background: var(--code-bg);
+        opacity: 0.8;
+        font-size: clamp(10px, 1.6vw, 14px);
+      }
+
+      .proof {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--col-gap);
+        align-items: stretch;
+      }
+      .proof .logos {
+        grid-column: span 10;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: var(--col-gap);
+      }
+      .proof .toggle {
+        grid-column: span 2;
+        display: flex;
+        justify-content: flex-end;
+        align-items: start;
+      }
+      .logo svg {
+        width: 100%;
+        height: 56px;
+        border: 1px solid var(--border);
+        padding: 8px;
+      }
+      html[data-theme="dark"] .logo svg {
+        filter: invert(1) contrast(0.9) brightness(1.1);
+      }
+
+      .features {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--col-gap);
+      }
+      .card {
+        grid-column: span 4;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+      .tabs {
+        display: flex;
+        gap: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .tab {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-bottom: none;
+        background: transparent;
+        cursor: pointer;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      .tab[aria-selected="true"] {
+        background: var(--fg);
+        color: var(--bg);
+      }
+      .code {
+        position: relative;
+        background: var(--code-bg);
+        padding: 12px;
+        overflow: auto;
+        border: 1px solid var(--border);
+      }
+      .copy {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        cursor: pointer;
+      }
+      .tooltip {
+        position: absolute;
+        top: -28px;
+        right: 8px;
+        background: var(--fg);
+        color: var(--bg);
+        padding: 2px 6px;
+        border: 1px solid var(--border);
+        display: none;
+      }
+
+      .pricing {
+        grid-column: 1 / -1;
+      }
+      .pricing .table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .pricing th,
+      .pricing td {
+        border: 1px solid var(--border);
+        padding: 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      .pricing thead th {
+        position: sticky;
+        top: 56px;
+        background: var(--bg);
+        z-index: 5;
+      }
+      .pricing .tier-cta {
+        padding: 8px 12px;
+        border: 1px solid var(--fg);
+        background: transparent;
+        cursor: pointer;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      footer {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--col-gap);
+        align-items: start;
+      }
+      footer nav {
+        grid-column: span 9;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: var(--col-gap);
+      }
+      footer .social {
+        grid-column: span 3;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        align-items: center;
+      }
+      footer a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        border: 1px solid var(--border);
+      }
+      footer svg {
+        width: 22px;
+        height: 22px;
+      }
+
+      #cursorLabel {
+        position: fixed;
+        z-index: 100;
+        pointer-events: none;
+        transform: translate(12px, 12px);
+        padding: 2px 6px;
+        background: var(--fg);
+        color: var(--bg);
+        border: 1px solid var(--border);
+        font-size: 12px;
+      }
+
+      .mt-2 {
+        margin-top: 8px;
+      }
+      .mt-4 {
+        margin-top: 16px;
+      }
+      .mt-6 {
+        margin-top: 24px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .center {
+        text-align: center;
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 99;
+      }
+      html[data-theme="light"] .modal-backdrop {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      .modal {
+        width: min(560px, 96vw);
+        background: var(--bg);
+        color: var(--fg);
+        border: 2px solid var(--fg);
+        padding: 16px;
+      }
+      .modal header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 8px;
+      }
+      .modal form {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .modal input {
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--fg);
+        padding: 10px;
+      }
+      .modal .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      @media (max-width: 960px) {
+        header .brand {
+          grid-column: span 6;
+        }
+        header nav {
+          display: none;
+        }
+        header .actions {
+          grid-column: span 6;
+        }
+        .proof .logos {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .card {
+          grid-column: span 12;
+        }
+        footer nav {
+          grid-column: span 12;
+          grid-template-columns: repeat(3, 1fr);
+        }
+        footer .social {
+          grid-column: span 12;
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div id="cursorLabel" aria-hidden="true">C1 R1</div>
+
+    <header class="wrap outline" role="banner">
+      <div class="brand">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <rect
+            x="1"
+            y="1"
+            width="22"
+            height="22"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+          <path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="2" />
+        </svg>
+        <strong>DEVPLATFORM</strong>
+      </div>
+      <nav aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#docs">Docs</a>
+        <a href="#footer">Contact</a>
+      </nav>
+      <div class="actions">
+        <button
+          class="btn secondary"
+          id="themeToggle"
+          aria-pressed="true"
+          aria-label="Toggle light/dark"
+        >
+          Invert
+        </button>
+        <a class="btn" href="#" id="startFreeTop">Start free</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="wrap hero outline" aria-labelledby="hero-title">
+        <div class="terminal-bg" aria-hidden="true">
+          <pre id="term" class="outline"></pre>
+        </div>
+        <div class="content">
+          <h1 id="hero-title" class="big">Ship APIs at terminal velocity.</h1>
+          <p class="lead mt-2">
+            Monochrome. Minimal. Maximum throughput for devs who hate waiting.
+          </p>
+          <div class="cta">
+            <a class="btn" href="#" id="startFreeHero">Start free</a>
+            <a class="btn secondary" href="#docs">Docs</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap outline mt-6" aria-labelledby="proof-title">
+        <h2
+          id="proof-title"
+          class="box"
+          style="grid-column: 1 / -1; text-transform: uppercase"
+        >
+          Trusted by teams
+        </h2>
+        <div class="proof mt-2">
+          <div class="logos">
+            <div class="logo center">
+              <svg viewBox="0 0 120 40" role="img" aria-label="Logo One">
+                <rect
+                  x="1"
+                  y="1"
+                  width="118"
+                  height="38"
+                  fill="none"
+                  stroke="currentColor"
+                />
+                <text
+                  x="60"
+                  y="25"
+                  text-anchor="middle"
+                  fill="currentColor"
+                  font-size="14"
+                >
+                  LOGO
+                </text>
+              </svg>
+            </div>
+            <div class="logo center">
+              <svg viewBox="0 0 120 40" role="img" aria-label="Logo Two">
+                <rect
+                  x="1"
+                  y="1"
+                  width="118"
+                  height="38"
+                  fill="none"
+                  stroke="currentColor"
+                />
+                <text
+                  x="60"
+                  y="25"
+                  text-anchor="middle"
+                  fill="currentColor"
+                  font-size="14"
+                >
+                  LOGO
+                </text>
+              </svg>
+            </div>
+            <div class="logo center">
+              <svg viewBox="0 0 120 40" role="img" aria-label="Logo Three">
+                <rect
+                  x="1"
+                  y="1"
+                  width="118"
+                  height="38"
+                  fill="none"
+                  stroke="currentColor"
+                />
+                <text
+                  x="60"
+                  y="25"
+                  text-anchor="middle"
+                  fill="currentColor"
+                  font-size="14"
+                >
+                  LOGO
+                </text>
+              </svg>
+            </div>
+            <div class="logo center">
+              <svg viewBox="0 0 120 40" role="img" aria-label="Logo Four">
+                <rect
+                  x="1"
+                  y="1"
+                  width="118"
+                  height="38"
+                  fill="none"
+                  stroke="currentColor"
+                />
+                <text
+                  x="60"
+                  y="25"
+                  text-anchor="middle"
+                  fill="currentColor"
+                  font-size="14"
+                >
+                  LOGO
+                </text>
+              </svg>
+            </div>
+            <div class="logo center">
+              <svg viewBox="0 0 120 40" role="img" aria-label="Logo Five">
+                <rect
+                  x="1"
+                  y="1"
+                  width="118"
+                  height="38"
+                  fill="none"
+                  stroke="currentColor"
+                />
+                <text
+                  x="60"
+                  y="25"
+                  text-anchor="middle"
+                  fill="currentColor"
+                  font-size="14"
+                >
+                  LOGO
+                </text>
+              </svg>
+            </div>
+            <div class="logo center">
+              <svg viewBox="0 0 120 40" role="img" aria-label="Logo Six">
+                <rect
+                  x="1"
+                  y="1"
+                  width="118"
+                  height="38"
+                  fill="none"
+                  stroke="currentColor"
+                />
+                <text
+                  x="60"
+                  y="25"
+                  text-anchor="middle"
+                  fill="currentColor"
+                  font-size="14"
+                >
+                  LOGO
+                </text>
+              </svg>
+            </div>
+          </div>
+          <div class="toggle">
+            <button id="invertToggle" class="btn" aria-pressed="true">
+              Light/Dark
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="features"
+        class="wrap outline mt-6"
+        aria-labelledby="features-title"
+      >
+        <h2
+          id="features-title"
+          class="box"
+          style="grid-column: 1 / -1; text-transform: uppercase"
+        >
+          Features
+        </h2>
+        <div class="features mt-2">
+          <!-- Card 1 -->
+          <article class="card outline">
+            <div class="tabs" role="tablist" aria-label="Authentication">
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="true"
+                aria-controls="c1-js"
+                id="t1-js"
+              >
+                JS
+              </button>
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="false"
+                aria-controls="c1-py"
+                id="t1-py"
+              >
+                Python
+              </button>
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="false"
+                aria-controls="c1-cur"
+                id="t1-cur"
+              >
+                cURL
+              </button>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c1-js"
+              aria-labelledby="t1-js"
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>import Dev from "@dev/sdk"
+const api = new Dev("$TOKEN")
+const user = await api.users.get("me")
+console.log(user)</code></pre>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c1-py"
+              aria-labelledby="t1-py"
+              hidden
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>from dev import Client
+api = Client(token="$TOKEN")
+user = api.users.get("me")
+print(user)</code></pre>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c1-cur"
+              aria-labelledby="t1-cur"
+              hidden
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>curl -H "Authorization: Bearer $TOKEN" \
+  https://api.devplatform.dev/v1/users/me</code></pre>
+            </div>
+          </article>
+
+          <!-- Card 2 -->
+          <article class="card outline">
+            <div class="tabs" role="tablist" aria-label="Write data">
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="true"
+                aria-controls="c2-js"
+                id="t2-js"
+              >
+                JS
+              </button>
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="false"
+                aria-controls="c2-py"
+                id="t2-py"
+              >
+                Python
+              </button>
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="false"
+                aria-controls="c2-cur"
+                id="t2-cur"
+              >
+                cURL
+              </button>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c2-js"
+              aria-labelledby="t2-js"
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>await api.items.create({
+  name: "Brutalist",
+  tier: "pro"
+})</code></pre>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c2-py"
+              aria-labelledby="t2-py"
+              hidden
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>api.items.create({
+  "name": "Brutalist",
+  "tier": "pro"
+})</code></pre>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c2-cur"
+              aria-labelledby="t2-cur"
+              hidden
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>curl -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Brutalist","tier":"pro"}' \
+  https://api.devplatform.dev/v1/items</code></pre>
+            </div>
+          </article>
+
+          <!-- Card 3 -->
+          <article class="card outline">
+            <div class="tabs" role="tablist" aria-label="Query">
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="true"
+                aria-controls="c3-js"
+                id="t3-js"
+              >
+                JS
+              </button>
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="false"
+                aria-controls="c3-py"
+                id="t3-py"
+              >
+                Python
+              </button>
+              <button
+                class="tab"
+                role="tab"
+                aria-selected="false"
+                aria-controls="c3-cur"
+                id="t3-cur"
+              >
+                cURL
+              </button>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c3-js"
+              aria-labelledby="t3-js"
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>const res = await api.query("items")
+  .where({ tier: "pro" })
+  .limit(10)
+  .run()</code></pre>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c3-py"
+              aria-labelledby="t3-py"
+              hidden
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>res = api.query("items") \
+  .where({ "tier": "pro" }) \
+  .limit(10) \
+  .run()</code></pre>
+            </div>
+            <div
+              class="code"
+              role="tabpanel"
+              id="c3-cur"
+              aria-labelledby="t3-cur"
+              hidden
+            >
+              <button class="copy" data-copy aria-label="Copy code">
+                Copy
+              </button>
+              <div class="tooltip" role="status">Copied</div>
+              <pre><code>curl -G \
+  -H "Authorization: Bearer $TOKEN" \
+  --data-urlencode "tier=pro" \
+  --data-urlencode "limit=10" \
+  https://api.devplatform.dev/v1/items</code></pre>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section
+        id="pricing"
+        class="wrap outline mt-6"
+        aria-labelledby="pricing-title"
+      >
+        <h2
+          id="pricing-title"
+          class="box"
+          style="grid-column: 1 / -1; text-transform: uppercase"
+        >
+          Pricing
+        </h2>
+        <div style="grid-column: 1 / -1; overflow-x: auto" class="mt-2">
+          <table
+            class="table pricing outline"
+            role="table"
+            aria-label="Pricing tiers"
+          >
+            <thead>
+              <tr>
+                <th scope="col">Tier</th>
+                <th scope="col">Included</th>
+                <th scope="col">Limits</th>
+                <th scope="col">Price</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Free</th>
+                <td>Core APIs, 1 project</td>
+                <td>10k requests/mo</td>
+                <td>$0</td>
+                <td><button class="tier-cta" data-signup>Choose</button></td>
+              </tr>
+              <tr>
+                <th scope="row">Pro</th>
+                <td>Everything in Free, 10 projects, metrics</td>
+                <td>1M requests/mo</td>
+                <td>$29</td>
+                <td><button class="tier-cta" data-signup>Choose</button></td>
+              </tr>
+              <tr>
+                <th scope="row">Enterprise</th>
+                <td>SAML SSO, dedicated region, support</td>
+                <td>Custom</td>
+                <td>Contact</td>
+                <td><button class="tier-cta" data-signup>Contact</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div
+        class="modal-backdrop"
+        id="signupModal"
+        role="dialog"
+        aria-modal="true"
+        aria-hidden="true"
+        aria-labelledby="signupTitle"
+      >
+        <div class="modal">
+          <header>
+            <h3 id="signupTitle" style="margin: 0; text-transform: uppercase">
+              Create your account
+            </h3>
+            <button id="modalClose" class="btn secondary" aria-label="Close">
+              Close
+            </button>
+          </header>
+          <form>
+            <label>
+              <div class="muted">Email</div>
+              <input type="email" required placeholder="you@dev.tld" />
+            </label>
+            <label>
+              <div class="muted">Password</div>
+              <input type="password" required placeholder="••••••••" />
+            </label>
+            <div class="actions">
+              <button type="button" class="btn secondary" id="modalCancel">
+                Cancel
+              </button>
+              <button type="submit" class="btn">Start free</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <section id="docs" class="wrap outline mt-6" aria-labelledby="docs-title">
+        <h2
+          id="docs-title"
+          class="box"
+          style="grid-column: 1 / -1; text-transform: uppercase"
+        >
+          Docs
+        </h2>
+        <p class="box" style="grid-column: span 12">
+          Read the full documentation in our repository. Everything you need to
+          integrate in minutes.
+        </p>
+      </section>
+    </main>
+
+    <footer id="footer" class="wrap outline mt-6" role="contentinfo">
+      <nav
+        aria-label="Sitemap"
+        class="box"
+        style="grid-column: 1 / -1; text-transform: uppercase"
+      >
+        Sitemap
+      </nav>
+      <nav aria-label="Footer" class="mt-2">
+        <a href="#hero-title">Home</a>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#docs">Docs</a>
+        <a href="#footer">Contact</a>
+        <a href="#" id="startFreeFooter">Start</a>
+      </nav>
+    </footer>
+
+    <script>
+      const htmlEl = document.documentElement;
+      const invertToggle = document.getElementById("invertToggle");
+      const themeToggleTop = document.getElementById("themeToggle");
+      function toggleTheme() {
+        const isLight = htmlEl.getAttribute("data-theme") === "light";
+        htmlEl.setAttribute("data-theme", isLight ? "dark" : "light");
+      }
+      invertToggle.addEventListener("click", toggleTheme);
+      themeToggleTop.addEventListener("click", toggleTheme);
+
+      const label = document.getElementById("cursorLabel");
+      window.addEventListener("mousemove", (e) => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const col = Math.min(12, Math.max(1, Math.ceil((e.clientX / w) * 12)));
+        const row = Math.min(12, Math.max(1, Math.ceil((e.clientY / h) * 12)));
+        label.textContent = `C${col} R${row}`;
+        label.style.left = e.clientX + "px";
+        label.style.top = e.clientY + "px";
+      });
+
+      const term = document.getElementById("term");
+      const demoLines = [
+        '$ curl -H "Authorization: Bearer $TOKEN" https://api.devplatform.dev/v1/items',
+        "{",
+        '  "data": [ { "id": "it_1", "name": "Brutalist" }, { "id": "it_2", "name": "Velocity" } ],',
+        '  "next": null',
+        "}",
+        "",
+      ];
+      let i = 0,
+        j = 0;
+      function typeLoop() {
+        if (i >= demoLines.length) {
+          i = 0;
+          j = 0;
+          term.textContent = "";
+        }
+        const line = demoLines[i];
+        term.textContent += line[j] ?? "";
+        j++;
+        if (j > line.length) {
+          term.textContent += "\n";
+          i++;
+          j = 0;
+        }
+        const delay = j === 0 ? 400 : 24 + Math.random() * 40;
+        setTimeout(typeLoop, delay);
+      }
+      typeLoop();
+
+      function setupTabs(section) {
+        const tabs = section.querySelectorAll(".tab");
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            const group = tab.parentElement; // tablist
+            const card = section; // article.card
+            group
+              .querySelectorAll(".tab")
+              .forEach((t) => t.setAttribute("aria-selected", "false"));
+            tab.setAttribute("aria-selected", "true");
+            // hide all panels in card
+            card
+              .querySelectorAll('[role="tabpanel"]')
+              .forEach((p) => (p.hidden = true));
+            const target = document.getElementById(
+              tab.getAttribute("aria-controls")
+            );
+            if (target) target.hidden = false;
+          });
+        });
+      }
+      document.querySelectorAll("article.card").forEach(setupTabs);
+
+      function setupCopy(el) {
+        const btn = el.querySelector("[data-copy]");
+        const tooltip = el.querySelector(".tooltip");
+        btn.addEventListener("click", async () => {
+          const code = el.querySelector("pre").innerText;
+          try {
+            await navigator.clipboard.writeText(code);
+            tooltip.style.display = "block";
+            setTimeout(() => {
+              tooltip.style.display = "none";
+            }, 900);
+          } catch (e) {
+            tooltip.textContent = "Failed";
+            tooltip.style.display = "block";
+            setTimeout(() => {
+              tooltip.style.display = "none";
+              tooltip.textContent = "Copied";
+            }, 1200);
+          }
+        });
+      }
+      document.querySelectorAll(".code").forEach(setupCopy);
+
+      const modal = document.getElementById("signupModal");
+      function openModal() {
+        modal.style.display = "flex";
+        modal.setAttribute("aria-hidden", "false");
+        modal.querySelector('input[type="email"]').focus();
+      }
+      function closeModal() {
+        modal.style.display = "none";
+        modal.setAttribute("aria-hidden", "true");
+      }
+      document
+        .querySelectorAll(
+          "[data-signup], #startFreeTop, #startFreeHero, #startFreeFooter"
+        )
+        .forEach((el) =>
+          el.addEventListener("click", (e) => {
+            e.preventDefault();
+            openModal();
+          })
+        );
+      document
+        .getElementById("modalClose")
+        .addEventListener("click", closeModal);
+      document
+        .getElementById("modalCancel")
+        .addEventListener("click", closeModal);
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.style.display === "flex") closeModal();
+      });
+    </script>
+  </body>
+</html>

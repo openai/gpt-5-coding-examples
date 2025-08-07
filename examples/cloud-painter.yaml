@@ -1,0 +1,11 @@
+id: cloud-painter
+title: Cloud Painter for Kids
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Cloud Painter
+  - Goal: Paint the sky by drawing clouds with a brush tool; enjoyable for kids.
+  - Features: Multiple brush shapes, animated cloud drift, air planes to fly in the sky, save image.
+  - The UI should be soft and whimsical.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/cloud-painter.png
+tags:
+  - interactive

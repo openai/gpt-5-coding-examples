@@ -1,0 +1,11 @@
+id: interactive-world-clock
+title: Interactive World Clock
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Interactive World Clock
+  - Goal: Display current times in multiple cities.
+  - Features: Add/remove cities, 12/24h toggle.
+  - The UI should be time-focused; each city should reflect morning/afternoon/evening/night time using colors and icons.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/interactive-world-clock.png
+tags:
+  - utility

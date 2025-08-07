@@ -1,0 +1,15 @@
+id: brutalist-dev-landing-page
+title: Brutalist Dev Platform
+prompt: |
+  Title: Brutalist Dev Platform Landing
+  Prompt:
+    Build a single HTML file for a brutalist developer platform landing page.
+    Style: monochrome, oversized type, strict 12-col grid, visible outlines, sharp corners; cursor shows grid coordinates.
+    Hero: stark headline, one-line value prop, two CTAs (“Start free”, “Docs”), background = live terminal demo typing a sample API call.
+    Proof: SVG logo wall + light/dark invert toggle.
+    Features: 3 code-snippet cards with tabs (JS/Python/cURL), copy-to-clipboard + tooltip.
+    Pricing: 3-tier table with sticky header, CTAs open signup modal.
+    Footer: keyboard-navigable site map + social links; only SVGs; responsive & fast.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/brutalist-dev-landing-page.png
+tags:
+  - landing

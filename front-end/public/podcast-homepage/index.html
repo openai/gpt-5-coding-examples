@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Podcast Home Page</title>
+    <meta name="description" content="Browse and play podcast episodes, search the archive, and subscribe on your favorite platform." />
+    <style>
+      :root {
+        --bg: #0e0f12;
+        --panel: #14161b;
+        --panel-2: #1a1d24;
+        --text: #e7ebf3;
+        --muted: #a7afc2;
+        /* Brighter accents for improved contrast */
+        --accent: #9ff7ea;   /* brighter teal */
+        --accent-2: #bcd3ff; /* brighter blue */
+        --accent-3: #ffb86b;
+        --danger: #ff6b6b;
+        --success: #47d18c;
+        --ring: rgba(159, 247, 234, 0.45);
+        --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        --radius: 14px;
+      }
+
+      html, body {
+        height: 100%;
+        background: radial-gradient(1200px 600px at -10% -10%, #16202e, transparent 60%),
+                    radial-gradient(1200px 600px at 110% -10%, #281a2c, transparent 60%),
+                    var(--bg);
+        color: var(--text);
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      a { color: inherit; }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+
+      header.hero {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(8px);
+        background: linear-gradient(180deg, rgba(14,15,18,0.75), rgba(14,15,18,0.55) 60%, rgba(14,15,18,0));
+      }
+
+      .brand {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 16px;
+        align-items: center;
+      }
+      .cover {
+        width: 76px;
+        height: 76px;
+        border-radius: 14px;
+        background: conic-gradient(from 180deg at 50% 50%, #3ed7c8, #8ed1ff, #ffb86b, #f78fb3, #3ed7c8);
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+      .cover::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(60% 60% at 30% 20%, rgba(255, 255, 255, 0.45), transparent 60%);
+        mix-blend-mode: overlay;
+      }
+      .title {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .title h1 {
+        font-size: 24px;
+        letter-spacing: 0.2px;
+        margin: 0;
+      }
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .controls-bar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--panel);
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid #20242c;
+      }
+      .search:focus-within { box-shadow: 0 0 0 4px var(--ring); }
+      .search svg { flex: none; color: var(--muted); }
+      .search input[type="search"] {
+        appearance: none;
+        border: none;
+        outline: none;
+        flex: 1;
+        background: transparent;
+        color: var(--text);
+        font-size: 16px;
+      }
+
+      .subscribe {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        border: 1px solid transparent;
+        transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+      }
+      .btn:hover { transform: translateY(-1px); }
+      .btn:active { transform: translateY(0); }
+      .btn svg { width: 18px; height: 18px; }
+
+      .btn-apple { background: #1f232a; color: #ffffff; border-color: #2a303a; }
+      .btn-spotify { background: #1ed7601a; color: #a9f2c6; border-color: #2b593d; }
+      .btn-google { background: #1a2333; color: #bcd3ff; border-color: #2b3f69; }
+      .btn-rss { background: #2a1c13; color: #ffd3b1; border-color: #5a3c20; }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 16px 0 8px;
+      }
+      .toolbar .sort {
+        background: var(--panel);
+        border: 1px solid #20242c;
+        color: var(--text);
+        padding: 8px 12px;
+        border-radius: 10px;
+      }
+      .count {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      /* Episode list */
+      .episodes {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-bottom: 140px; /* leave space for sticky player */
+      }
+
+      .episode {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 14px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.0)) , var(--panel-2);
+        border: 1px solid #232733;
+        border-radius: var(--radius);
+        padding: 12px;
+      }
+      .ep-art {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        flex: none;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(110, 231, 210, 0.15), rgba(139, 185, 255, 0.15));
+        display: grid;
+        place-items: center;
+      }
+      .ep-art svg { opacity: 0.9; }
+
+      .ep-main { min-width: 0; }
+      .ep-title {
+        margin: 0 0 6px;
+        font-size: 18px;
+        line-height: 1.3;
+        letter-spacing: 0.2px;
+      }
+      .ep-title button {
+        all: unset;
+        cursor: pointer;
+        color: inherit;
+        display: inline;
+      }
+      .ep-title button:hover { color: var(--accent); }
+      .ep-desc {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .ep-meta {
+        margin-top: 8px;
+        color: #9aa6bf;
+        font-size: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+      }
+      .tag {
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid #2a3140;
+        background: #12151b;
+        color: #a9b6d2;
+      }
+      .ep-cta { display: grid; gap: 6px; }
+      .play {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: linear-gradient(180deg, #1f2835, #161b23);
+        color: var(--text);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        border: 1px solid #283242;
+      }
+      .play:hover { box-shadow: 0 0 0 4px var(--ring); }
+      .mini {
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .empty {
+        display: none;
+        text-align: center;
+        color: var(--muted);
+        padding: 48px 0 96px;
+      }
+
+      /* Player */
+      .player {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        background: linear-gradient(180deg, rgba(20,22,27,0.6), rgba(20,22,27,0.95));
+        border-top: 1px solid #282f3a;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
+      }
+      .player .row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 16px;
+        align-items: center;
+        padding: 12px 16px;
+      }
+      .np {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      .np .thumb {
+        width: 48px; height: 48px; border-radius: 10px;
+        background: linear-gradient(135deg, #20303f, #16202a);
+        display: grid; place-items: center;
+        border: 1px solid #2b3341;
+      }
+      .np .info { min-width: 0; }
+      .np .t {
+        margin: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .np .s { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+
+      .controls {
+        display: grid;
+        gap: 8px;
+      }
+      .buttons {
+        display: flex; align-items: center; gap: 8px; justify-content: center;
+      }
+      .buttons button {
+        border: 1px solid #2b3341;
+        background: #161b23;
+        color: var(--text);
+        border-radius: 10px;
+        height: 36px; width: 36px;
+        display: inline-grid; place-items: center;
+        cursor: pointer;
+      }
+      .buttons .primary { background: linear-gradient(180deg, #2a3342, #1a212b); width: 44px; height: 44px; }
+      .buttons button:hover { box-shadow: 0 0 0 4px var(--ring); }
+
+      .seek {
+        display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+      }
+      .seek input[type="range"] {
+        appearance: none; height: 6px; border-radius: 999px; background: #242b36;
+        outline: none; border: 1px solid #2b3341;
+      }
+      .seek input[type="range"]::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 2px solid #0e0f12; box-shadow: 0 0 0 4px rgba(159, 247, 234, 0.2); }
+      .seek .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
+
+      .side {
+        display: flex; align-items: center; gap: 10px;
+      }
+      .speed, .volume {
+        display: inline-flex; align-items: center; gap: 6px; background: #161b23; border: 1px solid #2b3341; border-radius: 10px; padding: 6px 8px;
+      }
+      .speed button { background: transparent; border: none; color: var(--text); font-weight: 700; cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+      .speed button.active { background: #243041; color: var(--accent); }
+      .volume input { width: 92px; }
+      .volume input[type="range"] { appearance: none; height: 6px; border-radius: 999px; background: #242b36; outline: none; border: 1px solid #2b3341; }
+      .volume input[type="range"]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-2); border: 2px solid #0e0f12; box-shadow: 0 0 0 4px rgba(188, 211, 255, 0.25); }
+
+      @media (max-width: 860px) {
+        .controls-bar { grid-template-columns: 1fr; }
+        .subscribe { justify-content: flex-start; }
+        .episode { grid-template-columns: auto 1fr; }
+        .ep-cta { display: none; }
+        .player .row { grid-template-columns: 1fr; }
+        .np { justify-content: space-between; }
+        .side { justify-content: space-between; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container">
+        <div class="brand" role="banner">
+          <div class="cover" aria-hidden="true"></div>
+          <div class="title">
+            <h1>Podcast Home Page</h1>
+            <p class="subtitle">Explore episodes, search the archive, and subscribe. Built to be audio‑centric and easy to navigate.</p>
+          </div>
+        </div>
+
+        <div class="controls-bar" aria-label="Search and subscribe">
+          <label class="search" for="search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <input id="search" type="search" placeholder="Search episodes, guests, topics..." autocomplete="off" />
+          </label>
+
+          <nav class="subscribe" aria-label="Subscribe links">
+            <a class="btn btn-rss" href="#" aria-label="Subscribe via RSS">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M4 4a1.5 1.5 0 0 1 1.5-1.5 16 16 0 0 1 16 16A1.5 1.5 0 0 1 20 20a1.5 1.5 0 0 1-1.5-1.5 13 13 0 0 0-13-13A1.5 1.5 0 0 1 4 4zm0 7a1.5 1.5 0 0 1 1.5-1.5 9 9 0 0 1 9 9A1.5 1.5 0 0 1 13 20a1.5 1.5 0 0 1-1.5-1.5 6 6 0 0 0-6-6A1.5 1.5 0 0 1 4 11zm3 6.5A2.5 2.5 0 1 1 5.5 20 2.5 2.5 0 0 1 7 17.5z"/></svg>
+              RSS
+            </a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" id="app" role="main">
+      <div class="toolbar">
+        <p class="count" id="count">0 episodes</p>
+        <label>
+          <span class="sr-only">Sort</span>
+          <select class="sort" id="sort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="az">Title A–Z</option>
+            <option value="za">Title Z–A</option>
+          </select>
+        </label>
+      </div>
+
+      <section class="episodes" id="episodes" aria-label="Episode list"></section>
+      <p class="empty" id="empty">No episodes match your search.</p>
+    </main>
+
+    <footer class="player" aria-label="Audio player">
+      <div class="row container">
+        <div class="np">
+          <div class="thumb" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 17V7m5 10V7m5 10V7" stroke="#9bb0d3" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </div>
+          <div class="info">
+            <p class="t" id="np-title">Select an episode to start listening</p>
+            <p class="s" id="np-sub">—</p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="buttons">
+            <button id="btn-prev" title="Previous">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6v12m12-12-9 6 9 6V6Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="primary" id="btn-play" title="Play / Pause">
+              <svg id="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m7 4 14 8-14 8V4Z" fill="currentColor"/></svg>
+              <svg id="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none"><path d="M7 4h4v16H7V4Zm6 0h4v16h-4V4Z" fill="currentColor"/></svg>
+            </button>
+            <button id="btn-next" title="Next">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6v12M6 6l9 6-9 6V6Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button id="btn-rewind" title="Back 15s">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5.5v-3L7 6l5 3.5v-3c3.5 0 6.5 2.7 6.5 6 0 3.3-3 6-6.5 6S5.5 15.3 5.5 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button id="btn-forward" title="Forward 30s">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5.5v-3L17 6l-5 3.5v-3c-3.5 0-6.5 2.7-6.5 6 0 3.3 3 6 6.5 6s6.5-2.7 6.5-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="seek">
+            <span class="time" id="time-cur">0:00</span>
+            <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Seek" />
+            <span class="time" id="time-end">0:00</span>
+          </div>
+        </div>
+
+        <div class="side">
+          <div class="speed" role="group" aria-label="Playback speed">
+            <button data-rate="0.8">0.8×</button>
+            <button data-rate="1" class="active">1×</button>
+            <button data-rate="1.5">1.5×</button>
+            <button data-rate="2">2×</button>
+          </div>
+          <div class="volume" aria-label="Volume">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M5 9H3v6h2l4 3V6L5 9Zm8 8a5 5 0 0 0 0-10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <input id="volume" type="range" min="0" max="1" step="0.01" value="1" />
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Data: A small demo catalog of episodes
+      const episodesData = [
+        {
+          id: 1,
+          title: "Welcome to The Audio Lab",
+          description: "Kick off the season with a tour of what to expect: storytelling, sound design, and interviews.",
+          date: "2025-02-01",
+          durationSec: 120,
+          tags: ["Intro", "Season 1"],
+          guests: [],
+          toneHz: 440
+        },
+        {
+          id: 2,
+          title: "Behind the Mic: Storytelling Basics",
+          description: "We break down narrative arcs and transitions to keep listeners hooked.",
+          date: "2025-02-08",
+          durationSec: 180,
+          tags: ["Tutorial"],
+          guests: ["Sam Park"],
+          toneHz: 554
+        },
+        {
+          id: 3,
+          title: "Interview with Dr. Wave",
+          description: "A deep conversation about audio psychology and why certain sounds resonate.",
+          date: "2025-02-15",
+          durationSec: 240,
+          tags: ["Interview"],
+          guests: ["Dr. Wave"],
+          toneHz: 330
+        },
+        {
+          id: 4,
+          title: "Sound Design Deep Dive",
+          description: "Textures, layers, and spaces—how pros paint with sound.",
+          date: "2025-02-22",
+          durationSec: 300,
+          tags: ["Sound Design", "Tutorial"],
+          guests: [],
+          toneHz: 660
+        },
+        {
+          id: 5,
+          title: "Live Q&A: Listener Mailbag",
+          description: "We answer your questions about gear, workflow, and creativity.",
+          date: "2025-03-01",
+          durationSec: 150,
+          tags: ["Q&A", "Live"],
+          guests: [],
+          toneHz: 220
+        },
+        {
+          id: 6,
+          title: "Field Recording Tips",
+          description: "Capturing clean sounds outdoors—wind, wildlife, and urban soundscapes.",
+          date: "2025-03-08",
+          durationSec: 210,
+          tags: ["Field", "Tips"],
+          guests: ["Riley Cruz"],
+          toneHz: 494
+        },
+        {
+          id: 7,
+          title: "Editing Like a Pro",
+          description: "Cutting, pacing, and polishing your episode for clarity and flow.",
+          date: "2025-03-15",
+          durationSec: 270,
+          tags: ["Editing", "Workflow"],
+          guests: [],
+          toneHz: 392
+        },
+        {
+          id: 8,
+          title: "Season Finale: What We Learned",
+          description: "Highlights, lessons, and what's next for the show.",
+          date: "2025-03-22",
+          durationSec: 360,
+          tags: ["Season 1", "Recap"],
+          guests: [],
+          toneHz: 523
+        }
+      ];
+
+      // Utilities
+      const $ = (s, el=document) => el.querySelector(s);
+      const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+      const fmtTime = (sec) => {
+        if (!isFinite(sec) || sec < 0) sec = 0;
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m}:${String(s).padStart(2, '0')}`;
+      };
+
+      // Generate a simple tone as WAV on the fly. Keeps the entire app in one file.
+      function toneToWavUrl(freq=440, duration=2, sampleRate=44100) {
+        const samples = Math.floor(duration * sampleRate);
+        const headerSize = 44;
+        const dataSize = samples * 2; // 16-bit mono
+        const buffer = new ArrayBuffer(headerSize + dataSize);
+        const view = new DataView(buffer);
+        const writeStr = (off, str) => { for (let i=0;i<str.length;i++) view.setUint8(off+i, str.charCodeAt(i)); };
+        // RIFF header
+        writeStr(0, 'RIFF');
+        view.setUint32(4, 36 + dataSize, true);
+        writeStr(8, 'WAVE');
+        // fmt chunk
+        writeStr(12, 'fmt ');
+        view.setUint32(16, 16, true); // chunk size
+        view.setUint16(20, 1, true);  // PCM
+        view.setUint16(22, 1, true);  // mono
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true); // byte rate
+        view.setUint16(32, 2, true);  // block align
+        view.setUint16(34, 16, true); // bits per sample
+        // data chunk
+        writeStr(36, 'data');
+        view.setUint32(40, dataSize, true);
+        // PCM data
+        const amp = 0.25; // keep it soft
+        for (let i=0;i<samples;i++) {
+          const t = i / sampleRate;
+          const sample = Math.sin(2 * Math.PI * freq * t) * amp;
+          // fade in/out to avoid clicks
+          const fade = Math.min(1, i/512, (samples-i)/512);
+          const val = Math.max(-1, Math.min(1, sample * fade));
+          view.setInt16(headerSize + i*2, val * 0x7fff, true);
+        }
+        const blob = new Blob([buffer], {type:'audio/wav'});
+        return URL.createObjectURL(blob);
+      }
+
+      // State
+      const state = {
+        list: [...episodesData],
+        filtered: [...episodesData],
+        currentIndex: -1,
+        audio: new Audio(),
+        generatedUrls: new Map(), // id -> objectURL
+      };
+
+      // Restore volume/speed if set
+      try {
+        const vol = localStorage.getItem('ph_volume');
+        if (vol !== null) state.audio.volume = Math.max(0, Math.min(1, parseFloat(vol)));
+        const rate = localStorage.getItem('ph_rate');
+        if (rate !== null) state.audio.playbackRate = Math.max(0.5, Math.min(3, parseFloat(rate)));
+      } catch {}
+
+      // DOM refs
+      const episodesEl = $('#episodes');
+      const countEl = $('#count');
+      const emptyEl = $('#empty');
+      const searchEl = $('#search');
+      const sortEl = $('#sort');
+      const btnPlay = $('#btn-play');
+      const btnPrev = $('#btn-prev');
+      const btnNext = $('#btn-next');
+      const btnRew = $('#btn-rewind');
+      const btnFwd = $('#btn-forward');
+      const seekEl = $('#seek');
+      const timeCurEl = $('#time-cur');
+      const timeEndEl = $('#time-end');
+      const npTitleEl = $('#np-title');
+      const npSubEl = $('#np-sub');
+      const volumeEl = $('#volume');
+      const speedButtons = $$('.speed button');
+
+      // Sync UI volume
+      volumeEl.value = state.audio.volume.toFixed(2);
+
+      function renderCount() {
+        const n = state.filtered.length;
+        countEl.textContent = `${n} episode${n===1?'':'s'}`;
+      }
+
+      function renderEpisodes() {
+        episodesEl.innerHTML = '';
+        if (state.filtered.length === 0) {
+          emptyEl.style.display = 'block';
+          renderCount();
+          return;
+        } else {
+          emptyEl.style.display = 'none';
+        }
+        for (const ep of state.filtered) {
+          const card = document.createElement('article');
+          card.className = 'episode';
+          card.setAttribute('tabindex', '0');
+          card.setAttribute('role', 'group');
+          card.setAttribute('aria-label', ep.title);
+
+          const art = document.createElement('div');
+          art.className = 'ep-art';
+          art.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 17V7m5 10V7m5 10V7" stroke="#9bb0d3" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
+          const main = document.createElement('div');
+          main.className = 'ep-main';
+          const h3 = document.createElement('h3');
+          h3.className = 'ep-title';
+          const playTitleBtn = document.createElement('button');
+          playTitleBtn.textContent = ep.title;
+          playTitleBtn.addEventListener('click', () => playById(ep.id));
+          h3.appendChild(playTitleBtn);
+          const desc = document.createElement('p');
+          desc.className = 'ep-desc';
+          desc.textContent = ep.description;
+          const meta = document.createElement('div');
+          meta.className = 'ep-meta';
+          const date = new Date(ep.date);
+          const parts = [
+            date.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }),
+            fmtTime(ep.durationSec),
+            ep.guests.length ? `Guests: ${ep.guests.join(', ')}` : null
+          ].filter(Boolean);
+          meta.append(parts.join(' • '));
+          if (ep.tags?.length) {
+            for (const t of ep.tags) {
+              const tag = document.createElement('span');
+              tag.className = 'tag';
+              tag.textContent = t;
+              meta.appendChild(tag);
+            }
+          }
+          main.append(h3, desc, meta);
+
+          const cta = document.createElement('div');
+          cta.className = 'ep-cta';
+          const playBtn = document.createElement('button');
+          playBtn.className = 'play';
+          playBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="m7 4 14 8-14 8V4Z" fill="currentColor"/></svg> Play';
+          playBtn.addEventListener('click', () => playById(ep.id));
+          const mini = document.createElement('div');
+          mini.className = 'mini';
+          mini.textContent = 'Tap to play';
+          cta.append(playBtn, mini);
+
+          card.append(art, main, cta);
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playById(ep.id); }
+          });
+          episodesEl.appendChild(card);
+        }
+        renderCount();
+      }
+
+      function searchAndSort() {
+        const q = searchEl.value.trim().toLowerCase();
+        const sort = sortEl.value;
+        let arr = [...state.list];
+        if (q) {
+          arr = arr.filter(ep => {
+            const hay = [ep.title, ep.description, ep.tags?.join(' '), ep.guests?.join(' ')].join(' ').toLowerCase();
+            return hay.includes(q);
+          });
+        }
+        if (sort === 'newest') arr.sort((a,b)=> new Date(b.date)-new Date(a.date));
+        else if (sort === 'oldest') arr.sort((a,b)=> new Date(a.date)-new Date(b.date));
+        else if (sort === 'az') arr.sort((a,b)=> a.title.localeCompare(b.title));
+        else if (sort === 'za') arr.sort((a,b)=> b.title.localeCompare(a.title));
+        state.filtered = arr;
+        renderEpisodes();
+      }
+
+      // Player controls
+      function ensureSrcFor(ep) {
+        // Lazily generate tone per episode
+        if (!state.generatedUrls.has(ep.id)) {
+          const url = toneToWavUrl(ep.toneHz, Math.min(ep.durationSec, 20)); // keep short for demo
+          state.generatedUrls.set(ep.id, url);
+        }
+        return state.generatedUrls.get(ep.id);
+      }
+
+      function playById(id) {
+        const idx = state.filtered.findIndex(e => e.id === id);
+        if (idx === -1) return;
+        playAtIndex(idx);
+      }
+
+      function playAtIndex(idx) {
+        const ep = state.filtered[idx];
+        if (!ep) return;
+        state.currentIndex = idx;
+        const url = ensureSrcFor(ep);
+        if (state.audio.src !== url) state.audio.src = url;
+        state.audio.play().catch(()=>{});
+        updateNowPlaying(ep);
+        updatePlayButton(true);
+      }
+
+      function updateNowPlaying(ep) {
+        npTitleEl.textContent = ep?.title ?? 'Select an episode to start listening';
+        const date = ep ? new Date(ep.date).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) : '—';
+        npSubEl.textContent = ep ? `${date} • ${fmtTime(ep.durationSec)}` : '—';
+      }
+
+      function updatePlayButton(isPlaying) {
+        $('#icon-play').style.display = isPlaying ? 'none' : 'block';
+        $('#icon-pause').style.display = isPlaying ? 'block' : 'none';
+      }
+
+      // Event bindings
+      searchEl.addEventListener('input', searchAndSort);
+      sortEl.addEventListener('change', searchAndSort);
+      btnPrev.addEventListener('click', () => {
+        if (state.currentIndex <= 0) return;
+        playAtIndex(state.currentIndex - 1);
+      });
+      btnNext.addEventListener('click', () => {
+        if (state.currentIndex < 0) return;
+        if (state.currentIndex + 1 < state.filtered.length) playAtIndex(state.currentIndex + 1);
+      });
+      btnRew.addEventListener('click', () => { state.audio.currentTime = Math.max(0, state.audio.currentTime - 15); });
+      btnFwd.addEventListener('click', () => { state.audio.currentTime = Math.min(state.audio.duration || Infinity, state.audio.currentTime + 30); });
+      btnPlay.addEventListener('click', () => {
+        if (!state.audio.src && state.filtered.length) return playAtIndex(0);
+        if (state.audio.paused) state.audio.play(); else state.audio.pause();
+      });
+      speedButtons.forEach(b => b.addEventListener('click', () => {
+        speedButtons.forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        const r = parseFloat(b.dataset.rate);
+        state.audio.playbackRate = r;
+        try { localStorage.setItem('ph_rate', String(r)); } catch {}
+      }));
+      volumeEl.addEventListener('input', () => {
+        const v = parseFloat(volumeEl.value);
+        state.audio.volume = v;
+        try { localStorage.setItem('ph_volume', String(v)); } catch {}
+      });
+      seekEl.addEventListener('input', () => {
+        if (!isFinite(state.audio.duration)) return;
+        const p = seekEl.value / 1000;
+        state.audio.currentTime = p * state.audio.duration;
+      });
+
+      // Sync time + slider
+      state.audio.addEventListener('timeupdate', () => {
+        const cur = state.audio.currentTime || 0;
+        const dur = state.audio.duration || (state.filtered[state.currentIndex]?.durationSec ?? 0);
+        timeCurEl.textContent = fmtTime(cur);
+        timeEndEl.textContent = fmtTime(dur);
+        const p = dur ? Math.min(1000, Math.max(0, Math.round((cur / dur) * 1000))) : 0;
+        seekEl.value = String(p);
+      });
+      state.audio.addEventListener('play', () => updatePlayButton(true));
+      state.audio.addEventListener('pause', () => updatePlayButton(false));
+      state.audio.addEventListener('loadedmetadata', () => {
+        const dur = state.audio.duration || 0;
+        timeEndEl.textContent = fmtTime(dur);
+      });
+      state.audio.addEventListener('ended', () => {
+        if (state.currentIndex + 1 < state.filtered.length) playAtIndex(state.currentIndex + 1);
+        else updatePlayButton(false);
+      });
+
+      // Initialize
+      searchAndSort();
+      // Set persisted speed UI state
+      const persistedRate = (() => { try { return parseFloat(localStorage.getItem('ph_rate')); } catch { return NaN; } })();
+      if (!Number.isNaN(persistedRate)) {
+        speedButtons.forEach(b => b.classList.toggle('active', parseFloat(b.dataset.rate) === persistedRate));
+      }
+      // Reflect initial volume
+      volumeEl.value = state.audio.volume.toFixed(2);
+    </script>
+  </body>
+  </html>

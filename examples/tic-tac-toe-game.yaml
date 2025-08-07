@@ -1,0 +1,27 @@
+id: tic-tac-toe-game
+title: Tic Tac Toe
+prompt: |
+  Create a single-page app, in a single HTML file:
+  a Tic Tac Toe game that is Roman Empire themed, fully responsive, and modern.
+
+  Requirements:
+  - Full-viewport, fluid board (vmin-based) and mobile/desktop responsive layout.
+  - Roman theme: marble background, gold accents, SPQR crest, subtle Colosseum vibe.
+  - Clean top bar with only three buttons: “New Round”, “Customize”, “Reset Scores”.
+  - Put all options in a “Customize” dialog:
+    • Theme: Marble Day / Night Legion
+    • Glyphs: Standard X/O or Gladius/Laurel
+    • Mode: 2-player or vs AI
+    • First move: X or O
+    • AI discipline: Perfect / Pragmatic / Reckless
+  - Game logic:
+    • Perfect-play AI via minimax with difficulty handicaps
+    • Scoreboard for X, O, and Draws
+    • Gold win highlight + non-overlapping victory banner under header
+    • Canvas-based confetti on win (no DOM node spraying), respects prefers-reduced-motion
+  - Accessibility: ARIA roles for grid/cells, live status updates, keyboard + touch support.
+  - Visuals: smooth hover/press states, soft shadows, rounded corners, scalable typography.
+  - Constraints: no element overlap or flashing; no external JS frameworks; one HTML file with inline CSS/JS (Google Fonts allowed).
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/tic-tac-toe-game.png
+tags:
+  - game

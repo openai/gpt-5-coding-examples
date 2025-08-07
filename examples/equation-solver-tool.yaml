@@ -1,0 +1,11 @@
+id: equation-solver-tool
+title: Equation Solver Tool
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Equation Solver Tool
+  - Goal: Solve and explain math equations.
+  - Features: Input field, step-by-step breakdown, export results.
+  - The UI should be academic and minimal.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/equation-solver-tool.png
+tags:
+  - tool

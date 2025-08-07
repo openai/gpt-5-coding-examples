@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Language Learning Flashcards</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --primary: #22d3ee;
+      --primary-700: #0ea5b6;
+      --accent: #a78bfa;
+      --card: #111827;
+      --success: #34d399;
+      --danger: #fb7185;
+      --shadow: 0 10px 25px rgba(0,0,0,0.35);
+      --radius: 16px;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 800px at 10% 10%, #0b1225, var(--bg)),
+                  conic-gradient(from 180deg at 70% 10%, #0b1225, #0f172a, #0b1225);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 18px;
+      min-height: 100%;
+      padding: 24px 16px calc(32px + env(safe-area-inset-bottom));
+      box-sizing: border-box;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      margin: 0;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    label { color: var(--muted); font-size: 14px; }
+
+    select, button {
+      background: rgba(17,24,39,0.8);
+      color: var(--text);
+      border: 1px solid rgba(148,163,184,0.25);
+      padding: 12px 14px;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 200ms ease, transform 120ms ease, background 200ms ease, box-shadow 200ms ease;
+    }
+    select:focus, button:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(34,211,238,0.2); }
+    button {
+      cursor: pointer;
+      background: linear-gradient(180deg, rgba(34,211,238,0.16), rgba(34,211,238,0.06));
+    }
+    button.primary { border-color: rgba(34,211,238,0.35); }
+    button:active { transform: translateY(1px) scale(0.99); }
+    button[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+    .hint { color: var(--muted); font-size: 13px; }
+
+    .stage {
+      display: grid;
+      place-items: center;
+      perspective: 1200px;
+      min-height: 360px;
+    }
+
+    .deck { position: relative; width: min(720px, 92vw); height: min(430px, 66vh); }
+
+    .card-wrapper {
+      width: 100%; height: 100%; position: absolute; inset: 0;
+      display: grid; place-items: center;
+    }
+    .card {
+      width: 100%; height: 100%;
+      border-radius: var(--radius);
+      transform-style: preserve-3d;
+      transition: transform 640ms cubic-bezier(.2,.8,.2,1), filter 240ms ease;
+      box-shadow: var(--shadow);
+      background: transparent;
+    }
+    .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; border-radius: var(--radius); }
+    .card.flipped .card-inner { transform: rotateY(180deg); transition: transform 640ms cubic-bezier(.2,.8,.2,1); }
+
+    .card-face {
+      position: absolute; inset: 0; display: grid; align-content: center; justify-items: center;
+      backface-visibility: hidden;
+      padding: clamp(18px, 3vw, 28px);
+      border-radius: var(--radius);
+      background: linear-gradient(160deg, rgba(17,24,39,0.95), rgba(3,7,18,0.9));
+      border: 1px solid rgba(148,163,184,0.25);
+    }
+    .card-front .lang-badge { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.35); }
+    .card-back .lang-badge { background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.35); }
+
+    .face-content { max-width: 85%; text-align: center; }
+    .phrase { font-size: clamp(20px, 5vw, 36px); line-height: 1.25; margin: 10px 0 0; }
+    .lang-badge {
+      position: absolute; top: 12px; left: 12px;
+      font-size: 12px; letter-spacing: .3px; color: var(--text);
+      padding: 6px 10px; border-radius: 999px;
+    }
+
+    .card-back { transform: rotateY(180deg); }
+
+    .actions { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .actions .spacer { flex: 1; }
+
+    .pill {
+      display: inline-flex; gap: 8px; align-items: center;
+      padding: 6px 10px; border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.25);
+      color: var(--muted); font-size: 12px;
+      background: rgba(17,24,39,0.5);
+    }
+
+    .progress-bar { position: relative; height: 8px; background: rgba(148,163,184,0.2); border-radius: 999px; overflow: hidden; width: min(260px, 60vw); }
+    .progress-bar > span { position: absolute; inset: 0 0 0 0; width: 0%; background: linear-gradient(90deg, var(--success), #22c55e); transition: width 400ms ease; }
+
+    @keyframes slideOut {
+      0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateX(140%) rotate(12deg); opacity: 0; }
+    }
+    @keyframes slideIn {
+      0% { transform: translateX(-8%) rotate(-2deg); opacity: 0.0; }
+      100% { transform: translateX(0) rotate(0); opacity: 1; }
+    }
+    .out { animation: slideOut 420ms cubic-bezier(.2,.8,.2,1) both; }
+    .in { animation: slideIn 420ms cubic-bezier(.2,.8,.2,1) both; }
+
+    @keyframes shuffle {
+      0% { transform: translateX(0) rotate(0); }
+      20% { transform: translateX(-10px) rotate(-1.5deg); }
+      40% { transform: translateX(12px) rotate(1.5deg); }
+      60% { transform: translateX(-8px) rotate(-1deg); }
+      80% { transform: translateX(6px) rotate(1deg); }
+      100% { transform: translateX(0) rotate(0); }
+    }
+    .shuffle-anim { animation: shuffle 420ms ease; }
+
+    footer { display: flex; flex-direction: column; gap: 8px; align-items: center; color: var(--muted); font-size: 12px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card, .card.flipped .card-inner, .out, .in, .shuffle-anim { transition: none !important; animation: none !important; }
+    }
+
+    @media (max-width: 640px) {
+      header { flex-direction: column; align-items: stretch; gap: 10px; }
+      h1 { text-align: center; }
+      .controls { width: 100%; }
+      .controls > * { flex: 1 1 100%; }
+      select, button { width: 100%; }
+
+      .stage { min-height: 300px; }
+      .deck { width: 96vw; height: 56vh; }
+
+      .pill { width: 100%; justify-content: center; flex-wrap: wrap; }
+      .pill .progress-bar { width: 100%; max-width: 100%; }
+      .pill > div[style*="width:10px"] { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-live="polite">
+    <header>
+      <h1 id="title">Language Learning Flashcards</h1>
+      <div class="controls">
+        <label for="targetLang" id="chooseLabel">Which language do you want to learn?</label>
+        <select id="targetLang" aria-labelledby="chooseLabel">
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="ja">Japanese</option>
+        </select>
+        <button id="shuffleBtn" class="primary" type="button">Shuffle</button>
+        <button id="learnedBtn" type="button">Mark as learned</button>
+      </div>
+    </header>
+
+    <div class="hint" id="hint">Click the card to flip it. Use Shuffle or Mark as learned.</div>
+
+    <section class="stage" aria-label="Flashcard area">
+      <div class="deck" id="deck">
+        <div class="card-wrapper">
+          <div class="card" id="card" tabindex="0" role="button" aria-pressed="false" aria-label="Flip the card">
+            <div class="card-inner">
+              <div class="card-face card-front">
+                <span class="lang-badge" id="frontLangBadge">Front</span>
+                <div class="face-content">
+                  <div class="phrase" id="frontText"></div>
+                </div>
+              </div>
+              <div class="card-face card-back">
+                <span class="lang-badge" id="backLangBadge">Back</span>
+                <div class="face-content">
+                  <div class="phrase" id="backText"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="actions">
+      <div class="pill" id="progressPill">
+        <span id="cardsLeftLabel">Cards left</span>
+        <div style="width:10px"></div>
+        <div class="progress-bar"><span id="progressBar"></span></div>
+        <div style="width:10px"></div>
+        <span id="progressCount">10 / 10</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      const UI_STRINGS = {
+        en: {
+          title: 'Language Learning Flashcards',
+          choose: 'Which language do you want to learn?',
+          shuffle: 'Shuffle',
+          learned: 'Mark as learned',
+          hint: 'Click the card to flip it. Use Shuffle or Mark as learned.',
+          cardsLeft: 'Cards left',
+          front: 'Front',
+          back: 'Back',
+          empty: 'All done! You have learned all cards.'
+        },
+        es: {
+          title: 'Tarjetas de aprendizaje de idiomas',
+          choose: '¿Qué idioma quieres aprender?',
+          shuffle: 'Barajar',
+          learned: 'Marcar como aprendido',
+          hint: 'Haz clic en la tarjeta para voltearla. Usa Barajar o Marcar como aprendido.',
+          cardsLeft: 'Tarjetas restantes',
+          front: 'Anverso',
+          back: 'Reverso',
+          empty: '¡Listo! Has aprendido todas las tarjetas.'
+        },
+        fr: {
+          title: 'Cartes d’apprentissage des langues',
+          choose: 'Quelle langue voulez-vous apprendre ?',
+          shuffle: 'Mélanger',
+          learned: 'Marquer comme appris',
+          hint: 'Cliquez sur la carte pour la retourner. Utilisez Mélanger ou Marquer comme appris.',
+          cardsLeft: 'Cartes restantes',
+          front: 'Recto',
+          back: 'Verso',
+          empty: 'Terminé ! Vous avez appris toutes les cartes.'
+        },
+        ja: {
+          title: '言語学習フラッシュカード',
+          choose: '学習したい言語を選んでください',
+          shuffle: 'シャッフル',
+          learned: '学習済みにする',
+          hint: 'カードをクリックして裏返します。シャッフルまたは学習済みにするを使ってください。',
+          cardsLeft: '残りのカード',
+          front: '表',
+          back: '裏',
+          empty: 'すべて学習しました！お疲れさまです。'
+        }
+      };
+
+      const LANG_NAMES = {
+        en: { en: 'English', es: 'Spanish', fr: 'French', ja: 'Japanese' },
+        es: { en: 'Inglés', es: 'Español', fr: 'Francés', ja: 'Japonés' },
+        fr: { en: 'Anglais', es: 'Espagnol', fr: 'Français', ja: 'Japonais' },
+        ja: { en: '英語', es: 'スペイン語', fr: 'フランス語', ja: '日本語' }
+      };
+
+      const PHRASES = [
+        { id: 1, en: 'Where is the bathroom?', es: '¿Dónde está el baño?', fr: 'Où sont les toilettes ?', ja: 'トイレはどこですか？' },
+        { id: 2, en: 'How much is this?', es: '¿Cuánto cuesta?', fr: 'Combien ça coûte ?', ja: 'これはいくらですか？' },
+        { id: 3, en: 'Do you speak English?', es: '¿Habla inglés?', fr: 'Parlez-vous anglais ?', ja: '英語を話せますか？' },
+        { id: 4, en: 'Where is the train station?', es: '¿Dónde está la estación de tren?', fr: 'Où est la gare ?', ja: '駅はどこですか？' },
+        { id: 5, en: 'Can I pay with a card?', es: '¿Puedo pagar con tarjeta?', fr: 'Puis-je payer par carte ?', ja: 'カードで支払えますか？' },
+        { id: 6, en: 'What time does it open?', es: '¿A qué hora abre?', fr: 'À quelle heure ça ouvre ?', ja: '何時に開きますか？' },
+        { id: 7, en: 'Could you recommend a good restaurant?', es: '¿Podría recomendarme un buen restaurante?', fr: 'Pourriez-vous me recommander un bon restaurant ?', ja: 'おすすめのレストランはありますか？' },
+        { id: 8, en: 'Where can I get a taxi?', es: '¿Dónde puedo tomar un taxi?', fr: 'Où puis-je prendre un taxi ?', ja: 'タクシーはどこで拾えますか？' },
+        { id: 9, en: 'Is there free Wi‑Fi?', es: '¿Hay Wi‑Fi gratis?', fr: 'Y a-t-il du Wi‑Fi gratuit ?', ja: '無料のWi‑Fiはありますか？' },
+        { id: 10, en: 'Can you help me?', es: '¿Puede ayudarme?', fr: 'Pouvez-vous m\'aider ?', ja: '手伝っていただけますか？' }
+      ];
+
+      function detectUILang() {
+        const nav = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en'];
+        const shortlist = nav.map(l => (l || '').toLowerCase().slice(0,2));
+        for (const code of shortlist) {
+          if (['en', 'es', 'fr', 'ja'].includes(code)) return code;
+        }
+        return 'en';
+      }
+
+      // State
+      let uiLang = detectUILang();
+      let targetLang = 'es';
+      let order = [];
+      let learned = new Set();
+      let currentIdx = 0;
+      let locked = false;
+
+      const els = {
+        title: document.getElementById('title'),
+        chooseLabel: document.getElementById('chooseLabel'),
+        targetLang: document.getElementById('targetLang'),
+        shuffleBtn: document.getElementById('shuffleBtn'),
+        learnedBtn: document.getElementById('learnedBtn'),
+        hint: document.getElementById('hint'),
+        card: document.getElementById('card'),
+        frontText: document.getElementById('frontText'),
+        backText: document.getElementById('backText'),
+        frontLangBadge: document.getElementById('frontLangBadge'),
+        backLangBadge: document.getElementById('backLangBadge'),
+        progressBar: document.getElementById('progressBar'),
+        progressCount: document.getElementById('progressCount'),
+        cardsLeftLabel: document.getElementById('cardsLeftLabel'),
+        deck: document.getElementById('deck')
+      };
+
+      function setUIText() {
+        const T = UI_STRINGS[uiLang] || UI_STRINGS.en;
+        els.title.textContent = T.title;
+        els.chooseLabel.textContent = T.choose;
+        els.shuffleBtn.textContent = T.shuffle;
+        els.learnedBtn.textContent = T.learned;
+        els.hint.textContent = T.hint;
+        els.cardsLeftLabel.textContent = T.cardsLeft;
+        els.frontLangBadge.textContent = T.front + ' · ' + (LANG_NAMES[uiLang][getFrontLang()] || '');
+        els.backLangBadge.textContent = T.back + ' · ' + (LANG_NAMES[uiLang][targetLang] || '');
+        Array.from(els.targetLang.options).forEach(opt => {
+          opt.textContent = LANG_NAMES[uiLang][opt.value];
+        });
+      }
+
+      function getFrontLang() {
+        let front = ['en','es','fr','ja'].includes(uiLang) ? uiLang : 'en';
+        if (front === targetLang) {
+          front = (targetLang === 'en') ? 'es' : 'en';
+        }
+        return front;
+      }
+
+      function fisherYates(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      function resetDeck() {
+        learned = new Set();
+        order = fisherYates(PHRASES.map((_, i) => i));
+        currentIdx = 0;
+        els.card.classList.remove('flipped');
+        updateCard(true);
+        updateProgress();
+      }
+
+      function updateProgress() {
+        const left = PHRASES.length - learned.size;
+        const total = PHRASES.length;
+        els.progressBar.style.width = ((total - left) / total * 100).toFixed(1) + '%';
+        els.progressCount.textContent = (left) + ' / ' + total;
+        els.learnedBtn.disabled = left === 0;
+        els.shuffleBtn.disabled = left <= 1;
+      }
+
+      function currentPhrase() {
+        if (learned.size >= PHRASES.length) return null;
+        const idx = order[currentIdx];
+        return PHRASES[idx];
+      }
+
+      function updateCard(animateIn = false) {
+        const p = currentPhrase();
+        const T = UI_STRINGS[uiLang] || UI_STRINGS.en;
+        if (!p) {
+          els.frontText.textContent = T.empty;
+          els.backText.textContent = '✓';
+          els.frontLangBadge.textContent = T.front;
+          els.backLangBadge.textContent = T.back;
+          return;
+        }
+        const frontLang = getFrontLang();
+        els.frontText.textContent = p[frontLang];
+        els.backText.textContent = p[targetLang];
+        els.frontLangBadge.textContent = (UI_STRINGS[uiLang]?.front || 'Front') + ' · ' + LANG_NAMES[uiLang][frontLang];
+        els.backLangBadge.textContent = (UI_STRINGS[uiLang]?.back || 'Back') + ' · ' + LANG_NAMES[uiLang][targetLang];
+        if (animateIn) {
+          els.card.classList.remove('out');
+          void els.card.offsetWidth; // reflow
+          els.card.classList.add('in');
+          setTimeout(() => els.card.classList.remove('in'), 420);
+        }
+      }
+
+      function flipCard() {
+        if (locked) return;
+        els.card.classList.toggle('flipped');
+        const pressed = els.card.classList.contains('flipped');
+        els.card.setAttribute('aria-pressed', String(pressed));
+      }
+
+      function markLearned() {
+        if (locked) return;
+        const p = currentPhrase();
+        if (!p) return;
+        locked = true;
+        els.card.classList.add('out');
+        setTimeout(() => {
+          learned.add(p.id);
+          order = order.filter(i => PHRASES[i].id !== p.id);
+          if (order.length === 0) {
+            updateProgress();
+            els.card.classList.remove('out');
+            els.card.classList.remove('flipped');
+            updateCard();
+            locked = false;
+            return;
+          }
+          currentIdx = currentIdx % order.length;
+          els.card.classList.remove('flipped');
+          updateProgress();
+          updateCard(true);
+          locked = false;
+        }, 420);
+      }
+
+      function shuffleDeck() {
+        if (locked) return;
+        const remaining = order.length;
+        if (remaining <= 1) return;
+        els.card.classList.add('shuffle-anim');
+        setTimeout(() => {
+          els.card.classList.remove('shuffle-anim');
+        }, 420);
+        // rotate current card to a different spot and reshuffle order
+        order = fisherYates(order);
+        currentIdx = 0;
+        els.card.classList.remove('flipped');
+        updateCard();
+      }
+
+      function bindEvents() {
+        els.card.addEventListener('click', flipCard);
+        els.card.addEventListener('keydown', (e) => {
+          if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
+          if (e.key === 'ArrowRight') { markLearned(); }
+          if (e.key === 'ArrowLeft') { shuffleDeck(); }
+        });
+
+        els.shuffleBtn.addAction = 'shuffle';
+        els.learnedBtn.addAction = 'learned';
+        els.shuffleBtn.addEventListener('click', shuffleDeck);
+        els.learnedBtn.addEventListener('click', markLearned);
+
+        els.targetLang.addEventListener('change', () => {
+          targetLang = els.targetLang.value;
+          setUIText();
+          resetDeck();
+        });
+
+        window.addEventListener('resize', () => { void els.card.offsetWidth; });
+      }
+
+      function init() {
+        document.documentElement.lang = uiLang;
+        const guessTarget = (uiLang === 'en') ? 'es' : 'en';
+        targetLang = guessTarget;
+        els.targetLang.value = targetLang;
+        setUIText();
+        bindEvents();
+        resetDeck();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

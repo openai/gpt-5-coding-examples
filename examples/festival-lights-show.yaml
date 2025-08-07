@@ -1,0 +1,11 @@
+id: festival-lights-show
+title: Festival Lights Show
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Festival Lights Show
+  - Goal: Control a virtual light show.
+  - Features: Color changes, patterns, music sync.
+  - The UI should be vibrant and dynamic.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/festival-lights-show.png
+tags:
+  - interactive

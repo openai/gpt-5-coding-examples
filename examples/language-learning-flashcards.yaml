@@ -1,0 +1,12 @@
+id: language-learning-flashcards
+title: Language Learning Flashcards
+prompt: |
+  Create a single-page app in a single HTML file for interactive language flashcards.
+  - Ask a visitor which language they want to learn (English, Spanish, French, or Japanese)
+  - Consider visitor's locale to translate the UI by default
+  - Display cards with flip animations to reveal the translation on the back.
+  - Create 10 built-in questions for each language; these ten should be useful phrases when traveling.
+  - Include a “shuffle” and “mark as learned” function with smooth animations.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/language-learning-flashcards.png
+tags:
+  - app

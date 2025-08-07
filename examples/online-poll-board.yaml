@@ -1,0 +1,11 @@
+id: online-poll-board
+title: Online Poll Board
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Online Poll Board
+  - Goal: Let visitors vote on topics (mock).
+  - Features: List of polls, vote count animations, results display.
+  - The UI should be engaging and easy to use; the background should be a light delightful color.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/online-poll-board.png
+tags:
+  - app

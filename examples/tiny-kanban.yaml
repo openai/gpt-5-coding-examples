@@ -1,0 +1,11 @@
+id: tiny-kanban
+title: Tiny Kanban
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Tiny Kanban
+  - Goal: Enable Todo → Doing → Done workflow.
+  - Features: Drag cards, WIP limits, priority colors, assign to people, search filter, delete items.
+  - The UI, font size, and colors etc. should be suitable for daily standup meetings.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/tiny-kanban.png
+tags:
+  - app

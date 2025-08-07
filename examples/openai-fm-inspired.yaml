@@ -1,0 +1,7 @@
+id: openai-fm-inspired
+title: OpenAI.fm Inspired
+prompt: |
+  Create a single-page app in a single HTML file that is inspired by https://openai.fm/
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/openai-fm-inspired.png
+tags:
+  - landing

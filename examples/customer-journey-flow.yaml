@@ -1,0 +1,11 @@
+id: customer-journey-flow
+title: Customer Journey Flow
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: Customer Journey Flow
+  - Goal: Visualize a customer’s steps from awareness to purchase.
+  - Features: Editable stages, drag-and-drop connections.
+  - The UI should be clean and diagram-like.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/customer-journey-flow.png
+tags:
+  - tool

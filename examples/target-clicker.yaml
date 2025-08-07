@@ -1,0 +1,10 @@
+id: target-clicker
+title: Target Clicker
+prompt: |
+  Create a single-page app in a single HTML file for a target clicking challenge.
+  - Random targets appear briefly around the screen — click them to score.
+  - Game runs for 20 seconds; show score and accuracy at the end.
+  - Use colorful animated targets and a modern scoreboard overlay. The background should be a light color.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/target-clicker.png
+tags:
+  - game

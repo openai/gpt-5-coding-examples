@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kinetic Typography Studio</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #171924;
+        --panel-2: #1e2130;
+        --ink: #e7e9ef;
+        --muted: #9aa3b2;
+        --accent: #7dd3fc;
+        --accent-2: #a78bfa;
+        --danger: #f87171;
+        --ok: #34d399;
+        --warn: #fbbf24;
+        --track: #2a2f45;
+        --key: #8b5cf6;
+        --key-ghost: #4338ca;
+        --grid: #2a2d3a;
+        --focus: #60a5fa;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
+          Cantarell, Noto Sans, sans-serif;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        background: var(--panel-2);
+        border: 1px solid #2a2d3a;
+        border-radius: 10px;
+        padding: 0.5rem 0.7rem;
+        cursor: pointer;
+      }
+      button:hover {
+        filter: brightness(1.1);
+      }
+
+      /* Form fields: high-contrast surfaces */
+      input[type="number"],
+      input[type="text"],
+      input[type="file"],
+      select,
+      textarea {
+        background: #0f1322;
+        border: 1px solid #2a2d3a;
+        border-radius: 10px;
+        padding: 0.45rem 0.55rem;
+        color: var(--ink);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+      input[type="file"] {
+        padding: 0.35rem 0.5rem;
+      }
+      input[type="color"] {
+        background: transparent;
+        border: none;
+        padding: 0;
+      }
+      input::placeholder,
+      textarea::placeholder {
+        color: var(--muted);
+      }
+      select {
+        appearance: none;
+      }
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
+      textarea#text {
+        min-height: 96px;
+        background: #0f1322;
+      }
+      button[aria-pressed="true"] {
+        outline: 2px solid var(--accent);
+      }
+      .row {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .app {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        grid-template-columns: 300px 1fr 320px;
+        grid-template-areas:
+          "top top top"
+          "left stage right"
+          "timeline timeline timeline";
+        height: 100vh;
+        overflow: hidden;
+      }
+      header {
+        grid-area: top;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.8rem;
+        background: linear-gradient(180deg, #161926, #10131c);
+        border-bottom: 1px solid #212435;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      header .title {
+        font-weight: 650;
+        letter-spacing: 0.2px;
+      }
+      header .sp {
+        flex: 1;
+      }
+      .panel {
+        background: var(--panel);
+        border-right: 1px solid #22263a;
+        box-shadow: var(--shadow) inset 0 0 0 rgba(0, 0, 0, 0);
+      }
+      .left {
+        grid-area: left;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+      .right {
+        grid-area: right;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        border-left: 1px solid #22263a;
+      }
+      .section {
+        padding: 12px;
+      }
+      .section h3 {
+        margin: 0.2rem 0 0.6rem;
+        font-size: 0.9rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+      .control {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.35rem 0;
+      }
+      .control label {
+        color: var(--muted);
+      }
+      .control input[type="range"] {
+        width: 100%;
+      }
+      .control input[type="color"] {
+        padding: 0;
+        border: none;
+        background: transparent;
+      }
+      .seg {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .seg button {
+        padding: 0.35rem 0.5rem;
+        border-radius: 8px;
+        background: #1b1f2d;
+      }
+      .seg button[aria-pressed="true"] {
+        background: #243047;
+      }
+
+      .stage-wrap {
+        grid-area: stage;
+        display: grid;
+        grid-template-rows: 1fr auto;
+        min-height: 0;
+      }
+      .stage {
+        position: relative;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: #0b0d13;
+      }
+      .safe-guides {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .safe-guides .g {
+        position: absolute;
+        border: 1px dashed #3b405a;
+        opacity: 0.6;
+      }
+      .aspect {
+        position: relative;
+        background: radial-gradient(1200px 600px at 0 0, #0a0d16, #0a0c12),
+          linear-gradient(
+            90deg,
+            transparent 49.5%,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent 50.5%
+          ),
+          linear-gradient(
+            transparent 49.5%,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent 50.5%
+          );
+        /* grid overlay */
+        background-size: 100% 100%, 20px 20px, 20px 20px;
+        outline: 1px solid #23283e;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+      }
+      canvas#preview {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .timeline {
+        grid-area: timeline;
+        background: var(--panel);
+        border-top: 1px solid #22263a;
+        min-height: 210px;
+        max-height: 45vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+      .timebar {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        align-items: center;
+        border-bottom: 1px solid #22263a;
+      }
+      .timebar .lhs {
+        padding: 0.4rem 0.6rem;
+        color: var(--muted);
+      }
+      .ruler {
+        position: relative;
+        height: 40px;
+        background: #141827;
+      }
+      .ruler .mark {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: #27304a;
+      }
+      .ruler .label {
+        position: absolute;
+        top: 2px;
+        font-size: 0.72rem;
+        color: #8a93a8;
+      }
+      .tracks {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        min-height: 0;
+      }
+      .track-names {
+        border-right: 1px solid #22263a;
+      }
+      .track-names .name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.6rem;
+        border-bottom: 1px solid #22263a;
+        color: #b6bed0;
+      }
+      .track-area {
+        position: relative;
+        overflow: auto;
+      }
+      .grid {
+        position: relative;
+      }
+      .grid::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 9px,
+            rgba(255, 255, 255, 0.04) 10px
+          ),
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 19px,
+            rgba(255, 255, 255, 0.03) 20px
+          );
+        pointer-events: none;
+      }
+      .key {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: var(--key);
+        border: 1px solid #c4b5fd;
+        transform: translate(-5px, -5px);
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      .key.sel {
+        outline: 2px solid var(--focus);
+      }
+      .playhead {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #60a5fa;
+      }
+
+      .kbd {
+        display: inline-block;
+        padding: 0.1rem 0.35rem;
+        border: 1px solid #2b3147;
+        border-bottom-color: #1a1e2e;
+        border-radius: 6px;
+        background: #101324;
+        box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+        font-size: 0.85em;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .fx-heavy {
+          display: none;
+        }
+      }
+
+      /* Dialogs */
+      dialog {
+        border: none;
+        border-radius: 12px;
+        background: #121628;
+        color: var(--ink);
+        box-shadow: var(--shadow);
+        max-width: min(900px, 92vw);
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .dialog-body {
+        padding: 1rem;
+      }
+
+      /* Responsive tweaks */
+      @media (max-width: 1100px) {
+        .app {
+          grid-template-columns: 260px 1fr 280px;
+        }
+      }
+      @media (max-width: 900px) {
+        .app {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto 1fr auto;
+          grid-template-areas: "top" "left" "stage" "timeline";
+        }
+        .right {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" role="application" aria-label="Kinetic Typography Studio">
+      <header>
+        <div class="title" aria-label="App title">
+          Kinetic Typography Studio
+        </div>
+        <div class="sp"></div>
+        <button id="btnPlay" aria-label="Play/Pause" title="Space">
+          ▶︎ Play
+        </button>
+        <button id="btnExport" aria-label="Export" title="Export (E)">
+          Export
+        </button>
+        <button id="btnProject" aria-label="Project menu" title="Project (P)">
+          Project
+        </button>
+      </header>
+
+      <!-- LEFT: Content & Style -->
+      <aside class="panel left" aria-label="Left controls">
+        <div class="section">
+          <h3>Content</h3>
+          <div class="control">
+            <label for="text">Text</label
+            ><textarea id="text" rows="3" aria-label="Text content"></textarea>
+          </div>
+          <div class="control">
+            <label for="split">Animate By</label>
+            <select id="split" aria-label="Animate by">
+              <option value="letters">Letters</option>
+              <option value="words">Words</option>
+              <option value="lines">Lines</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="stagger">Stagger (ms)</label
+            ><input id="stagger" type="number" value="30" min="0" step="5" />
+          </div>
+        </div>
+        <div class="section">
+          <h3>Style</h3>
+          <div class="control">
+            <label for="font">Font</label>
+            <select id="font">
+              <option
+                value="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif"
+              >
+                System Sans
+              </option>
+              <option value="Georgia, Times New Roman, serif">Serif</option>
+              <option
+                value="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace"
+              >
+                Monospace
+              </option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="size">Size</label
+            ><input id="size" type="number" value="120" min="6" />
+          </div>
+          <div class="control">
+            <label for="weight">Weight</label
+            ><input
+              id="weight"
+              type="number"
+              value="700"
+              min="100"
+              max="900"
+              step="50"
+            />
+          </div>
+          <div class="control">
+            <label for="italic">Italics</label
+            ><input id="italic" type="checkbox" />
+          </div>
+          <div class="control">
+            <label for="fill">Fill</label
+            ><input id="fill" type="color" value="#e7e9ef" />
+          </div>
+          <div class="control">
+            <label for="stroke">Outline</label
+            ><input id="stroke" type="color" value="#000000" />
+          </div>
+          <div class="control">
+            <label for="strokeW">Outline W</label
+            ><input id="strokeW" type="number" value="0" min="0" max="20" />
+          </div>
+          <div class="control">
+            <label for="shadow">Shadow</label
+            ><input id="shadow" type="checkbox" />
+          </div>
+          <div class="control">
+            <label for="grad">Gradient</label
+            ><input id="grad" type="checkbox" />
+          </div>
+          <div class="control">
+            <label for="blur">Motion Blur</label
+            ><input id="blur" type="checkbox" />
+          </div>
+          <div class="control">
+            <label for="tracking">Tracking</label
+            ><input id="tracking" type="number" value="0" step="0.5" />
+          </div>
+          <div class="control">
+            <label for="bgColor">BG Color</label
+            ><input id="bgColor" type="color" value="#0b0d13" />
+          </div>
+          <div class="control">
+            <label for="bgImg">BG Image</label
+            ><input id="bgImg" type="file" accept="image/*" />
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Layout</h3>
+          <div class="control">
+            <label for="aspect">Aspect</label>
+            <select id="aspect">
+              <option value="1:1">1:1</option>
+              <option value="9:16">9:16</option>
+              <option value="16:9" selected>16:9</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="margins">Margins %</label
+            ><input id="margins" type="number" value="5" min="0" max="30" />
+          </div>
+          <div class="control">
+            <label>Guides</label>
+            <div class="seg" role="group" aria-label="Guides">
+              <button id="gSafe" aria-pressed="true">Safe</button>
+              <button id="gGrid" aria-pressed="true">Grid</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- STAGE -->
+      <main class="stage-wrap">
+        <div class="stage" aria-label="Preview area">
+          <div id="aspectBox" class="aspect" aria-live="polite">
+            <canvas
+              id="preview"
+              width="1280"
+              height="720"
+              aria-label="Preview canvas"
+            ></canvas>
+            <div class="safe-guides" aria-hidden="true">
+              <div id="safeRect" class="g"></div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="section"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            justify-content: space-between;
+          "
+        >
+          <div class="hint">
+            Shortcuts: <span class="kbd">Space</span> Play/Pause ·
+            <span class="kbd">←/→</span> Step ·
+            <span class="kbd">Cmd/Ctrl+S</span> Save ·
+            <span class="kbd">Cmd/Ctrl+O</span> Open
+          </div>
+          <div class="row">
+            <label class="hint"
+              >FPS
+              <input
+                id="fps"
+                type="number"
+                value="30"
+                min="1"
+                max="120"
+                style="width: 70px"
+            /></label>
+            <label class="hint"
+              >Dur(s)
+              <input
+                id="dur"
+                type="number"
+                value="6"
+                min="0.5"
+                step="0.5"
+                style="width: 70px"
+            /></label>
+            <label class="hint"
+              >Res
+              <select id="res">
+                <option value="1280x720">1280×720</option>
+                <option value="1920x1080" selected>1920×1080</option>
+                <option value="1080x1920">1080×1920</option>
+                <option value="1080x1080">1080×1080</option>
+              </select></label
+            >
+          </div>
+        </div>
+      </main>
+
+      <!-- RIGHT: Presets & Audio -->
+      <aside class="panel right" aria-label="Right controls">
+        <div class="section">
+          <h3>Presets</h3>
+          <div class="seg" role="group" aria-label="Animation presets">
+            <button class="preset" data-p="typewriter">Typewriter</button>
+            <button class="preset" data-p="fadeup">Fade‑Up</button>
+            <button class="preset" data-p="bounce">Bounce</button>
+            <button class="preset" data-p="liquid">Liquid</button>
+            <button class="preset" data-p="glitch">Glitch</button>
+            <button class="preset" data-p="cascade">Cascade</button>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Easing</h3>
+          <div class="control">
+            <label for="easePreset">Preset</label>
+            <select id="easePreset">
+              <option value="ease">ease</option>
+              <option value="linear">linear</option>
+              <option value="ease-in">ease-in</option>
+              <option value="ease-out" selected>ease-out</option>
+              <option value="ease-in-out">ease-in-out</option>
+              <option value="custom">custom</option>
+            </select>
+          </div>
+          <div class="control">
+            <label>Bezier</label>
+            <canvas
+              id="bezier"
+              width="240"
+              height="160"
+              style="
+                background: #0f1322;
+                border: 1px solid #242a40;
+                border-radius: 8px;
+              "
+            ></canvas>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Audio‑Reactive</h3>
+          <div class="control">
+            <label for="audioFile">Audio</label
+            ><input id="audioFile" type="file" accept="audio/*" />
+          </div>
+          <div class="control">
+            <label>BPM</label
+            ><input
+              id="bpm"
+              type="number"
+              value="120"
+              min="40"
+              max="240"
+              step="1"
+            />
+          </div>
+          <div class="control">
+            <label>Snap</label>
+            <div class="seg" role="group" aria-label="Snap grid">
+              <button class="snap" data-s="off" aria-pressed="true">Off</button>
+              <button class="snap" data-s="beats">Beats</button>
+              <button class="snap" data-s="bars">Bars</button>
+            </div>
+          </div>
+          <div class="control">
+            <label>Detect BPM</label><button id="detectBpm">Analyze</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- TIMELINE -->
+      <section class="timeline" aria-label="Timeline editor">
+        <div class="timebar">
+          <div class="lhs">Tracks</div>
+          <div class="ruler" id="ruler" aria-hidden="true"></div>
+        </div>
+        <div class="tracks">
+          <div class="track-names" id="trackNames"></div>
+          <div
+            class="track-area"
+            id="trackArea"
+            tabindex="0"
+            aria-label="Keyframe area"
+          >
+            <div class="grid" id="grid"></div>
+            <div class="playhead" id="playhead"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Export dialog -->
+    <dialog id="exportDlg" aria-label="Export dialog">
+      <div class="dialog-body col">
+        <h2 style="margin: 0.2rem 0 0.6rem">Export</h2>
+        <div class="row" style="gap: 1rem; flex-wrap: wrap">
+          <label
+            >Format
+            <select id="exFmt">
+              <option value="webm" selected>WebM (video)</option>
+              <option value="gif" disabled>GIF (coming)</option>
+              <option value="pngseq">PNG Sequence (.zip)</option>
+            </select>
+          </label>
+          <label
+            >FPS <input id="exFps" type="number" value="30" min="1" max="60"
+          /></label>
+          <label
+            >Duration(s)
+            <input id="exDur" type="number" value="6" step="0.5" min="0.5"
+          /></label>
+          <label
+            >Resolution
+            <select id="exRes">
+              <option>1280x720</option>
+              <option selected>1920x1080</option>
+              <option>1080x1920</option>
+              <option>1080x1080</option>
+            </select>
+          </label>
+          <label
+            >Motion blur samples
+            <input id="exSamples" type="number" value="1" min="1" max="8"
+          /></label>
+        </div>
+        <div class="row" style="justify-content: flex-end">
+          <button id="exStart">Start Export</button>
+          <button id="exClose">Close</button>
+        </div>
+        <div
+          id="exStatus"
+          class="hint"
+          aria-live="polite"
+          style="margin-top: 0.5rem"
+        ></div>
+      </div>
+    </dialog>
+
+    <!-- Project dialog -->
+    <dialog id="projDlg" aria-label="Project dialog">
+      <div class="dialog-body col">
+        <h2 style="margin: 0.2rem 0 0.6rem">Project</h2>
+        <div class="row" style="gap: 1rem; flex-wrap: wrap">
+          <button id="btnSave">Save JSON</button>
+          <button id="btnLoad">Load JSON</button>
+          <input
+            type="file"
+            id="loadInput"
+            accept="application/json"
+            style="display: none"
+          />
+        </div>
+        <p class="hint">
+          Project files are portable JSON. Exported videos render without UI
+          chrome.
+        </p>
+        <div class="row" style="justify-content: flex-end">
+          <button id="projClose">Close</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      (function () {
+        "use strict";
+
+        // ---------- Utilities ----------
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+        const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const easeFuncs = {
+          linear: (t) => t,
+          ease: (t) => cubicBezier(0.25, 0.1, 0.25, 1)(t),
+          "ease-in": (t) => cubicBezier(0.42, 0, 1, 1)(t),
+          "ease-out": (t) => cubicBezier(0, 0, 0.58, 1)(t),
+          "ease-in-out": (t) => cubicBezier(0.42, 0, 0.58, 1)(t),
+        };
+        function cubicBezier(p0x, p0y, p1x, p1y) {
+          // Returns function(t)
+          function cx(t) {
+            return (
+              3 * p0x * (1 - t) * (1 - t) +
+              3 * (1 - 3 * p0x) * (t * (1 - t)) +
+              t * t * t
+            );
+          }
+          function cy(t) {
+            return (
+              3 * p0y * (1 - t) * (1 - t) +
+              3 * (1 - 3 * p0y) * (t * (1 - t)) +
+              t * t * t
+            );
+          }
+          // Use Newton-Raphson on x to invert, then y.
+          return function (t) {
+            let x = t,
+              i = 0;
+            for (; i < 5; i++) {
+              const f = cx(x) - t;
+              const df =
+                3 * (-2 * p0x * (1 - x) + (1 - 3 * p0x) * (1 - 2 * x) + x * x);
+              if (Math.abs(f) < 1e-4) break;
+              x -= f / (df || 1e-6);
+              x = clamp(x, 0, 1);
+            }
+            // Compute y given x
+            const y = cy(x);
+            return clamp(y, 0, 1);
+          };
+        }
+        function downloadBlob(blob, name) {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = name;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            URL.revokeObjectURL(a.href);
+            a.remove();
+          }, 0);
+        }
+        function fmtTime(ms) {
+          const s = ms / 1000;
+          const m = Math.floor(s / 60);
+          const rs = (s % 60).toFixed(2).padStart(5, "0");
+          return `${m}:${rs}`;
+        }
+
+        // Minimal ZIP writer (store only)
+        async function zipStore(files) {
+          // files: [{name: 'frame0001.png', blob}]
+          const enc = new TextEncoder();
+          let parts = [],
+            central = [],
+            offset = 0;
+          let fileIndex = 0;
+          for (const f of files) {
+            const buf = await f.blob.arrayBuffer();
+            const nameBytes = enc.encode(f.name);
+            const crc = crc32(new Uint8Array(buf));
+            const local = new DataView(new ArrayBuffer(30));
+            let p = 0;
+            local.setUint32(p, 0x04034b50, true);
+            p += 4; // sig
+            local.setUint16(p, 20, true);
+            p += 2; // ver
+            local.setUint16(p, 0, true);
+            p += 2; // flags
+            local.setUint16(p, 0, true);
+            p += 2; // method store
+            local.setUint16(p, 0, true);
+            p += 2; // time
+            local.setUint16(p, 0, true);
+            p += 2; // date
+            local.setUint32(p, crc, true);
+            p += 4;
+            local.setUint32(p, buf.byteLength, true);
+            p += 4; // comp size
+            local.setUint32(p, buf.byteLength, true);
+            p += 4; // uncomp size
+            local.setUint16(p, nameBytes.length, true);
+            p += 2; // name len
+            local.setUint16(p, 0, true);
+            p += 2; // extra len
+            parts.push(new Uint8Array(local.buffer));
+            parts.push(nameBytes);
+            parts.push(new Uint8Array(buf));
+
+            // central dir header
+            const cd = new DataView(new ArrayBuffer(46));
+            p = 0;
+            cd.setUint32(p, 0x02014b50, true);
+            p += 4;
+            cd.setUint16(p, 20, true);
+            p += 2; // ver made by
+            cd.setUint16(p, 20, true);
+            p += 2; // ver needed
+            cd.setUint16(p, 0, true);
+            p += 2; // flags
+            cd.setUint16(p, 0, true);
+            p += 2; // store
+            cd.setUint16(p, 0, true);
+            p += 2; // time
+            cd.setUint16(p, 0, true);
+            p += 2; // date
+            cd.setUint32(p, crc, true);
+            p += 4;
+            cd.setUint32(p, buf.byteLength, true);
+            p += 4;
+            cd.setUint32(p, buf.byteLength, true);
+            p += 4;
+            cd.setUint16(p, nameBytes.length, true);
+            p += 2;
+            cd.setUint16(p, 0, true);
+            p += 2; // extra
+            cd.setUint16(p, 0, true);
+            p += 2; // comment
+            cd.setUint16(p, 0, true);
+            p += 2; // disk
+            cd.setUint16(p, 0, true);
+            p += 2; // int attrs
+            cd.setUint32(p, 0, true);
+            p += 4; // ext attrs
+            cd.setUint32(p, offset, true);
+            p += 4; // local header rel offset
+            central.push(new Uint8Array(cd.buffer));
+            central.push(nameBytes);
+
+            // Update offset
+            offset += 30 + nameBytes.length + buf.byteLength;
+            fileIndex++;
+          }
+          // End of central dir
+          const centralSize = central.reduce((a, b) => a + b.byteLength, 0);
+          const centralOffset = offset;
+          const eocd = new DataView(new ArrayBuffer(22));
+          let q = 0;
+          eocd.setUint32(q, 0x06054b50, true);
+          q += 4;
+          eocd.setUint16(q, 0, true);
+          q += 2; // disk
+          eocd.setUint16(q, 0, true);
+          q += 2; // start disk
+          eocd.setUint16(q, fileIndex, true);
+          q += 2;
+          eocd.setUint16(q, fileIndex, true);
+          q += 2;
+          eocd.setUint32(q, centralSize, true);
+          q += 4;
+          eocd.setUint32(q, centralOffset, true);
+          q += 4;
+          eocd.setUint16(q, 0, true);
+          q += 2; // comment len
+
+          const all = new Blob(
+            [...parts, ...central, new Uint8Array(eocd.buffer)],
+            { type: "application/zip" }
+          );
+          return all;
+        }
+        // CRC32 table
+        const CRC_TABLE = new Uint32Array(256).map((_, n) => {
+          let c = n;
+          for (let k = 0; k < 8; k++) {
+            c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+          }
+          return c >>> 0;
+        });
+        function crc32(bytes) {
+          let c = ~0;
+          for (let i = 0; i < bytes.length; i++) {
+            c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+          }
+          return ~c >>> 0;
+        }
+
+        // ---------- State ----------
+        const state = {
+          text: "Kinetic\nTypography",
+          split: "letters",
+          stagger: 30,
+          style: {
+            font: "system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif",
+            size: 120,
+            weight: 700,
+            italic: false,
+            fill: "#e7e9ef",
+            stroke: "#000000",
+            strokeW: 0,
+            shadow: false,
+            gradient: false,
+            blur: false,
+            tracking: 0,
+          },
+          layout: {
+            aspect: "16:9",
+            margins: 5,
+            showSafe: true,
+            showGrid: true,
+            bgColor: "#0b0d13",
+            bgImg: null,
+          },
+          timing: { fps: 30, duration: 6_000, width: 1920, height: 1080 },
+          easing: { preset: "ease-out", custom: [0.17, 0.67, 0.32, 0.97] },
+          audio: { bpm: 120, snap: "off", buffer: null },
+          tracks: [
+            {
+              name: "Position X",
+              key: [
+                { t: 0, v: 0 },
+                { t: 3000, v: 0 },
+              ],
+            },
+            {
+              name: "Position Y",
+              key: [
+                { t: 0, v: 0 },
+                { t: 3000, v: 0 },
+              ],
+            },
+            {
+              name: "Scale",
+              key: [
+                { t: 0, v: 1 },
+                { t: 3000, v: 1 },
+              ],
+            },
+            {
+              name: "Rotation",
+              key: [
+                { t: 0, v: 0 },
+                { t: 3000, v: 0 },
+              ],
+            },
+            {
+              name: "Opacity",
+              key: [
+                { t: 0, v: 0 },
+                { t: 800, v: 1 },
+              ],
+            },
+            {
+              name: "Tracking",
+              key: [
+                { t: 0, v: 0 },
+                { t: 3000, v: 0 },
+              ],
+            },
+            {
+              name: "Glyph Offset",
+              key: [
+                { t: 0, v: 0 },
+                { t: 3000, v: 0 },
+              ],
+            },
+          ],
+          t: 0,
+          playing: false,
+        };
+
+        // DOM refs
+        const canvas = $("#preview");
+        const ctx = canvas.getContext("2d");
+        const aspectBox = $("#aspectBox");
+        const safeRect = $("#safeRect");
+        const playBtn = $("#btnPlay");
+        const fpsIn = $("#fps");
+        const durIn = $("#dur");
+        const resSel = $("#res");
+
+        // Init inputs
+        $("#text").value = state.text;
+        $("#split").value = state.split;
+        $("#stagger").value = state.stagger;
+        $("#font").value = state.style.font;
+        $("#size").value = state.style.size;
+        $("#weight").value = state.style.weight;
+        $("#italic").checked = state.style.italic;
+        $("#fill").value = state.style.fill;
+        $("#stroke").value = state.style.stroke;
+        $("#strokeW").value = state.style.strokeW;
+        $("#shadow").checked = state.style.shadow;
+        $("#grad").checked = state.style.gradient;
+        $("#blur").checked = state.style.blur;
+        $("#tracking").value = state.style.tracking;
+        $("#bgColor").value = state.layout.bgColor;
+        $("#margins").value = state.layout.margins;
+        $("#aspect").value = state.layout.aspect;
+        $("#gSafe").setAttribute("aria-pressed", state.layout.showSafe);
+        $("#gGrid").setAttribute("aria-pressed", state.layout.showGrid);
+        fpsIn.value = state.timing.fps;
+        durIn.value = (state.timing.duration / 1000).toString();
+        resSel.value = `${state.timing.width}x${state.timing.height}`;
+        $("#easePreset").value = state.easing.preset;
+        $("#bpm").value = state.audio.bpm;
+
+        // Tracks UI build
+        const trackNames = $("#trackNames");
+        const trackArea = $("#trackArea");
+        const grid = $("#grid");
+        const playhead = $("#playhead");
+        function rebuildTracks() {
+          trackNames.innerHTML = "";
+          grid.innerHTML = "";
+          state.tracks.forEach((tr, idx) => {
+            const row = document.createElement("div");
+            row.className = "name";
+            row.textContent = tr.name;
+            trackNames.appendChild(row);
+            // keys
+            tr.key.forEach((k, i) => {
+              const d = document.createElement("div");
+              d.className = "key";
+              d.dataset.t = k.t;
+              d.dataset.track = idx;
+              d.dataset.i = i;
+              grid.appendChild(d);
+            });
+            // row separator
+            const sep = document.createElement("div");
+            sep.style.position = "absolute";
+            sep.style.left = "0";
+            sep.style.right = "0";
+            sep.style.height = "1px";
+            sep.style.background = "#22263a";
+            sep.style.top = `${(idx + 1) * 32}px`;
+            grid.appendChild(sep);
+          });
+          layoutTimeline();
+        }
+        function layoutTimeline() {
+          const pxPerMs = 0.08; // timeline zoom
+          const total = state.timing.duration;
+          // grid area size
+          grid.style.height = `${state.tracks.length * 32}px`;
+          grid.style.minWidth = `${Math.max(
+            trackArea.clientWidth,
+            total * pxPerMs + 40
+          )}px`;
+          // position keys
+          $$(".key").forEach((k) => {
+            const t = +k.dataset.t;
+            const y = parseInt(k.dataset.track, 10) * 32 + 16;
+            const x = t * pxPerMs + 40;
+            k.style.left = `${x}px`;
+            k.style.top = `${y}px`;
+          });
+          playhead.style.left = `${state.t * pxPerMs + 40}px`;
+          // ruler
+          const ruler = $("#ruler");
+          ruler.innerHTML = "";
+          for (let ms = 0; ms <= total; ms += 500) {
+            const m = document.createElement("div");
+            m.className = "mark";
+            m.style.left = `${ms * pxPerMs + 40}px`;
+            m.style.opacity = ms % 1000 === 0 ? 1 : 0.6;
+            m.style.height = ms % 1000 === 0 ? "100%" : "60%";
+            ruler.appendChild(m);
+            const l = document.createElement("div");
+            l.className = "label";
+            l.style.left = `${ms * pxPerMs + 44}px`;
+            l.textContent = fmtTime(ms);
+            if (ms % 1000 === 0) ruler.appendChild(l);
+          }
+        }
+        rebuildTracks();
+
+        // Keyframe interactions
+        let dragKey = null,
+          dragOffset = 0;
+        trackArea.addEventListener("pointerdown", (e) => {
+          const target = e.target.closest(".key");
+          trackArea.setPointerCapture(e.pointerId);
+          if (target) {
+            dragKey = target;
+            dragOffset = e.clientX - target.offsetLeft;
+            target.classList.add("sel");
+          } else {
+            // move playhead
+            const rect = grid.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const t = (x - 40) / 0.08;
+            state.t = clamp(t, 0, state.timing.duration);
+            layoutTimeline();
+          }
+        });
+        trackArea.addEventListener("pointermove", (e) => {
+          if (!dragKey) return;
+          const rect = grid.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const t = (x - dragOffset) / 0.08;
+          const snap = state.audio.snap;
+          let tt = clamp(t, 0, state.timing.duration);
+          if (snap !== "off") {
+            const beatMs = 60000 / state.audio.bpm;
+            const barMs = beatMs * 4;
+            const gridMs = snap === "beats" ? beatMs : barMs;
+            tt = Math.round(tt / gridMs) * gridMs;
+          }
+          dragKey.dataset.t = Math.round(tt);
+          layoutTimeline();
+        });
+        window.addEventListener("pointerup", () => {
+          if (dragKey) {
+            const tr = state.tracks[+dragKey.dataset.track];
+            const i = +dragKey.dataset.i;
+            tr.key[i].t = +dragKey.dataset.t;
+            dragKey.classList.remove("sel");
+            dragKey = null;
+            render();
+          }
+        });
+        trackArea.addEventListener("dblclick", (e) => {
+          // add key at position in first track as example
+          const rect = grid.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const t = Math.round((x - 40) / 0.08);
+          const tr = state.tracks[0];
+          tr.key.push({ t, v: 0 });
+          rebuildTracks();
+        });
+
+        // ---------- Rendering ----------
+        let lastTs = 0,
+          rafId = null;
+        function getEase() {
+          if (state.easing.preset === "custom") {
+            const [x1, y1, x2, y2] = state.easing.custom;
+            return cubicBezier(x1, y1, x2, y2);
+          }
+          return easeFuncs[state.easing.preset] || easeFuncs["linear"];
+        }
+        function sampleTrack(name) {
+          const tr = state.tracks.find((t) => t.name === name);
+          if (!tr || tr.key.length === 0) return 0;
+          const t = state.t;
+          const key = [...tr.key].sort((a, b) => a.t - b.t);
+          if (t <= key[0].t) return key[0].v;
+          if (t >= key.at(-1).t) return key.at(-1).v;
+          let a = key[0],
+            b = key[1];
+          for (let i = 1; i < key.length; i++) {
+            if (t < key[i].t) {
+              a = key[i - 1];
+              b = key[i];
+              break;
+            }
+          }
+          const u = (t - a.t) / (b.t - a.t);
+          const e = getEase()(u);
+          return lerp(a.v, b.v, e);
+        }
+        function renderFrame(ctx, w, h, timeMs, samples = 1) {
+          // Heavy effects reduced if prefers-reduced-motion
+          const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+          const S = reduce ? 1 : samples;
+          let acc = null,
+            temp = null;
+          for (let s = 0; s < S; s++) {
+            const t =
+              timeMs +
+              (S > 1 ? (s / (S - 1) - 0.5) * (1000 / state.timing.fps) : 0);
+            // Clear
+            ctx.clearRect(0, 0, w, h);
+            // BG
+            ctx.save();
+            if (state.layout.bgImg) {
+              ctx.drawImage(state.layout.bgImg, 0, 0, w, h);
+            } else {
+              ctx.fillStyle = state.layout.bgColor;
+              ctx.fillRect(0, 0, w, h);
+            }
+            ctx.restore();
+
+            // Compute transforms
+            const px = sampleTrack("Position X");
+            const py = sampleTrack("Position Y");
+            const sc = sampleTrack("Scale");
+            const rot = sampleTrack("Rotation");
+            const op = clamp(sampleTrack("Opacity"), 0, 1);
+            const trk = sampleTrack("Tracking");
+            const gof = sampleTrack("Glyph Offset");
+
+            // Text split
+            const lines = state.text.split(/\n/);
+            const parts = [];
+            if (state.split === "letters") {
+              lines.forEach((ln, li) => {
+                for (let i = 0; i < ln.length; i++) {
+                  parts.push({ text: ln[i], li, wi: i });
+                }
+              });
+            } else if (state.split === "words") {
+              lines.forEach((ln, li) => {
+                const ws = ln.split(/(\s+)/);
+                ws.forEach((w, wi) => parts.push({ text: w, li, wi }));
+              });
+            } else {
+              // lines
+              lines.forEach((ln, li) => parts.push({ text: ln, li, wi: 0 }));
+            }
+
+            // Typography setup
+            const fontStyle = `${state.style.italic ? "italic " : ""}${
+              state.style.weight
+            } ${state.style.size}px ${state.style.font}`;
+            ctx.font = fontStyle;
+            ctx.textBaseline = "alphabetic";
+            ctx.textAlign = "left";
+
+            // Measure block
+            const lineH = state.style.size * 1.2;
+            const blockH = lineH * lines.length;
+            const maxW = Math.max(
+              ...lines.map((l) => ctx.measureText(l).width)
+            );
+            const margin = state.layout.margins / 100;
+            const cx = w * 0.5 + px;
+            const cy = h * 0.5 + py;
+
+            // Build positions per part
+            let idx = 0;
+            const stagger = state.stagger;
+            const start = 0,
+              end = state.timing.duration;
+            const ease = getEase();
+            function animProgress(localIdx) {
+              const d = end - start;
+              const tnorm = clamp(
+                (timeMs - start - localIdx * stagger) / d,
+                0,
+                1
+              );
+              return ease(tnorm);
+            }
+
+            // Shadow
+            if (state.style.shadow) {
+              ctx.shadowColor = "rgba(0,0,0,.45)";
+              ctx.shadowBlur = 20;
+              ctx.shadowOffsetY = 8;
+            }
+
+            // Gradient fill
+            let grad = null;
+            if (state.style.gradient) {
+              grad = ctx.createLinearGradient(
+                cx - maxW / 2,
+                cy - blockH / 2,
+                cx + maxW / 2,
+                cy + blockH / 2
+              );
+              grad.addColorStop(0, state.style.fill);
+              grad.addColorStop(1, "#60a5fa");
+            }
+
+            // Draw per-line to compute positions
+            const safeW = w * (1 - margin * 2);
+            const safeH = h * (1 - margin * 2);
+            let y0 = cy - blockH / 2;
+
+            for (let li = 0; li < lines.length; li++) {
+              const ln = lines[li];
+              // Per-line width with tracking
+              const metrics = ctx.measureText(ln);
+              const lineWidth =
+                metrics.width + (ln.length - 1) * state.style.tracking;
+              let x0 = cx - lineWidth / 2;
+              for (let c = 0; c < ln.length; c++) {
+                const ch = ln[c];
+                const wch = ctx.measureText(ch).width + state.style.tracking;
+                parts[idx] = { text: ch, x: x0, y: y0 + lineH * li, li, wi: c };
+                x0 += wch;
+                idx++;
+              }
+            }
+
+            // Render parts with transforms
+            ctx.save();
+            for (let i = 0; i < parts.length; i++) {
+              const p = parts[i];
+              const prog = animProgress(i);
+              // Derived transforms by tracks + presets flavor
+              const alpha = op * prog;
+              if (alpha <= 0.001) continue;
+              const ox = p.x - cx;
+              const oy = p.y - cy;
+              ctx.save();
+              ctx.translate(cx, cy);
+              ctx.rotate(((rot * Math.PI) / 180) * prog);
+              ctx.scale(lerp(0.7, sc, prog), lerp(0.7, sc, prog));
+              ctx.translate(ox, oy - (1 - prog) * 40 - gof * (1 - prog));
+              ctx.globalAlpha = alpha;
+              // Fill
+              ctx.fillStyle = grad ? grad : state.style.fill;
+              if (
+                state.style.blur &&
+                !matchMedia("(prefers-reduced-motion: reduce)").matches
+              ) {
+                ctx.filter = "blur(0.6px)";
+              }
+              if (state.style.strokeW > 0) {
+                ctx.lineWidth = state.style.strokeW;
+                ctx.strokeStyle = state.style.stroke;
+                ctx.strokeText(p.text, 0, 0);
+              }
+              ctx.fillText(p.text, 0, 0);
+              ctx.filter = "none";
+              ctx.restore();
+            }
+            ctx.restore();
+
+            // Accumulate for motion blur if S>1
+            if (S > 1) {
+              temp = ctx.getImageData(0, 0, w, h);
+              if (!acc) {
+                acc = new Float32Array(w * h * 4);
+              }
+              for (let i = 0; i < acc.length; i++) {
+                acc[i] += temp.data[i];
+              }
+            }
+          }
+          if (S > 1 && acc) {
+            const img = ctx.getImageData(0, 0, w, h);
+            for (let i = 0; i < img.data.length; i++) {
+              img.data[i] = acc[i] / S;
+            }
+            ctx.putImageData(img, 0, 0);
+          }
+        }
+
+        function render() {
+          // Fit aspect box
+          const [aw, ah] = state.layout.aspect.split(":").map(Number);
+          const rect = aspectBox.getBoundingClientRect();
+          const boxRatio = rect.width / rect.height;
+          const want = aw / ah;
+          const w = rect.width;
+          const h = rect.height;
+          const scale = boxRatio > want ? h * want : w;
+          // canvas size follows CSS size
+          const resStr = $("#res").value.split("x");
+          const cw = +resStr[0];
+          const ch = +resStr[1];
+          // keep canvas pixel size constant for crisp preview
+          canvas.width = clamp(cw, 640, 1920);
+          canvas.height = clamp(ch, 360, 1920);
+
+          // Safe area
+          const margin = state.layout.margins / 100;
+          const sw = canvas.width * (1 - margin * 2);
+          const sh = canvas.height * (1 - margin * 2);
+          safeRect.style.left = margin * 100 + "%";
+          safeRect.style.top = margin * 100 + "%";
+          safeRect.style.right = margin * 100 + "%";
+          safeRect.style.bottom = margin * 100 + "%";
+          safeRect.style.display = state.layout.showSafe ? "block" : "none";
+
+          renderFrame(ctx, canvas.width, canvas.height, state.t);
+        }
+
+        function tick(ts) {
+          if (!lastTs) lastTs = ts;
+          const dt = ts - lastTs;
+          lastTs = ts;
+          if (state.playing) {
+            state.t += dt;
+            if (state.t > state.timing.duration) state.t = 0;
+            layoutTimeline();
+            render();
+          }
+          rafId = requestAnimationFrame(tick);
+        }
+        rafId = requestAnimationFrame(tick);
+        render();
+
+        // ---------- Controls wiring ----------
+        function updateAndRender() {
+          render();
+        }
+        $("#text").addEventListener("input", (e) => {
+          state.text = e.target.value;
+          render();
+        });
+        $("#split").addEventListener("change", (e) => {
+          state.split = e.target.value;
+          render();
+        });
+        $("#stagger").addEventListener("input", (e) => {
+          state.stagger = +e.target.value;
+        });
+
+        $("#font").addEventListener("change", (e) => {
+          state.style.font = e.target.value;
+          render();
+        });
+        $("#size").addEventListener("input", (e) => {
+          state.style.size = +e.target.value;
+          render();
+        });
+        $("#weight").addEventListener("input", (e) => {
+          state.style.weight = +e.target.value;
+          render();
+        });
+        $("#italic").addEventListener("change", (e) => {
+          state.style.italic = e.target.checked;
+          render();
+        });
+        $("#fill").addEventListener("input", (e) => {
+          state.style.fill = e.target.value;
+          render();
+        });
+        $("#stroke").addEventListener("input", (e) => {
+          state.style.stroke = e.target.value;
+          render();
+        });
+        $("#strokeW").addEventListener("input", (e) => {
+          state.style.strokeW = +e.target.value;
+          render();
+        });
+        $("#shadow").addEventListener("change", (e) => {
+          state.style.shadow = e.target.checked;
+          render();
+        });
+        $("#grad").addEventListener("change", (e) => {
+          state.style.gradient = e.target.checked;
+          render();
+        });
+        $("#blur").addEventListener("change", (e) => {
+          state.style.blur = e.target.checked;
+          render();
+        });
+        $("#tracking").addEventListener("input", (e) => {
+          state.style.tracking = +e.target.value;
+          render();
+        });
+        $("#bgColor").addEventListener("input", (e) => {
+          state.layout.bgColor = e.target.value;
+          render();
+        });
+        $("#bgImg").addEventListener("change", (e) => {
+          const f = e.target.files[0];
+          if (!f) {
+            state.layout.bgImg = null;
+            render();
+            return;
+          }
+          const img = new Image();
+          img.onload = () => {
+            state.layout.bgImg = img;
+            render();
+          };
+          img.src = URL.createObjectURL(f);
+        });
+
+        $("#aspect").addEventListener("change", (e) => {
+          state.layout.aspect = e.target.value;
+          render();
+        });
+        $("#margins").addEventListener("input", (e) => {
+          state.layout.margins = +e.target.value;
+          render();
+        });
+        $("#gSafe").addEventListener("click", (e) => {
+          const on = e.target.getAttribute("aria-pressed") !== "true";
+          e.target.setAttribute("aria-pressed", on);
+          state.layout.showSafe = on;
+          render();
+        });
+        $("#gGrid").addEventListener("click", (e) => {
+          const on = e.target.getAttribute("aria-pressed") !== "true";
+          e.target.setAttribute(
+            "aria-pressed",
+            on
+          ); /* visual grid baked in bg */
+        });
+
+        fpsIn.addEventListener("input", (e) => {
+          state.timing.fps = +e.target.value;
+        });
+        durIn.addEventListener("input", (e) => {
+          state.timing.duration = Math.max(
+            500,
+            Math.round(+e.target.value * 1000)
+          );
+          layoutTimeline();
+          render();
+        });
+        resSel.addEventListener("change", (e) => {
+          const [w, h] = e.target.value.split("x").map(Number);
+          state.timing.width = w;
+          state.timing.height = h;
+          render();
+        });
+
+        // Play/Pause
+        function togglePlay() {
+          state.playing = !state.playing;
+          playBtn.textContent = state.playing ? "⏸ Pause" : "▶︎ Play";
+        }
+        playBtn.addEventListener("click", togglePlay);
+
+        // Presets
+        $$(".preset").forEach((b) =>
+          b.addEventListener("click", () => {
+            const p = b.dataset.p;
+            if (p === "fadeup") {
+              findTrack("Position Y").key = [
+                { t: 0, v: 40 },
+                { t: 800, v: 0 },
+              ];
+              findTrack("Opacity").key = [
+                { t: 0, v: 0 },
+                { t: 700, v: 1 },
+              ];
+            } else if (p === "typewriter") {
+              state.stagger = 40;
+              $("#stagger").value = 40;
+              findTrack("Opacity").key = [
+                { t: 0, v: 0.001 },
+                { t: 300, v: 1 },
+              ];
+            } else if (p === "bounce") {
+              findTrack("Position Y").key = [
+                { t: 0, v: -60 },
+                { t: 700, v: 0 },
+                { t: 1000, v: -12 },
+                { t: 1200, v: 0 },
+              ];
+              state.easing.preset = "ease-out";
+              $("#easePreset").value = "ease-out";
+            } else if (p === "liquid") {
+              findTrack("Glyph Offset").key = [
+                { t: 0, v: 20 },
+                { t: 500, v: -20 },
+                { t: 1000, v: 20 },
+                { t: 1500, v: -20 },
+                { t: 2000, v: 0 },
+              ];
+            } else if (p === "glitch") {
+              findTrack("Position X").key = [
+                { t: 0, v: -3 },
+                { t: 60, v: 3 },
+                { t: 120, v: -2 },
+                { t: 200, v: 0 },
+              ];
+              findTrack("Opacity").key = [
+                { t: 0, v: 0.8 },
+                { t: 120, v: 1 },
+              ];
+            } else if (p === "cascade") {
+              state.split = "words";
+              $("#split").value = "words";
+              state.stagger = 120;
+              $("#stagger").value = 120;
+              findTrack("Opacity").key = [
+                { t: 0, v: 0 },
+                { t: 600, v: 1 },
+              ];
+              findTrack("Position Y").key = [
+                { t: 0, v: 30 },
+                { t: 600, v: 0 },
+              ];
+            }
+            rebuildTracks();
+            render();
+          })
+        );
+
+        function findTrack(name) {
+          return state.tracks.find((t) => t.name === name);
+        }
+
+        // Easing UI (bezier editor)
+        const bez = $("#bezier");
+        const bctx = bez.getContext("2d");
+        let cp = [...state.easing.custom]; // x1,y1,x2,y2 in [0,1]
+        function drawBezier() {
+          bctx.clearRect(0, 0, bez.width, bez.height);
+          bctx.fillStyle = "#0b0f1b";
+          bctx.fillRect(0, 0, bez.width, bez.height);
+          // grid
+          bctx.strokeStyle = "#243049";
+          bctx.lineWidth = 1;
+          bctx.strokeRect(20, 20, 200, 120);
+          // curve
+          const p0 = { x: 20, y: 140 },
+            p3 = { x: 220, y: 20 };
+          const p1 = { x: 20 + cp[0] * 200, y: 140 - cp[1] * 120 };
+          const p2 = { x: 20 + cp[2] * 200, y: 140 - cp[3] * 120 };
+          bctx.strokeStyle = "#8b5cf6";
+          bctx.lineWidth = 2;
+          bctx.beginPath();
+          bctx.moveTo(p0.x, p0.y);
+          bctx.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+          bctx.stroke();
+          // handles
+          bctx.fillStyle = "#60a5fa";
+          [p1, p2].forEach((p) => {
+            bctx.beginPath();
+            bctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+            bctx.fill();
+          });
+        }
+        drawBezier();
+        let draggingHandle = -1;
+        bez.addEventListener("pointerdown", (e) => {
+          const rect = bez.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const p1 = { x: 20 + cp[0] * 200, y: 140 - cp[1] * 120 };
+          const p2 = { x: 20 + cp[2] * 200, y: 140 - cp[3] * 120 };
+          if (Math.hypot(x - p1.x, y - p1.y) < 8) draggingHandle = 1;
+          else if (Math.hypot(x - p2.x, y - p2.y) < 8) draggingHandle = 2;
+          else draggingHandle = -1;
+        });
+        window.addEventListener("pointermove", (e) => {
+          if (draggingHandle < 0) return;
+          const rect = bez.getBoundingClientRect();
+          let x = (e.clientX - rect.left - 20) / 200;
+          let y = (140 - (e.clientY - rect.top)) / 120;
+          x = clamp(x, 0, 1);
+          y = clamp(y, 0, 1);
+          if (draggingHandle === 1) {
+            cp[0] = x;
+            cp[1] = y;
+          } else {
+            cp[2] = x;
+            cp[3] = y;
+          }
+          state.easing.preset = "custom";
+          $("#easePreset").value = "custom";
+          state.easing.custom = [...cp];
+          drawBezier();
+        });
+        window.addEventListener("pointerup", () => (draggingHandle = -1));
+        $("#easePreset").addEventListener("change", (e) => {
+          state.easing.preset = e.target.value;
+          drawBezier();
+        });
+
+        // Audio reactive
+        let audioCtx = null,
+          srcNode = null,
+          analyser = null,
+          audioBuf = null,
+          audioArray = null;
+        $("#audioFile").addEventListener("change", async (e) => {
+          const f = e.target.files[0];
+          if (!f) return;
+          const ab = await f.arrayBuffer();
+          audioCtx = audioCtx || new AudioContext();
+          audioBuf = await audioCtx.decodeAudioData(ab);
+          const bufSrc = audioCtx.createBufferSource();
+          bufSrc.buffer = audioBuf;
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 2048;
+          bufSrc.connect(analyser);
+          analyser.connect(audioCtx.destination);
+          audioArray = new Uint8Array(analyser.frequencyBinCount);
+          srcNode = bufSrc;
+          state.audio.buffer = audioBuf; // We don't auto-play
+        });
+        $("#bpm").addEventListener("input", (e) => {
+          state.audio.bpm = +e.target.value;
+          layoutTimeline();
+        });
+        $$(".snap").forEach((b) =>
+          b.addEventListener("click", () => {
+            $$(".snap").forEach((x) => x.setAttribute("aria-pressed", "false"));
+            b.setAttribute("aria-pressed", "true");
+            state.audio.snap = b.dataset.s;
+          })
+        );
+        $("#detectBpm").addEventListener("click", () => {
+          if (!state.audio.buffer) {
+            alert("Load audio first");
+            return;
+          }
+          const ch = state.audio.buffer.getChannelData(0);
+          // Simple energy-based BPM estimation
+          let last = 0,
+            peaks = [];
+          const step = 1024;
+          for (let i = 0; i < ch.length - step; i += step) {
+            let e = 0;
+            for (let k = 0; k < step; k++) {
+              const s = ch[i + k];
+              e += s * s;
+            }
+            const energy = e / step;
+            if (energy > last * 1.5 && energy > 0.006) peaks.push(i);
+            last = energy * 0.9 + last * 0.1;
+          }
+          if (peaks.length > 1) {
+            const diffs = [];
+            for (let i = 1; i < peaks.length; i++) {
+              diffs.push(peaks[i] - peaks[i - 1]);
+            }
+            const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+            const bpm = Math.round((60 * state.audio.buffer.sampleRate) / avg);
+            state.audio.bpm = clamp(bpm, 40, 240);
+            $("#bpm").value = state.audio.bpm;
+            layoutTimeline();
+          }
+        });
+
+        // Keyboard shortcuts
+        window.addEventListener("keydown", (e) => {
+          if (e.key === " ") {
+            e.preventDefault();
+            togglePlay();
+          }
+          if (e.key === "ArrowRight") {
+            state.t = clamp(
+              state.t + 1000 / state.timing.fps,
+              0,
+              state.timing.duration
+            );
+            layoutTimeline();
+            render();
+          }
+          if (e.key === "ArrowLeft") {
+            state.t = clamp(
+              state.t - 1000 / state.timing.fps,
+              0,
+              state.timing.duration
+            );
+            layoutTimeline();
+            render();
+          }
+          if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+            e.preventDefault();
+            saveProject();
+          }
+          if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "o") {
+            e.preventDefault();
+            $("#loadInput").click();
+          }
+          if (e.key.toLowerCase() === "e") {
+            e.preventDefault();
+            openExport();
+          }
+          if (e.key.toLowerCase() === "p") {
+            e.preventDefault();
+            openProject();
+          }
+        });
+
+        // Export
+        const exDlg = $("#exportDlg");
+        const exFmt = $("#exFmt");
+        const exFps = $("#exFps");
+        const exDur = $("#exDur");
+        const exRes = $("#exRes");
+        const exSamples = $("#exSamples");
+        const exStatus = $("#exStatus");
+        $("#btnExport").addEventListener("click", openExport);
+        $("#exClose").addEventListener("click", () => exDlg.close());
+        $("#exStart").addEventListener("click", startExport);
+        function openExport() {
+          exFps.value = state.timing.fps;
+          exDur.value = state.timing.duration / 1000;
+          exRes.value = `${state.timing.width}x${state.timing.height}`;
+          exDlg.showModal();
+          exStatus.textContent = "";
+        }
+
+        async function startExport() {
+          const [w, h] = exRes.value.split("x").map(Number);
+          const fps = +exFps.value;
+          const dur = +exDur.value;
+          const samples = +exSamples.value;
+          const frames = Math.round(dur * fps);
+          exStatus.textContent = `Rendering ${frames} frames…`;
+          const off = document.createElement("canvas");
+          off.width = w;
+          off.height = h;
+          const octx = off.getContext("2d");
+
+          if (exFmt.value === "webm") {
+            const stream = off.captureStream(fps);
+            const rec = new MediaRecorder(stream, {
+              mimeType: "video/webm;codecs=vp9",
+            });
+            const chunks = [];
+            rec.ondataavailable = (e) => {
+              if (e.data.size) chunks.push(e.data);
+            };
+            let t = 0;
+            let i = 0;
+            const chunkDur = 1000 / fps;
+            rec.start();
+            function step() {
+              if (i >= frames) {
+                rec.stop();
+                return;
+              }
+              renderFrame(octx, w, h, t, samples);
+              t += chunkDur;
+              i++;
+              setTimeout(step, 0);
+            }
+            rec.onstop = () => {
+              const blob = new Blob(chunks, { type: "video/webm" });
+              downloadBlob(blob, "export.webm");
+              exStatus.textContent = "Done. Saved export.webm";
+            };
+            step();
+          } else if (exFmt.value === "pngseq") {
+            const files = [];
+            let t = 0;
+            for (let i = 0; i < frames; i++) {
+              renderFrame(octx, w, h, t, samples);
+              t += 1000 / fps;
+              const b = await new Promise((res) =>
+                off.toBlob(res, "image/png")
+              );
+              files.push({
+                name: `frame_${String(i).padStart(5, "0")}.png`,
+                blob: b,
+              });
+              if (i % Math.max(1, Math.floor(frames / 10)) === 0)
+                exStatus.textContent = `Rendering… ${Math.round(
+                  (100 * i) / frames
+                )}%`;
+            }
+            const zip = await zipStore(files);
+            downloadBlob(zip, "frames.zip");
+            exStatus.textContent = "Done. Saved frames.zip";
+          }
+        }
+
+        // Project save/open
+        const projDlg = $("#projDlg");
+        $("#btnProject").addEventListener("click", openProject);
+        $("#projClose").addEventListener("click", () => projDlg.close());
+        function openProject() {
+          projDlg.showModal();
+        }
+        function saveProject() {
+          const data = JSON.stringify(
+            state,
+            (k, v) => (k === "bgImg" ? undefined : v),
+            2
+          );
+          const blob = new Blob([data], { type: "application/json" });
+          downloadBlob(blob, "project.json");
+        }
+        $("#btnSave").addEventListener("click", saveProject);
+        $("#btnLoad").addEventListener("click", () => $("#loadInput").click());
+        $("#loadInput").addEventListener("change", async (e) => {
+          const f = e.target.files[0];
+          if (!f) return;
+          const j = JSON.parse(await f.text());
+          Object.assign(state, j); // shallow merge for demo
+          // Clean img if missing
+          state.layout.bgImg = null;
+          render();
+          rebuildTracks();
+          projDlg.close();
+        });
+
+        // Accessibility: focus order and ARIA are set via HTML labels; ensure play button reflects state
+        const observer = new MutationObserver(() => {
+          playBtn.setAttribute("aria-pressed", String(state.playing));
+        });
+        observer.observe(playBtn, { attributes: true });
+      })();
+    </script>
+  </body>
+</html>

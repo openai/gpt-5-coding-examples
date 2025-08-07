@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="sepia">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Math Practice Drills</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #111111;
+      --muted: #666666;
+      --accent: #2d6cdf;
+      --okay: #1f9d55;
+      --bad: #d64545;
+      --panel: #f6f7f9;
+      --focus: #b5cdfc;
+      --shadow: rgba(0,0,0,0.06);
+      font-size: 18px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1115;
+        --fg: #f1f5f9;
+        --muted: #94a3b8;
+        --panel: #111520;
+        --shadow: rgba(0,0,0,0.3);
+      }
+    }
+    :root[data-theme="light"] {
+      --bg: #ffffff;
+      --fg: #0f172a;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --okay: #16a34a;
+      --bad: #dc2626;
+      --panel: #f6f7f9;
+      --focus: #bfd2ff;
+      --shadow: rgba(0,0,0,0.06);
+    }
+    :root[data-theme="dark"] {
+      --bg: #0b1020;
+      --fg: #e5e7eb;
+      --muted: #9aa3b2;
+      --accent: #60a5fa;
+      --okay: #22c55e;
+      --bad: #f87171;
+      --panel: #10172a;
+      --focus: #2b4bdb66;
+      --shadow: rgba(0,0,0,0.35);
+    }
+    :root[data-theme="sepia"] {
+      --bg: #f4ecd8;
+      --fg: #3e3325;
+      --muted: #7b6f5a;
+      --accent: #b36b2c;
+      --okay: #1f9d55;
+      --bad: #d64545;
+      --panel: #f8f1e4;
+      --focus: #e1c8a5;
+      --shadow: rgba(102, 77, 51, 0.15);
+    }
+    :root[data-theme="midnight"] {
+      --bg: #0a0f1e;
+      --fg: #e6edf7;
+      --muted: #9fb0d4;
+      --accent: #6aa8ff;
+      --okay: #22c55e;
+      --bad: #f87171;
+      --panel: #0f162c;
+      --focus: #28407a;
+      --shadow: rgba(0,0,0,0.4);
+    }
+    :root[data-theme="forest"] {
+      --bg: #0f1a14;
+      --fg: #e6f2ea;
+      --muted: #9ac7ae;
+      --accent: #2fb171;
+      --okay: #2dd4bf;
+      --bad: #f97316;
+      --panel: #142219;
+      --focus: #2fb17155;
+      --shadow: rgba(0,0,0,0.38);
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 1rem 1rem 3rem;
+    }
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 0.5rem 0 1rem;
+    }
+    h1 {
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0.25rem 0 0;
+      font-size: clamp(1.8rem, 3vw + 1rem, 3rem);
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .panel {
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: 0 6px 20px var(--shadow) inset;
+      padding: 1rem;
+    }
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1rem;
+      align-items: center;
+    }
+    .settings .group {
+      grid-column: span 12;
+    }
+    @media (min-width: 720px) {
+      .settings .group.small { grid-column: span 3; }
+      .settings .group.medium { grid-column: span 6; }
+      .settings .group.large { grid-column: span 12; }
+    }
+    label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+    select, input[type="number"], button {
+      font: inherit;
+      padding: 0.65rem 0.8rem;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: #fff;
+      color: #111;
+      box-shadow: 0 1px 2px var(--shadow);
+    }
+    @media (prefers-color-scheme: dark) {
+      select, input[type="number"], button {
+        background: #0e1420;
+        color: #e5e7eb;
+      }
+    }
+    select:focus, input:focus, button:focus { outline: none; box-shadow: 0 0 0 3px var(--focus); }
+    .ops {
+      display: flex; gap: 0.8rem; flex-wrap: wrap;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.45rem 0.7rem; border-radius: 999px; background: #fff; color: #111;
+      border: 2px solid transparent; cursor: pointer; user-select: none;
+    }
+    .chip input { appearance: none; width: 1.1rem; height: 1.1rem; border: 2px solid #9aa2ad; border-radius: 4px; display: inline-block; }
+    .chip input:checked { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 2px #fff; }
+    .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      min-width: 7.5rem;
+    }
+    .btn.secondary { background: #e2e8f0; color: #111; }
+    .btn.ghost { background: transparent; color: var(--fg); border: 2px solid #cbd5e1; }
+    .btn:disabled { filter: grayscale(0.6); opacity: 0.7; cursor: not-allowed; }
+
+    .game {
+      margin-top: 1.25rem;
+      display: grid;
+      gap: 1rem;
+    }
+    .status {
+      display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      align-items: center; font-size: clamp(1rem, 0.9rem + 0.6vw, 1.35rem);
+    }
+    .time { font-weight: 800; letter-spacing: 0.02em; }
+    .big {
+      font-size: clamp(2.2rem, 5.5vw + 1rem, 6rem);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      text-align: center;
+      padding: 0.5rem 0.25rem;
+    }
+    .problem {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem;
+      padding: 1rem 0.5rem;
+      border-radius: 16px; background: var(--panel); box-shadow: 0 6px 20px var(--shadow) inset;
+      min-height: 180px;
+    }
+    .answer-wrap { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .answer {
+      width: 12ch;
+      font: inherit; font-size: clamp(1.8rem, 3vw + 1rem, 3rem);
+      text-align: center;
+      padding: 0.45rem 0.7rem;
+      border-radius: 12px; border: 2px solid transparent;
+    }
+    .answer:focus { box-shadow: 0 0 0 3px var(--focus); outline: none; }
+    .feedback { min-height: 1.6rem; font-weight: 700; text-align: center; }
+    .feedback.ok { color: var(--okay); }
+    .feedback.no { color: var(--bad); }
+
+    .stats {
+      display: grid; grid-template-columns: repeat(12, 1fr); gap: 0.8rem; align-items: stretch; margin-top: 0.5rem;
+    }
+    .stat {
+      grid-column: span 6; padding: 0.8rem; background: var(--panel); border-radius: 12px; box-shadow: inset 0 3px 10px var(--shadow);
+    }
+    @media (min-width: 720px) { .stat { grid-column: span 3; } }
+    .stat .label { color: var(--muted); font-size: 0.95rem; }
+    .stat .value { font-weight: 800; font-size: clamp(1.3rem, 1rem + 1vw, 1.8rem); }
+
+    .end { text-align: center; }
+    .high { color: var(--accent); font-weight: 800; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Math Practice Drills</h1>
+        <div class="tagline">Improve speed and accuracy with timed math quizzes.</div>
+      </div>
+    </header>
+
+    <section class="panel" aria-labelledby="settings-title">
+      <h2 id="settings-title" class="sr-only" style="position:absolute;left:-9999px;">Settings</h2>
+      <div class="settings">
+        
+        <div class="group small">
+          <label for="difficulty">Difficulty</label>
+          <select id="difficulty" aria-label="Difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+        <div class="group medium">
+          <label>Operations</label>
+          <div class="ops" role="group" aria-label="Operations">
+            <label class="chip" title="Addition">
+              <input type="checkbox" id="op-add" checked />
+              <span>+</span>
+            </label>
+            <label class="chip" title="Subtraction">
+              <input type="checkbox" id="op-sub" checked />
+              <span>&minus;</span>
+            </label>
+            <label class="chip" title="Multiplication">
+              <input type="checkbox" id="op-mul" checked />
+              <span>&times;</span>
+            </label>
+            <label class="chip" title="Division">
+              <input type="checkbox" id="op-div" checked />
+              <span>&divide;</span>
+            </label>
+          </div>
+        </div>
+        <div class="group small">
+          <label for="duration">Timer</label>
+          <select id="duration" aria-label="Duration">
+            <option value="30">30 seconds</option>
+            <option value="60" selected>60 seconds</option>
+            <option value="120">2 minutes</option>
+            <option value="180">3 minutes</option>
+          </select>
+        </div>
+        <div class="group large">
+          <div class="actions">
+            <button id="startBtn" class="btn">Start</button>
+            <button id="stopBtn" class="btn secondary" disabled>Stop</button>
+            <button id="resetBtn" class="btn ghost">Reset Stats</button>
+            <div id="modeSummary" style="margin-left:auto;color:var(--muted);"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="game">
+      <div class="status">
+        <div class="time" aria-live="polite">Time left: <span id="timeLeft">60</span>s</div>
+        <div class="note" style="color:var(--muted)">Press Enter to submit • Esc to clear • Tab to skip</div>
+      </div>
+      <div class="problem">
+        <div id="question" class="big" aria-live="assertive" aria-atomic="true">Ready?</div>
+        <div class="answer-wrap">
+          <input id="answer" class="answer" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" aria-label="Your answer" />
+          <button id="submitBtn" class="btn">Submit</button>
+          <button id="skipBtn" class="btn secondary">Skip</button>
+        </div>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="label">Correct</div><div id="stat-correct" class="value">0</div></div>
+        <div class="stat"><div class="label">Attempts</div><div id="stat-attempts" class="value">0</div></div>
+        <div class="stat"><div class="label">Accuracy</div><div id="stat-acc" class="value">0%</div></div>
+        <div class="stat"><div class="label">Speed</div><div id="stat-speed" class="value">0/min</div></div>
+        <div class="stat"><div class="label">Streak</div><div id="stat-streak" class="value">0</div></div>
+        <div class="stat"><div class="label">Best Streak</div><div id="stat-best" class="value">0</div></div>
+        <div class="stat"><div class="label">Skips</div><div id="stat-skips" class="value">0</div></div>
+        <div class="stat"><div class="label">High Score (mode)</div><div id="stat-high" class="value">0</div></div>
+      </div>
+      <div id="endMessage" class="end hidden"></div>
+    </section>
+  </div>
+
+  <script>
+    (function() {
+      const els = {
+        
+        difficulty: document.getElementById('difficulty'),
+        duration: document.getElementById('duration'),
+        ops: {
+          add: document.getElementById('op-add'),
+          sub: document.getElementById('op-sub'),
+          mul: document.getElementById('op-mul'),
+          div: document.getElementById('op-div'),
+        },
+        startBtn: document.getElementById('startBtn'),
+        stopBtn: document.getElementById('stopBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        modeSummary: document.getElementById('modeSummary'),
+        timeLeft: document.getElementById('timeLeft'),
+        question: document.getElementById('question'),
+        answer: document.getElementById('answer'),
+        submitBtn: document.getElementById('submitBtn'),
+        skipBtn: document.getElementById('skipBtn'),
+        feedback: document.getElementById('feedback'),
+        stats: {
+          correct: document.getElementById('stat-correct'),
+          attempts: document.getElementById('stat-attempts'),
+          acc: document.getElementById('stat-acc'),
+          speed: document.getElementById('stat-speed'),
+          streak: document.getElementById('stat-streak'),
+          best: document.getElementById('stat-best'),
+          skips: document.getElementById('stat-skips'),
+          high: document.getElementById('stat-high'),
+        },
+        endMessage: document.getElementById('endMessage'),
+      };
+
+      const symbols = { add: '+', sub: '−', mul: '×', div: '÷' };
+      let state = defaultState();
+      // Force sepia theme
+      document.documentElement.setAttribute('data-theme', 'sepia');
+
+      function defaultState() {
+        return {
+          running: false,
+          timeTotal: parseInt(els.duration.value, 10),
+          timeLeft: parseInt(els.duration.value, 10),
+          timerId: null,
+          correct: 0,
+          attempts: 0,
+          streak: 0,
+          bestStreak: 0,
+          skips: 0,
+          startTs: 0,
+          current: null,
+        };
+      }
+
+      function getSelectedOps() {
+        const selected = [];
+        for (const key of Object.keys(els.ops)) {
+          if (els.ops[key].checked) selected.push(key);
+        }
+        return selected.length ? selected : ['add'];
+      }
+
+      function summarizeMode() {
+        const diff = els.difficulty.value;
+        const ops = getSelectedOps().map(k => symbols[k]).join(' ');
+        const dur = parseInt(els.duration.value, 10);
+        els.modeSummary.textContent = `Mode: ${diff} • Ops: ${ops} • ${dur}s`;
+      }
+
+      function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function generateProblem() {
+        const diff = els.difficulty.value;
+        const ops = getSelectedOps();
+        const op = ops[randInt(0, ops.length - 1)];
+        let a=0, b=0, ans=0, text='';
+
+        const pick = (ranges) => {
+          const [min, max] = ranges;
+          return randInt(min, max);
+        };
+
+        const ranges = {
+          easy: {
+            add: [[0,9],[0,9]],
+            sub: [[0,9],[0,9]],
+            mul: [[0,12],[0,12]],
+            div: [[1,12],[0,12]], // divisor, quotient
+          },
+          medium: {
+            add: [[10,99],[10,99]],
+            sub: [[10,99],[10,99]],
+            mul: [[10,99],[2,12]],
+            div: [[2,12],[10,99]],
+          },
+          hard: {
+            add: [[100,999],[100,999]],
+            sub: [[100,999],[100,999]],
+            mul: [[10,99],[10,19]],
+            div: [[2,19],[10,99]],
+          }
+        };
+
+        if (op === 'add') {
+          a = pick(ranges[diff].add[0]);
+          b = pick(ranges[diff].add[1]);
+          ans = a + b;
+          text = `${a} ${symbols.add} ${b} =`;
+        } else if (op === 'sub') {
+          a = pick(ranges[diff].sub[0]);
+          b = pick(ranges[diff].sub[1]);
+          if (a < b) [a, b] = [b, a];
+          ans = a - b;
+          text = `${a} ${symbols.sub} ${b} =`;
+        } else if (op === 'mul') {
+          a = pick(ranges[diff].mul[0]);
+          b = pick(ranges[diff].mul[1]);
+          ans = a * b;
+          text = `${a} ${symbols.mul} ${b} =`;
+        } else if (op === 'div') {
+          const divisor = pick(ranges[diff].div[0]);
+          const quotient = pick(ranges[diff].div[1]);
+          a = divisor * Math.max(1, quotient);
+          b = divisor;
+          ans = Math.floor(a / b);
+          text = `${a} ${symbols.div} ${b} =`;
+        }
+
+        return { a, b, op, ans, text };
+      }
+
+      function setRunning(running) {
+        state.running = running;
+        for (const el of [els.difficulty, els.duration, ...Object.values(els.ops)]) {
+          el.disabled = running;
+        }
+        els.startBtn.disabled = running;
+        els.stopBtn.disabled = !running;
+        els.answer.disabled = !running;
+        els.submitBtn.disabled = !running;
+        els.skipBtn.disabled = !running;
+      }
+
+      function resetUIStats() {
+        els.stats.correct.textContent = '0';
+        els.stats.attempts.textContent = '0';
+        els.stats.acc.textContent = '0%';
+        els.stats.speed.textContent = '0/min';
+        els.stats.streak.textContent = '0';
+        els.stats.best.textContent = '0';
+        els.stats.skips.textContent = '0';
+      }
+
+      function updateStatsUI() {
+        els.stats.correct.textContent = String(state.correct);
+        els.stats.attempts.textContent = String(state.attempts);
+        const acc = state.attempts ? Math.round((state.correct / state.attempts) * 100) : 0;
+        els.stats.acc.textContent = acc + '%';
+        const elapsedSec = Math.max(1, Math.floor((Date.now() - state.startTs) / 1000));
+        const perMin = Math.round((state.correct / elapsedSec) * 60);
+        els.stats.speed.textContent = perMin + '/min';
+        els.stats.streak.textContent = String(state.streak);
+        els.stats.best.textContent = String(state.bestStreak);
+        els.stats.skips.textContent = String(state.skips);
+      }
+
+      function updateHighUI() {
+        els.stats.high.textContent = String(getHighScoreForCurrentMode());
+      }
+
+      function problemToFocus() {
+        requestAnimationFrame(() => {
+          els.answer.focus();
+          els.answer.select();
+        });
+      }
+
+      function start() {
+        if (state.running) return;
+        summarizeMode();
+        state = defaultState();
+        state.timeTotal = parseInt(els.duration.value, 10);
+        state.timeLeft = state.timeTotal;
+        els.timeLeft.textContent = String(state.timeLeft);
+        updateHighUI();
+        els.endMessage.classList.add('hidden');
+        els.feedback.textContent = '';
+        els.feedback.className = 'feedback';
+        resetUIStats();
+        setRunning(true);
+        state.current = generateProblem();
+        els.question.textContent = state.current.text;
+        problemToFocus();
+        state.startTs = Date.now();
+        state.timerId = setInterval(tick, 1000);
+      }
+
+      function stop(endType = 'stopped') {
+        if (!state.running) return;
+        clearInterval(state.timerId);
+        state.timerId = null;
+        setRunning(false);
+        saveHighScoreIfAny();
+        updateHighUI();
+        const summary = `Correct ${state.correct}/${state.attempts} • Accuracy ${els.stats.acc.textContent} • Speed ${els.stats.speed.textContent}`;
+        els.endMessage.innerHTML = `<div style="font-size:1.35rem;font-weight:800;margin-top:0.5rem;">Time ${endType === 'ended' ? 'up' : 'stopped'}!</div><div style="margin-top:0.3rem;color:var(--muted);">${summary}</div>`;
+        els.endMessage.classList.remove('hidden');
+      }
+
+      function tick() {
+        state.timeLeft -= 1;
+        els.timeLeft.textContent = String(Math.max(0, state.timeLeft));
+        if (state.timeLeft <= 0) {
+          stop('ended');
+        }
+      }
+
+      function submitAnswer() {
+        if (!state.running) return;
+        const raw = els.answer.value.trim();
+        if (raw === '') {
+          blink(els.answer);
+          return;
+        }
+        const guess = Number(raw);
+        const correct = Number(state.current.ans);
+        if (Number.isFinite(guess) && guess === correct) {
+          state.correct += 1;
+          state.attempts += 1;
+          state.streak += 1;
+          if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+          feedback('Correct!', true);
+          updateStatsUI();
+          nextProblem();
+        } else {
+          state.attempts += 1;
+          state.streak = 0;
+          feedback(`Try again`, false);
+          updateStatsUI();
+          problemToFocus();
+        }
+      }
+
+      function nextProblem() {
+        els.answer.value = '';
+        state.current = generateProblem();
+        els.question.textContent = state.current.text;
+        problemToFocus();
+      }
+
+      function skip() {
+        if (!state.running) return;
+        state.attempts += 1;
+        state.streak = 0;
+        state.skips += 1;
+        feedback('Skipped', false);
+        updateStatsUI();
+        nextProblem();
+      }
+
+      function feedback(msg, ok) {
+        els.feedback.textContent = msg;
+        els.feedback.className = 'feedback ' + (ok ? 'ok' : 'no');
+        flash(ok ? '#19c37d22' : '#ef444422');
+      }
+
+      function flash(color) {
+        const el = document.querySelector('.problem');
+        const old = el.style.boxShadow;
+        el.style.boxShadow = `0 0 0 9999px ${color} inset, 0 6px 20px var(--shadow) inset`;
+        setTimeout(() => { el.style.boxShadow = old || '0 6px 20px var(--shadow) inset'; }, 120);
+      }
+
+      function blink(el) {
+        const old = el.style.outline;
+        el.style.outline = '3px solid var(--bad)';
+        setTimeout(() => { el.style.outline = old; }, 140);
+      }
+
+      function getModeKey() {
+        const ops = getSelectedOps().sort().join('');
+        const diff = els.difficulty.value;
+        const dur = parseInt(els.duration.value, 10);
+        return `${diff}|${ops}|${dur}`;
+      }
+
+      function getHighStore() {
+        try {
+          const raw = localStorage.getItem('mpd_high_scores');
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function setHighStore(obj) {
+        try { localStorage.setItem('mpd_high_scores', JSON.stringify(obj)); } catch (e) {}
+      }
+
+      function getHighScoreForCurrentMode() {
+        const store = getHighStore();
+        const key = getModeKey();
+        return store[key] || 0;
+      }
+
+      function saveHighScoreIfAny() {
+        const key = getModeKey();
+        const store = getHighStore();
+        const prev = store[key] || 0;
+        if (state.correct > prev) {
+          store[key] = state.correct;
+          setHighStore(store);
+          toast(`New high score for this mode: ${state.correct}!`);
+        }
+      }
+
+      function toast(msg) {
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.position = 'fixed';
+        t.style.bottom = '18px';
+        t.style.left = '50%';
+        t.style.transform = 'translateX(-50%)';
+        t.style.background = 'rgba(15,23,42,0.92)';
+        t.style.color = '#fff';
+        t.style.padding = '0.6rem 0.9rem';
+        t.style.borderRadius = '999px';
+        t.style.fontWeight = '700';
+        t.style.zIndex = '9999';
+        t.style.boxShadow = '0 6px 30px rgba(0,0,0,0.25)';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2200);
+      }
+
+      els.startBtn.addEventListener('click', start);
+      els.stopBtn.addEventListener('click', () => stop('stopped'));
+      els.resetBtn.addEventListener('click', () => {
+        if (confirm('Reset all saved high scores?')) {
+          setHighStore({});
+          updateHighUI();
+          toast('High scores cleared');
+        }
+      });
+      // Theme toggle removed; always use sepia
+      els.submitBtn.addEventListener('click', submitAnswer);
+      els.skipBtn.addEventListener('click', skip);
+      els.answer.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submitAnswer(); }
+        else if (e.key === 'Escape') { e.preventDefault(); els.answer.value = ''; }
+        else if (e.key === 'Tab') { e.preventDefault(); skip(); }
+      });
+      for (const el of [els.difficulty, els.duration, ...Object.values(els.ops)]) {
+        el.addEventListener('change', () => { summarizeMode(); updateHighUI(); });
+      }
+      summarizeMode();
+      updateHighUI();
+    })();
+  </script>
+</body>
+</html>

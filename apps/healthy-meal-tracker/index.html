@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Healthy Meal Tracker</title>
+  <meta name="description" content="Log meals with ingredients, calories per meal, and a daily summary." />
+  <style>
+    :root {
+      --bg: #f6f9fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #22c55e;
+      --accent-strong: #16a34a;
+      --ring-bg: #e5e7eb;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --shadow: 0 10px 20px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.05);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: linear-gradient(180deg, #f0fdf4, var(--bg) 200px);
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+    header.app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 16px 20px; background: var(--panel);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand .logo {
+      width: 44px; height: 44px; display: grid; place-items: center;
+      border-radius: 12px; background: #dcfce7; font-size: 26px;
+    }
+    .brand h1 { font-size: 20px; margin: 0; line-height: 1; }
+    .brand p { margin: 0; color: var(--muted); font-size: 13px; }
+
+    .header-right { display: flex; gap: 10px; align-items: center; }
+    .pill {
+      background: #f0fdf4; color: var(--accent-strong); padding: 6px 10px;
+      border-radius: 999px; font-weight: 600; font-size: 12px; border: 1px solid #dcfce7;
+    }
+
+    main.grid {
+      margin-top: 22px;
+      display: grid; gap: 22px;
+      grid-template-columns: 1.1fr 1fr;
+    }
+    @media (max-width: 960px) {
+      main.grid { grid-template-columns: 1fr; }
+    }
+
+    .card { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card .card-body { padding: 18px; }
+    .card .card-title { margin: 0 0 6px 0; font-size: 18px; }
+    .muted { color: var(--muted); }
+
+    .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: center; }
+    @media (max-width: 520px) { .summary { grid-template-columns: 1fr; } }
+    .ring {
+      width: 160px; height: 160px; border-radius: 50%; position: relative;
+      display: grid; place-items: center; margin: 6px auto 8px; background: conic-gradient(var(--accent) var(--angle), var(--ring-bg) 0);
+      transition: background 0.3s ease;
+    }
+    .ring::after {
+      content: ""; position: absolute; inset: 10px; border-radius: 50%;
+      background: var(--panel);
+      box-shadow: inset 0 0 0 1px #eef2f7;
+    }
+    .ring .ring-info {
+      position: relative; text-align: center; z-index: 1;
+    }
+    .ring .big { font-size: 22px; font-weight: 800; }
+    .ring .small { font-size: 12px; color: var(--muted); }
+
+    .summary-stats { display: grid; gap: 10px; }
+    .stat { background: #f8fafc; border: 1px solid #eef2f7; padding: 12px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .stat .left { display: flex; align-items: center; gap: 10px; }
+    .ico {
+      width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; font-size: 18px;
+      background: #eef2f7;
+    }
+
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .toolbar .spacer { flex: 1 1 auto; }
+
+    label { font-weight: 600; font-size: 13px; color: #374151; }
+    input, button, select, textarea { font: inherit; }
+    .input, .select {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #e5e7eb; background: #fff; color: var(--text);
+    }
+    .input:focus, .select:focus { outline: 2px solid #bbf7d0; border-color: #86efac; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer;
+      background: var(--accent); color: #fff; font-weight: 700; box-shadow: 0 8px 16px rgba(34,197,94,0.25);
+    }
+    .btn:hover { background: var(--accent-strong); }
+    .btn.secondary { background: #111827; color: #fff; box-shadow: 0 8px 16px rgba(17,24,39,0.2); }
+    .btn.ghost { background: #f3f4f6; color: #111827; box-shadow: none; }
+    .btn.warn { background: var(--warning); box-shadow: 0 8px 16px rgba(245,158,11,0.25); }
+    .btn.danger { background: var(--danger); box-shadow: 0 8px 16px rgba(239,68,68,0.25); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .ingredients { display: grid; gap: 8px; }
+    .ing-row { display: grid; grid-template-columns: 1fr 130px 40px; gap: 8px; align-items: center; }
+    @media (max-width: 520px) { .ing-row { grid-template-columns: 1fr 110px 40px; } }
+    .ing-row .remove { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #e5e7eb; background: #fff; border-radius: 10px; cursor: pointer; }
+    .ing-row .remove:hover { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+
+    .form-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .live-total { font-weight: 800; color: #111827; background: #f3f4f6; border: 1px solid #e5e7eb; padding: 8px 12px; border-radius: 999px; }
+
+    .meals { display: grid; gap: 12px; }
+    .meal { border: 1px solid #eef2f7; border-radius: 14px; padding: 14px; }
+    .meal .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .meal .title { display: flex; align-items: center; gap: 10px; }
+    .meal .title .emoji { font-size: 22px; width: 34px; height: 34px; display: grid; place-items: center; background: #f8fafc; border-radius: 10px; }
+    .kcal-pill { background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; padding: 6px 10px; border-radius: 999px; font-weight: 700; }
+    .meal .ings { margin-top: 8px; color: var(--muted); font-size: 14px; }
+    .meal .ings ul { margin: 6px 0 0 0; padding-left: 18px; }
+    .meal .actions { display: flex; gap: 8px; margin-top: 10px; }
+
+    .empty { text-align: center; color: var(--muted); padding: 30px 12px; }
+    .small-note { color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="app-header" role="banner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🥗</div>
+        <div>
+          <h1>Healthy Meal Tracker</h1>
+          <p class="muted">Log meals, ingredients, and calories with a friendly daily summary.</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="pill">🍎 Fuel your day wisely</span>
+      </div>
+    </header>
+
+    <main class="grid" role="main">
+      <section class="card" aria-labelledby="summary-title">
+        <div class="card-body">
+          <div class="toolbar" style="margin-bottom: 12px; gap: 12px;">
+            <div>
+              <label for="view-date">View date</label>
+              <input id="view-date" type="date" class="input" />
+            </div>
+            <div>
+              <label for="goal-input">Daily goal (kcal)</label>
+              <input id="goal-input" type="number" min="0" step="10" class="input" value="2000" />
+            </div>
+            <div class="spacer"></div>
+            <button id="today-btn" class="btn ghost" type="button">📅 Today</button>
+            <button id="clear-day-btn" class="btn warn" type="button">🧹 Clear day</button>
+          </div>
+
+          <div class="summary">
+            <div class="ring" id="progress-ring" style="--angle: 0deg;">
+              <div class="ring-info">
+                <div class="big" id="summary-total">0 kcal</div>
+                <div class="small" id="summary-meals">0 meals</div>
+              </div>
+            </div>
+            <div class="summary-stats">
+              <div class="stat">
+                <div class="left"><div class="ico">🍽️</div><div>
+                  <div style="font-weight: 700">Calories today</div>
+                  <div class="muted small-note">Total calories for selected day</div>
+                </div></div>
+                <div id="stat-calories" style="font-weight: 800;">0 kcal</div>
+              </div>
+              <div class="stat">
+                <div class="left"><div class="ico">🥙</div><div>
+                  <div style="font-weight: 700">Meals logged</div>
+                  <div class="muted small-note">Count of meals today</div>
+                </div></div>
+                <div id="stat-meals" style="font-weight: 800;">0</div>
+              </div>
+              <div class="stat">
+                <div class="left"><div class="ico">🔥</div><div>
+                  <div style="font-weight: 700">Remaining</div>
+                  <div class="muted small-note">Goal minus total</div>
+                </div></div>
+                <div id="stat-remaining" style="font-weight: 800;">2000 kcal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="add-title">
+        <div class="card-body">
+          <h2 id="add-title" class="card-title">Add a meal</h2>
+          <form id="meal-form">
+            <div class="grid-2" style="margin-bottom: 10px;">
+              <div>
+                <label for="meal-date">Date</label>
+                <input id="meal-date" class="input" type="date" required />
+              </div>
+              <div>
+                <label for="meal-name">Meal name</label>
+                <input id="meal-name" class="input" type="text" placeholder="e.g., Chicken salad" required />
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 6px;">
+              <label>Ingredients</label>
+              <button type="button" class="btn ghost" id="add-ingredient-btn">➕ Add ingredient</button>
+            </div>
+            <div class="ingredients" id="ingredients"></div>
+
+            <div class="form-actions">
+              <div class="live-total">Meal total: <span id="meal-live-total">0</span> kcal</div>
+              <div style="display: flex; gap: 8px;">
+                <button type="reset" class="btn ghost" id="reset-form-btn">Reset</button>
+                <button type="submit" class="btn">✅ Add meal</button>
+              </div>
+            </div>
+            <div id="form-error" class="small-note" style="color: var(--danger); margin-top: 6px; display: none;">Please add at least one ingredient with a name or calories.</div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="meals-title" style="grid-column: 1 / -1;">
+        <div class="card-body">
+          <h2 id="meals-title" class="card-title">Meals for <span id="meals-date-label">today</span></h2>
+          <div class="meals" id="meals-list"></div>
+          <div class="empty" id="empty-state" style="display:none;">No meals yet for this date. Add your first meal above 🍽️</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="small-note" style="text-align:center; margin-top: 18px;">
+      Built for a healthy, mindful you. 🍏
+    </footer>
+  </div>
+
+  <script>
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+    const storageKey = 'healthyMealTracker.v1';
+    const settingsKey = 'healthyMealTracker.settings.v1';
+
+    const todayString = () => new Date().toISOString().slice(0, 10);
+
+    function loadData() {
+      try { return JSON.parse(localStorage.getItem(storageKey)) || []; } catch { return []; }
+    }
+    function saveData(data) { localStorage.setItem(storageKey, JSON.stringify(data)); }
+    function loadSettings() {
+      try { return JSON.parse(localStorage.getItem(settingsKey)) || { goal: 2000 }; } catch { return { goal: 2000 }; }
+    }
+    function saveSettings(s) { localStorage.setItem(settingsKey, JSON.stringify(s)); }
+
+    let data = loadData();
+    let settings = loadSettings();
+
+    const viewDateInput = $('#view-date');
+    const goalInput = $('#goal-input');
+    const todayBtn = $('#today-btn');
+    const clearDayBtn = $('#clear-day-btn');
+    const mealsDateLabel = $('#meals-date-label');
+    const progressRing = $('#progress-ring');
+    const summaryTotal = $('#summary-total');
+    const summaryMeals = $('#summary-meals');
+    const statCalories = $('#stat-calories');
+    const statMeals = $('#stat-meals');
+    const statRemaining = $('#stat-remaining');
+    const mealsList = $('#meals-list');
+    const emptyState = $('#empty-state');
+
+    const form = $('#meal-form');
+    const mealDateInput = $('#meal-date');
+    const mealNameInput = $('#meal-name');
+    const ingredientsEl = $('#ingredients');
+    const addIngredientBtn = $('#add-ingredient-btn');
+    const liveTotalEl = $('#meal-live-total');
+    const formError = $('#form-error');
+    const resetFormBtn = $('#reset-form-btn');
+
+    function fmtKcal(n) { return `${Math.round(n)} kcal`; }
+    function parseCal(v) { const n = parseFloat(v); return isNaN(n) ? 0 : Math.max(0, n); }
+    function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+    function totalForMeal(meal) {
+      return meal.ingredients.reduce((t, ing) => t + parseCal(ing.calories), 0);
+    }
+    function mealsForDate(dateStr) { return data.filter(m => m.date === dateStr); }
+    function totalForDate(dateStr) { return mealsForDate(dateStr).reduce((t,m) => t + totalForMeal(m), 0); }
+
+    function setProgress(total, goal) {
+      const pct = goal > 0 ? Math.min(total / goal, 1) : 0;
+      const angle = Math.round(pct * 360);
+      progressRing.style.setProperty('--angle', angle + 'deg');
+    }
+
+    function updateSummary() {
+      const d = viewDateInput.value || todayString();
+      const total = totalForDate(d);
+      const meals = mealsForDate(d);
+      const goal = parseCal(goalInput.value);
+      setProgress(total, goal);
+      summaryTotal.textContent = fmtKcal(total);
+      summaryMeals.textContent = `${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}`;
+      statCalories.textContent = fmtKcal(total);
+      statMeals.textContent = String(meals.length);
+      const remaining = Math.max(0, goal - total);
+      statRemaining.textContent = fmtKcal(remaining);
+      mealsDateLabel.textContent = d === todayString() ? 'today' : d;
+    }
+
+    function renderMeals() {
+      const d = viewDateInput.value || todayString();
+      const meals = mealsForDate(d);
+      mealsList.innerHTML = '';
+      if (!meals.length) {
+        emptyState.style.display = '';
+        return;
+      }
+      emptyState.style.display = 'none';
+      for (const meal of meals) {
+        const mealTotal = totalForMeal(meal);
+        const card = document.createElement('div');
+        card.className = 'meal';
+        card.innerHTML = `
+          <div class="top">
+            <div class="title"><div class="emoji">🍱</div><div>
+              <div style="font-weight:800; font-size:16px;">${escapeHtml(meal.name)}</div>
+              <div class="small-note">${meal.date}</div>
+            </div></div>
+            <div class="kcal-pill">${Math.round(mealTotal)} kcal</div>
+          </div>
+          <div class="ings">
+            <div class="small-note">Ingredients</div>
+            <ul>
+              ${meal.ingredients.map(i => `<li>${escapeHtml(i.name || 'Unnamed')} — ${Math.round(parseCal(i.calories))} kcal</li>`).join('')}
+            </ul>
+          </div>
+          <div class="actions">
+            <button class="btn ghost" data-action="duplicate" data-id="${meal.id}">📄 Duplicate</button>
+            <button class="btn danger" data-action="delete" data-id="${meal.id}">🗑️ Delete</button>
+          </div>
+        `;
+        mealsList.appendChild(card);
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    function updateAll() { updateSummary(); renderMeals(); }
+
+    function addIngredientRow(name = '', calories = '') {
+      const row = document.createElement('div');
+      row.className = 'ing-row';
+      row.innerHTML = `
+        <input type="text" class="input" placeholder="Ingredient name" value="${escapeHtml(name)}" />
+        <input type="number" class="input" placeholder="kcal" min="0" step="1" value="${escapeHtml(calories)}" />
+        <button type="button" class="remove" title="Remove ingredient">✖</button>
+      `;
+      const [nameInput, calInput, removeBtn] = row.children;
+      const recalc = () => {
+        const total = $$('.ingredients .ing-row input[type="number"]').reduce((t, el) => t + parseCal(el.value), 0);
+        liveTotalEl.textContent = Math.round(total);
+      };
+      calInput.addEventListener('input', recalc);
+      nameInput.addEventListener('input', () => {});
+      removeBtn.addEventListener('click', () => { row.remove(); recalc(); });
+      ingredientsEl.appendChild(row);
+      recalc();
+    }
+
+    function resetForm() {
+      form.reset();
+      ingredientsEl.innerHTML = '';
+      addIngredientRow();
+      addIngredientRow();
+      formError.style.display = 'none';
+      liveTotalEl.textContent = '0';
+      mealDateInput.value = viewDateInput.value || todayString();
+    }
+
+    addIngredientBtn.addEventListener('click', () => addIngredientRow());
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const date = mealDateInput.value || todayString();
+      const name = mealNameInput.value.trim();
+      const ings = $$('.ing-row', ingredientsEl).map(row => {
+        const [nEl, cEl] = row.querySelectorAll('input');
+        return { name: nEl.value.trim(), calories: parseCal(cEl.value) };
+      }).filter(i => i.name || i.calories > 0);
+      if (!name || ings.length === 0) {
+        formError.style.display = '';
+        return;
+      }
+      formError.style.display = 'none';
+      const meal = { id: uid(), date, name, ingredients: ings };
+      data.push(meal);
+      saveData(data);
+      viewDateInput.value = date;
+      updateAll();
+      resetForm();
+    });
+
+    mealsList.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+      const meal = data.find(m => m.id === id);
+      if (!meal) return;
+      if (action === 'delete') {
+        if (confirm('Delete this meal?')) {
+          data = data.filter(m => m.id !== id);
+          saveData(data);
+          updateAll();
+        }
+      } else if (action === 'duplicate') {
+        const copy = JSON.parse(JSON.stringify(meal));
+        copy.id = uid();
+        data.push(copy);
+        saveData(data);
+        updateAll();
+      }
+    });
+
+    todayBtn.addEventListener('click', () => { viewDateInput.value = todayString(); updateAll(); });
+    clearDayBtn.addEventListener('click', () => {
+      const d = viewDateInput.value || todayString();
+      const meals = mealsForDate(d);
+      if (!meals.length) return;
+      if (confirm(`Clear ${meals.length} meal(s) for ${d === todayString() ? 'today' : d}?`)) {
+        data = data.filter(m => m.date !== d);
+        saveData(data);
+        updateAll();
+      }
+    });
+
+    viewDateInput.addEventListener('change', updateAll);
+    goalInput.addEventListener('input', () => { settings.goal = parseCal(goalInput.value); saveSettings(settings); updateAll(); });
+    resetFormBtn.addEventListener('click', (e) => { e.preventDefault(); resetForm(); });
+
+    function init() {
+      if (!settings || typeof settings.goal !== 'number') settings = { goal: 2000 };
+      viewDateInput.value = todayString();
+      mealDateInput.value = todayString();
+      goalInput.value = String(settings.goal);
+      resetForm();
+      updateAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>

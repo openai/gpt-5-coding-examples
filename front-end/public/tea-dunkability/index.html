@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tea Dunkability Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect, useMemo, useRef } = React;
+
+      const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+      const BISCUITS = [
+        { key: 'digestive', name: 'Digestive', fragility: 0.7, porosity: 0.65 },
+        { key: 'rich-tea', name: 'Rich Tea', fragility: 0.85, porosity: 0.8 },
+        { key: 'hobnob', name: 'Hobnob', fragility: 0.55, porosity: 0.6 },
+        { key: 'ginger-nut', name: 'Ginger Nut', fragility: 0.4, porosity: 0.35 },
+        { key: 'shortbread', name: 'Shortbread', fragility: 0.75, porosity: 0.5 },
+      ];
+
+      function crumbleRiskAt(t, { tempC, integrity, biscuit }) {
+        const type = BISCUITS.find(b => b.key === biscuit) || BISCUITS[0];
+        const tempNorm = (tempC - 40) / 60;
+        const integ = clamp(integrity / 100, 0.01, 1);
+        const time = Math.max(0, t);
+        const porosity = type.porosity;
+        const frag = type.fragility;
+        const k = 0.45 + 0.9 * tempNorm + 0.8 * porosity;
+        const soak = 1 - Math.exp(-k * time);
+        const stressExp = 1.4 + 1.8 * (1 - integ) + 0.8 * tempNorm;
+        let risk = Math.pow(soak, stressExp) * (0.5 + 0.8 * frag) * (0.7 + 0.6 * tempNorm);
+        risk = 1 - Math.exp(-2.7 * risk);
+        return clamp(risk, 0, 1);
+      }
+
+      function useDarkMode() {
+        const [theme, setTheme] = useState(() => {
+          const saved = localStorage.getItem('theme');
+          return saved || 'auto';
+        });
+        useEffect(() => {
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('theme', theme);
+        }, [theme]);
+        const isDark = useMemo(() => {
+          if (theme === 'dark') return true;
+          if (theme === 'light') return false;
+          return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }, [theme]);
+        return { theme, setTheme, isDark };
+      }
+
+      function GlassCard({ title, children, footer, style }) {
+        return (
+          <section className="glass-card" style={style}>
+            {title && <header className="card-header">{title}</header>}
+            <div className="card-body">{children}</div>
+            {footer && <footer className="card-footer">{footer}</footer>}
+          </section>
+        );
+      }
+
+      function RangeRow({ label, value, onChange, min, max, step = 1, unit, id, shortcut, inputRef }) {
+        return (
+          <div className="range-row">
+            <label htmlFor={id} className="range-label">
+              <span>{label}</span>
+              {shortcut && <kbd className="shortcut">{shortcut}</kbd>}
+            </label>
+            <div className="range-controls">
+              <input
+                id={id}
+                type="range"
+                min={min}
+                max={max}
+                step={step}
+                value={value}
+                onChange={e => onChange(parseFloat(e.target.value))}
+                ref={inputRef}
+              />
+              <output className="range-value">{Math.round(value)}{unit}</output>
+            </div>
+          </div>
+        );
+      }
+
+      function SelectRow({ label, value, onChange, options, id, shortcut, inputRef }) {
+        return (
+          <div className="range-row">
+            <label htmlFor={id} className="range-label">
+              <span>{label}</span>
+              {shortcut && <kbd className="shortcut">{shortcut}</kbd>}
+            </label>
+            <div className="range-controls">
+              <select id={id} value={value} onChange={e => onChange(e.target.value)} ref={inputRef}>
+                {options.map(o => (
+                  <option key={o.key} value={o.key}>{o.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        );
+      }
+
+      function Teacup({ tempC, dunkTime, overDunk }) {
+        const intensity = clamp((tempC - 50) / 50, 0, 1);
+        const bubbles = Math.round(3 + intensity * 3);
+        return (
+          <div className="teacup-wrap">
+            <div className="steam">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i} style={{
+                  animationDelay: `${i * 0.6}s`,
+                  opacity: 0.4 + 0.6 * intensity,
+                  transform: `scale(${0.8 + intensity * 0.4})`
+                }} />
+              ))}
+            </div>
+            <div className={"cup" + (overDunk ? " shake" : "") }>
+              <div className="cup-inner">
+                <div className="tea" style={{ filter: `saturate(${0.7 + intensity * 0.5})` }}>
+                  {Array.from({ length: bubbles }).map((_, i) => (
+                    <i key={i} style={{ left: `${10 + i * (70 / bubbles)}%`, animationDelay: `${i * 0.9}s` }} />
+                  ))}
+                </div>
+              </div>
+              <div className="handle" />
+            </div>
+          </div>
+        );
+      }
+
+      function CrumbleOMeter({ params, currentTime }) {
+        const W = 420; const H = 160; const P = 28;
+        const pathD = useMemo(() => {
+          const pts = [];
+          const maxT = 10;
+          for (let i = 0; i <= 120; i++) {
+            const t = (i / 120) * maxT;
+            const risk = crumbleRiskAt(t, params);
+            const x = P + (t / maxT) * (W - 2 * P);
+            const y = H - P - risk * (H - 2 * P);
+            pts.push([x, y]);
+          }
+          return pts.map((p, idx) => (idx === 0 ? `M ${p[0]} ${p[1]}` : `L ${p[0]} ${p[1]}`)).join(' ');
+        }, [params]);
+
+        const riskNow = crumbleRiskAt(currentTime, params);
+        const xNow = P + (currentTime / 10) * (W - 2 * P);
+        const yNow = H - P - riskNow * (H - 2 * P);
+
+        return (
+          <svg className="meter" viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label="Crumble-o-meter graph">
+            <defs>
+              <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width={W} height={H} rx="12" className="meter-bg" />
+            <g className="grid">
+              {Array.from({length:5}).map((_, i) => (
+                <line key={i} x1={P} x2={W-P} y1={P + i * (H-2*P)/4} y2={P + i * (H-2*P)/4} />
+              ))}
+              {Array.from({length:5}).map((_, i) => (
+                <line key={'v'+i} y1={P} y2={H-P} x1={P + i * (W-2*P)/4} x2={P + i * (W-2*P)/4} />
+              ))}
+            </g>
+            <path d={pathD} className="risk-line" />
+            <line className="time-marker" x1={xNow} x2={xNow} y1={P} y2={H-P} />
+            <circle className="risk-dot" cx={xNow} cy={yNow} r="4" />
+            <text className="axis-label" x={W/2} y={H-4} textAnchor="middle">Dunk time (s)</text>
+            <text className="axis-label" x={4} y={14}>Risk</text>
+          </svg>
+        );
+      }
+
+      function Crumbs({ active }) {
+        const containerRef = useRef(null);
+        useEffect(() => {
+          if (!active) return;
+          const el = containerRef.current;
+          let raf;
+          const crumbs = [];
+          const spawn = () => {
+            const n = 12 + Math.floor(Math.random() * 10);
+            for (let i = 0; i < n; i++) {
+              const c = document.createElement('span');
+              c.className = 'crumb';
+              const x = 140 + Math.random()*100;
+              const y = 100 + Math.random()*20;
+              c.style.left = x + 'px';
+              c.style.top = y + 'px';
+              c.style.transform = `scale(${0.6 + Math.random()*0.8})`;
+              el.appendChild(c);
+              const vx = -1 + Math.random()*2;
+              const vy = -2 - Math.random()*2;
+              crumbs.push({ el: c, x, y, vx, vy, life: 0 });
+            }
+          };
+          spawn();
+          const tick = () => {
+            for (let i = crumbs.length - 1; i >= 0; i--) {
+              const c = crumbs[i];
+              c.life += 0.016;
+              c.vy += 0.12;
+              c.x += c.vx;
+              c.y += c.vy;
+              c.el.style.left = c.x + 'px';
+              c.el.style.top = c.y + 'px';
+              c.el.style.opacity = String(clamp(1 - c.life/2.2, 0, 1));
+              if (c.life > 2.2) {
+                c.el.remove();
+                crumbs.splice(i, 1);
+              }
+            }
+            if (crumbs.length === 0) return;
+            raf = requestAnimationFrame(tick);
+          };
+          raf = requestAnimationFrame(tick);
+          return () => {
+            cancelAnimationFrame(raf);
+            crumbs.forEach(c => c.el.remove());
+          };
+        }, [active]);
+        return <div ref={containerRef} className="crumbs" aria-hidden />;
+      }
+
+      function useKeyboardShortcuts(api) {
+        useEffect(() => {
+          const handler = (e) => {
+            if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+            const key = e.key.toLowerCase();
+            switch (key) {
+              case 't': api.focus('temp'); break;
+              case 'd': api.focus('time'); break;
+              case 'i': api.focus('integrity'); break;
+              case 'b': api.cycleBiscuit(); break;
+              case ' ': e.preventDefault(); api.toggleOverDunk(); break;
+              case '[': api.nudge(-1); break;
+              case ']': api.nudge(+1); break;
+              case '/': api.toggleHelp(); break;
+              case 'm': api.toggleTheme(); break;
+              default: break;
+            }
+          };
+          window.addEventListener('keydown', handler);
+          return () => window.removeEventListener('keydown', handler);
+        }, [api]);
+      }
+
+      function Help() {
+        return (
+          <div className="help">
+            <p>Keyboard shortcuts:</p>
+            <ul>
+              <li><kbd>T</kbd> focus Tea Temp</li>
+              <li><kbd>D</kbd> focus Dunk Time</li>
+              <li><kbd>I</kbd> focus Integrity</li>
+              <li><kbd>B</kbd> cycle Biscuit type</li>
+              <li><kbd>[</kbd> / <kbd>]</kbd> nudge focused slider</li>
+              <li><kbd>Space</kbd> trigger over-dunk crumbs</li>
+              <li><kbd>M</kbd> toggle theme</li>
+              <li><kbd>/</kbd> toggle this help</li>
+            </ul>
+          </div>
+        );
+      }
+
+      function App() {
+        const { theme, setTheme, isDark } = useDarkMode();
+        const [tempC, setTempC] = useState(90);
+        const [dunkTime, setDunkTime] = useState(5);
+        const [biscuit, setBiscuit] = useState(BISCUITS[0].key);
+        const [integrity, setIntegrity] = useState(70);
+        const [showHelp, setShowHelp] = useState(false);
+        const [overDunkTrigger, setOverDunkTrigger] = useState(0); // increment to spawn crumbs
+
+        const inputsRef = {
+          temp: useRef(null),
+          time: useRef(null),
+          integrity: useRef(null),
+          biscuit: useRef(null)
+        };
+
+        const params = { tempC, integrity, biscuit };
+        const risk = crumbleRiskAt(dunkTime, params);
+        const safe = risk < 0.6;
+        const overDunk = risk > 0.8;
+
+        const cycleBiscuit = () => {
+          const idx = BISCUITS.findIndex(b => b.key === biscuit);
+          const next = BISCUITS[(idx + 1) % BISCUITS.length].key;
+          setBiscuit(next);
+          inputsRef.biscuit.current?.focus();
+        };
+
+        const api = {
+          focus: (which) => {
+            const ref = inputsRef[which];
+            if (ref && ref.current) ref.current.focus();
+          },
+          cycleBiscuit,
+          nudge: (dir) => {
+            const active = document.activeElement?.id;
+            if (active === 'temp') setTempC(v => clamp(v + dir, 40, 100));
+            else if (active === 'time') setDunkTime(v => clamp(v + dir*0.5, 0, 10));
+            else if (active === 'integrity') setIntegrity(v => clamp(v + dir, 0, 100));
+          },
+          toggleOverDunk: () => setOverDunkTrigger(t => t + 1),
+          toggleHelp: () => setShowHelp(h => !h),
+          toggleTheme: () => setTheme(prev => prev === 'dark' ? 'light' : prev === 'light' ? 'auto' : 'dark'),
+        };
+
+        useKeyboardShortcuts(api);
+
+        useEffect(() => {
+          if (overDunk) setOverDunkTrigger(t => t + 1);
+        }, [overDunk]);
+
+        return (
+          <div className="app">
+            <header className="topbar">
+              <h1>Tea Dunkability Simulator</h1>
+              <div className="topbar-actions">
+                <button className="btn" onClick={() => setShowHelp(h => !h)} title="Keyboard shortcuts (/)">?
+                </button>
+                <button className="btn" onClick={api.toggleTheme} title="Toggle theme (M)">
+                  {isDark ? '🌙' : theme === 'light' ? '☀️' : '🌓'}
+                </button>
+              </div>
+            </header>
+
+            <main className="layout">
+              <GlassCard title="Brew" style={{gridArea:'brew'}}>
+                <div className="teacup-area">
+                  <Teacup tempC={tempC} dunkTime={dunkTime} overDunk={overDunk} />
+                  <div className="status">
+                    <div className="pill" data-safe={safe} data-risk={overDunk}>
+                      {overDunk ? 'Over-dunked!' : safe ? 'Safe dunk' : 'Borderline'}
+                    </div>
+                    <div className="score">
+                      Risk: {(risk*100).toFixed(0)}%
+                    </div>
+                  </div>
+                </div>
+                <Crumbs key={overDunkTrigger} active />
+              </GlassCard>
+
+              <GlassCard title="Controls" style={{gridArea:'controls'}}>
+                <div className="controls">
+                  <RangeRow id="temp" label="Tea temperature" value={tempC} onChange={setTempC} min={40} max={100} step={1} unit="°C" shortcut="T" inputRef={inputsRef.temp} />
+                  <RangeRow id="time" label="Dunk time" value={dunkTime} onChange={setDunkTime} min={0} max={10} step={0.1} unit="s" shortcut="D" inputRef={inputsRef.time} />
+                  <RangeRow id="integrity" label="Structural integrity" value={integrity} onChange={setIntegrity} min={0} max={100} step={1} unit="%" shortcut="I" inputRef={inputsRef.integrity} />
+                  <SelectRow id="biscuit" label="Biscuit type" value={biscuit} onChange={setBiscuit} options={BISCUITS} shortcut="B" inputRef={inputsRef.biscuit} />
+                </div>
+              </GlassCard>
+
+              <GlassCard title="Crumble‑o‑meter" style={{gridArea:'graph'}}>
+                <CrumbleOMeter params={params} currentTime={dunkTime} />
+              </GlassCard>
+            </main>
+
+            {showHelp && (
+              <div className="modal" role="dialog" aria-modal="true">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h2>Help</h2>
+                    <button className="btn" onClick={() => setShowHelp(false)} aria-label="Close">✕</button>
+                  </div>
+                  <Help />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+  </html>

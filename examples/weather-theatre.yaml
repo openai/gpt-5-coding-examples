@@ -1,0 +1,7 @@
+id: weather-theatre
+title: Weather Theatre
+prompt: |
+  Generate a beautiful React + Canvas “weather theatre” where sliders (cosy, eerie, heroic) remix the same mock forecast into different stage sets; parallax backdrops, spotlight sweeps, and a curtain reveal; add a typewriter subtitle of the scene and a “Matinée/Night” toggle; no external APIs.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/weather-theatre.png
+tags:
+  - interactive

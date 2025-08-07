@@ -1,0 +1,156 @@
+@font-face {
+  font-family: 'Pixelated MS Sans Serif';
+  src: local('MS Sans Serif'), local('Tahoma');
+}
+
+:root {
+  --win-face: #c0c0c0;
+  --win-dark: #808080;
+  --win-darker: #404040;
+  --win-light: #ffffff;
+  --win-accent: #000080;
+  --bg: #0b0f1a;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #0b0f1a, #1b1130 60%, #28153e);
+  color: #111;
+  font-family: 'Pixelated MS Sans Serif', Tahoma, sans-serif;
+}
+
+.desktop {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 24px;
+}
+
+.window {
+  width: min(980px, 96vw);
+  background: var(--win-face);
+  border: 2px solid var(--win-dark);
+  box-shadow: 0 0 0 1px var(--win-light) inset,
+              0 0 0 2px var(--win-dark) inset,
+              0 0 0 3px var(--win-light) inset,
+              4px 4px 0 rgba(0,0,0,0.5);
+}
+
+.titlebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #000080, #3a3ab0);
+  color: white;
+  padding: 3px 5px;
+  font-weight: bold;
+}
+
+.titlebar .buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.px-btn {
+  width: 18px; height: 18px;
+  background: var(--win-face);
+  border: 2px solid var(--win-dark);
+  box-shadow: 0 0 0 1px var(--win-light) inset,
+              0 0 0 2px var(--win-dark) inset,
+              0 0 0 3px var(--win-light) inset;
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.px-btn:active { box-shadow: 0 0 0 1px var(--win-dark) inset, 0 0 0 2px var(--win-light) inset, 0 0 0 3px var(--win-dark) inset; }
+.px-btn svg { width: 10px; height: 10px; fill: black; }
+
+.menubar {
+  display: flex;
+  gap: 8px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--win-dark);
+}
+.menu-item { padding: 2px 6px; border: 1px solid transparent; }
+.menu-item:active, .menu-item.active {
+  border-color: var(--win-dark);
+  background: var(--win-light);
+}
+
+.window-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 8px;
+  padding: 8px;
+}
+
+.panel {
+  background: var(--win-face);
+  border: 2px solid var(--win-dark);
+  box-shadow: 0 0 0 1px var(--win-light) inset,
+              0 0 0 2px var(--win-dark) inset,
+              0 0 0 3px var(--win-light) inset;
+}
+.panel .panel-title {
+  background: #000080;
+  color: white;
+  padding: 3px 6px;
+  font-weight: bold;
+}
+.panel .panel-body { padding: 8px; }
+
+.controls { display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+.row label { font-size: 12px; }
+.row input[type="range"] { width: 130px; }
+
+.style-toggle { display: flex; gap: 6px; flex-wrap: wrap; }
+.style-toggle button {
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--win-face);
+  border: 2px solid var(--win-dark);
+  box-shadow: 0 0 0 1px var(--win-light) inset,
+              0 0 0 2px var(--win-dark) inset,
+              0 0 0 3px var(--win-light) inset;
+}
+.style-toggle button.active { background: #d6d6d6; }
+
+.statusbar {
+  margin-top: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  border-top: 1px solid var(--win-dark);
+  display: flex; justify-content: space-between; gap: 8px;
+}
+
+.canvas-wrap {
+  position: relative;
+  height: 580px;
+  background: radial-gradient(1200px 800px at 50% 40%, rgba(255,255,255,0.05), rgba(0,0,0,0.6)), #05060b;
+}
+canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+.hue-wheel {
+  width: 160px; height: 160px; margin: 6px auto; position: relative;
+}
+.hue-thumb {
+  position: absolute; width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid white; box-shadow: 0 0 0 1px black;
+  transform: translate(-50%, -50%);
+}
+
+.playbar { display: flex; gap: 8px; align-items: center; }
+.playbar .big-btn {
+  width: 32px; height: 32px; display: grid; place-items: center;
+  background: var(--win-face);
+  border: 2px solid var(--win-dark);
+  box-shadow: 0 0 0 1px var(--win-light) inset,
+              0 0 0 2px var(--win-dark) inset,
+              0 0 0 3px var(--win-light) inset;
+}
+.playbar .big-btn:active { box-shadow: 0 0 0 1px var(--win-dark) inset, 0 0 0 2px var(--win-light) inset, 0 0 0 3px var(--win-dark) inset; }
+.hint { color: #333; font-size: 11px; }
+
+.credits { font-size: 11px; opacity: 0.7; text-align: center; margin-top: 8px; }
+

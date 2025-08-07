@@ -1,0 +1,7 @@
+id: tea-dunkability
+title: Tea Dunkability Simulator
+prompt: |
+  Generate a React page that simulates tea dunkability for classic biscuits: sliders for tea temp, dunk time, biscuit type, and structural integrity; animate a looping teacup with steam, show a crumble-o-meter graph, and sprinkle crumbs on over-dunks; glass cards, dark mode, and keyboard shortcuts
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/tea-dunkability.png
+tags:
+  - interactive

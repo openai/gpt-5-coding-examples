@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tic Tac Toe — Imperium Edition</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* =====================
+         THEME VARIABLES
+         ===================== */
+      :root {
+        --bg: #f4efe6;                /* parchment */
+        --marble-1: #ffffff;
+        --marble-2: #e9e4da;
+        --marble-3: rgba(0,0,0,0.03);
+        --ink: #1d1a16;
+        --muted: #3d3a33;
+        --gold: #c9a227;
+        --gold-2: #b18d20;
+        --imperial-red: #7b1113;
+        --laurel: #2a7b3f;
+        --shadow: 0 12px 40px rgba(0,0,0,.15);
+        --radius-xl: 22px;
+        --radius-lg: 16px;
+        --gap: clamp(10px, 1.5vmin, 18px);
+        --size: min(92vmin, 840px); /* board size scales to viewport */
+        --tile: calc((var(--size) - 2 * var(--gap)) / 3);
+      }
+
+      /* Night Legion theme */
+      [data-theme="night"] {
+        --bg: #0f0f12;
+        --marble-1: #181820;
+        --marble-2: #101016;
+        --marble-3: rgba(255,255,255,0.04);
+        --ink: #f3efe6;
+        --muted: #cfc9bc;
+        --gold: #e8c766;
+        --gold-2: #ad8b2d;
+        --imperial-red: #d34a4e;
+        --laurel: #39a35b;
+        --shadow: 0 16px 50px rgba(0,0,0,.45);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; overflow: hidden; }
+      body {
+        margin: 0;
+        min-height: 100svh;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--ink);
+        background:
+          /* Colosseum silhouette */
+          radial-gradient(1000px 600px at 80% 0%, rgba(201,162,39,.08), transparent 60%),
+          radial-gradient(600px 400px at 10% 10%, var(--marble-2), transparent 60%),
+          radial-gradient(900px 1000px at 90% 20%, var(--marble-1), transparent 55%),
+          radial-gradient(800px 800px at 50% 90%, var(--marble-2), transparent 50%),
+          repeating-linear-gradient(135deg, transparent 0 22px, var(--marble-3) 22px 23px),
+          var(--bg);
+        transition: background .4s ease;
+      }
+
+      .wrap { height: 100svh; display: grid; place-items: start center; padding: clamp(16px, 2.8vmin, 32px); }
+
+      .card {
+        width: min(1280px, 96vw);
+        background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.86));
+        border: 1px solid rgba(0,0,0,.06);
+        box-shadow: var(--shadow);
+        border-radius: var(--radius-xl);
+        padding: clamp(16px, 2.4vmin, 28px);
+        position: relative;
+        overflow: hidden;
+        transform-origin: top center;
+      }
+
+      /* gilded frame */
+      .card::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(201,162,39,.8), rgba(177,141,32,.5)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+
+      /* ========== TOP BAR: simplified to avoid overlap ========== */
+      header { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 4px 8px 14px; border-bottom: 1px solid rgba(0,0,0,.06); }
+      @media (max-width: 720px) { header { grid-template-columns: 1fr; gap: 8px; } }
+
+      .title { font-family: Cinzel, serif; letter-spacing: .5px; line-height: 1.15; }
+      .title h1 { margin: 0; font-weight: 800; font-size: clamp(22px, 4.2vw, 40px); display: inline-flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .spqr { font-family: Cinzel, serif; font-weight: 800; font-size: .95rem; color: #fff; background: linear-gradient(135deg, var(--gold), var(--gold-2)); border: 1px solid rgba(0,0,0,.15); padding: 4px 10px; border-radius: 999px; box-shadow: 0 4px 10px rgba(0,0,0,.12), inset 0 0 0 1px rgba(255,255,255,.35); text-shadow: 0 1px 0 rgba(0,0,0,.25); }
+      .subtitle { margin-top: 4px; color: var(--muted); font-size: .98rem; }
+
+      .toolbar { display: inline-flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+      .btn, .select { appearance: none; border: 1px solid rgba(0,0,0,.12); background: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 600; box-shadow: 0 1px 0 rgba(255,255,255,.6) inset; cursor: pointer; transition: transform .04s ease, box-shadow .2s ease; }
+      .btn:hover { box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+      .btn:active { transform: translateY(1px) scale(.99); }
+      .btn.primary { color: #fff; background: linear-gradient(135deg, var(--imperial-red), #a31a1d); border: none; }
+      .btn.gold { color: #3a2f0b; background: linear-gradient(135deg, #f8e7a2, #e6c661); border: none; }
+
+      /* BOARD */
+      .crest { display:grid; place-items:center; margin-top: 8px; }
+      .crest .wreath { font-family: Cinzel, serif; font-weight: 900; letter-spacing:.6px; color:#3a2f0b; background: linear-gradient(135deg,#f7e59a,#e6c661); -webkit-background-clip:text; background-clip:text; color:transparent; font-size: clamp(16px,2.2vmin,22px); }
+
+      .grid { margin: clamp(14px, 2.4vmin, 24px) auto 12px; width: var(--size); height: var(--size); display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: var(--gap); position: relative; user-select: none; }
+
+      .cell { display: grid; place-items: center; font-weight: 800; font-size: calc(var(--tile) * .55); height: var(--tile); width: var(--tile); background: radial-gradient(120% 120% at 30% 20%, #fff, #f7f4ee 60%, #efe8db); border: 1px solid rgba(0,0,0,.08); border-radius: var(--radius-lg); box-shadow: 0 10px 22px rgba(0,0,0,.10), inset 0 0 0 1px rgba(255,255,255,.6); cursor: pointer; transition: transform .08s ease, box-shadow .2s ease, background .2s ease; position: relative; line-height: 1; overflow: hidden; }
+      [data-theme="night"] .cell { background: radial-gradient(140% 140% at 30% 20%, #1c1c24, #14141a 60%, #0f0f14); border-color: rgba(255,255,255,.06); box-shadow: 0 12px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06); }
+      .cell::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(135deg, transparent 0 18px, rgba(0,0,0,.02) 18px 19px); }
+      .cell:hover { transform: translateY(-1px); box-shadow: 0 16px 30px rgba(0,0,0,.12); }
+      .cell.disabled { pointer-events: none; opacity: .82; }
+
+      .mark-X { color: var(--imperial-red); text-shadow: 0 2px 0 rgba(0,0,0,.06); }
+      .mark-O { color: var(--laurel); text-shadow: 0 2px 0 rgba(0,0,0,.06); }
+
+      .cell.pop { animation: pop .18s ease-out; }
+      @keyframes pop { from { transform: scale(.85); opacity:.6 } to { transform: scale(1); opacity:1 } }
+
+      .win { box-shadow: 0 0 0 2px var(--gold) inset, 0 10px 24px rgba(0,0,0,.12); background: linear-gradient(180deg, #fff9db, #fff3b0); }
+      [data-theme="night"] .win { background: linear-gradient(180deg, #3c2f0b, #2b220a); }
+
+      .statusbar { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 8px 8px 0; }
+      @media (max-width: 720px) { .statusbar { grid-template-columns: 1fr; gap: 8px; } }
+
+      .status { display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 999px; background: #fff; border: 1px solid rgba(0,0,0,.08); box-shadow: 0 3px 10px rgba(0,0,0,.06); font-weight: 700; }
+      [data-theme="night"] .status { background: #13131a; border-color: rgba(255,255,255,.08); }
+
+      .badge { font-family: Cinzel, serif; font-weight: 800; letter-spacing: .3px; }
+      .badge.gold { color: #3a2f0b; background: linear-gradient(135deg, #f7e59a, #e6c661); padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,.12); }
+
+      .scores { display: inline-grid; grid-auto-flow: column; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,.08); background: #fff; box-shadow: 0 3px 10px rgba(0,0,0,.06); font-weight: 700; }
+      [data-theme="night"] .scores { background: #13131a; border-color: rgba(255,255,255,.08); }
+
+      footer { margin-top: 10px; font-size: .9rem; opacity:.85; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap: wrap; }
+
+      /* Floating victory banner — now anchored below header to avoid overlap */
+      .banner { position: relative; margin: 8px auto 0; width: max-content; background: linear-gradient(135deg, var(--gold), var(--gold-2)); color:#2a2208; padding: 8px 14px; border-radius: 999px; font-weight: 900; font-family: Cinzel, serif; letter-spacing: .4px; box-shadow: 0 12px 30px rgba(0,0,0,.18); opacity: 0; transform: translateY(-10px); transition: transform .3s ease, opacity .3s ease; }
+      .banner.show { opacity: 1; transform: translateY(0); }
+
+      /* Confetti — CSS keyframes to reduce layout flashing */
+      .confetti { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 0; }
+      .confetti canvas { width: 100%; height: 100%; display: block; }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .cell, .btn, .banner { transition: none !important; animation: none !important; }
+        .confetti i { display:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div
+        class="card"
+        role="application"
+        aria-label="Tic Tac Toe: Imperium Edition"
+      >
+        <header>
+          <div class="title">
+            <h1>
+              <span class="spqr" aria-hidden="true">SPQR</span> Tic Tac Toe —
+              <span class="badge gold">Imperium Edition</span>
+            </h1>
+            <div class="subtitle">
+              Conquer the grid. Three in a row crowns the victor.
+            </div>
+          </div>
+          <div class="toolbar">
+            <button id="newRound" class="btn gold" aria-label="Start new round">
+              New Round
+            </button>
+            <button
+              id="openSettings"
+              class="btn"
+              aria-haspopup="dialog"
+              aria-controls="settingsDialog"
+            >
+              Customize ⚙️
+            </button>
+            <button
+              id="resetAll"
+              class="btn primary"
+              aria-label="Reset scores and board"
+            >
+              Reset Scores
+            </button>
+          </div>
+        </header>
+
+        <main>
+          <div class="crest"><div class="wreath">✶ ROMA • INVICTA ✶</div></div>
+          <div class="banner" id="banner" aria-live="polite"></div>
+          <section class="grid" id="grid" role="grid" aria-label="3 by 3 board">
+            <!-- cells injected by JS -->
+          </section>
+          <div class="statusbar">
+            <div class="status" id="status" aria-live="polite"></div>
+            <div class="scores" id="scores" aria-label="Scoreboard">
+              <span>🏛️ Ledgers:</span>
+              <span>Legio X: <strong id="scoreX">0</strong></span>
+              <span>Legio O: <strong id="scoreO">0</strong></span>
+              <span>Drawn Battles: <strong id="scoreD">0</strong></span>
+            </div>
+          </div>
+          <footer>
+            <span style="font-family: Cinzel, serif">Resize freely.</span
+            ><span>•</span><span>The board scales with the viewport.</span>
+          </footer>
+          <div class="confetti" id="confetti" aria-hidden="true"></div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Settings Dialog to declutter the top bar -->
+    <dialog id="settingsDialog">
+      <form
+        method="dialog"
+        style="min-width: min(92vw, 560px); padding: 0; border: none"
+      >
+        <div
+          style="
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+          "
+        >
+          <div
+            style="
+              font-family: Cinzel, serif;
+              font-weight: 800;
+              letter-spacing: 0.4px;
+            "
+          >
+            Customize Arena
+          </div>
+          <button class="btn" value="close">✕</button>
+        </div>
+        <div
+          style="
+            display: grid;
+            gap: 12px;
+            padding: 16px 18px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          "
+        >
+          <label
+            >Theme
+            <select id="theme" class="select" style="width: 100%">
+              <option value="day">Marble Day</option>
+              <option value="night">Night Legion</option>
+            </select>
+          </label>
+          <label
+            >Glyph style
+            <select id="glyphs" class="select" style="width: 100%">
+              <option value="standard">Standard X / O</option>
+              <option value="ornate">Gladius / Laurel</option>
+            </select>
+          </label>
+          <label
+            >Game mode
+            <select id="mode" class="select" style="width: 100%">
+              <option value="pvp">Duel: 2 Players</option>
+              <option value="ai">Challenge Caesar (vs AI)</option>
+            </select>
+          </label>
+          <label
+            >First move
+            <select id="firstPlayer" class="select" style="width: 100%">
+              <option value="X">X</option>
+              <option value="O">O</option>
+            </select>
+          </label>
+          <label
+            >AI discipline
+            <select id="handicap" class="select" style="width: 100%">
+              <option value="0">Perfect</option>
+              <option value="1">Pragmatic</option>
+              <option value="2">Reckless</option>
+            </select>
+          </label>
+        </div>
+        <div
+          style="
+            padding: 14px 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+          "
+        >
+          <button class="btn" value="close">Close</button>
+          <button id="applySettings" class="btn gold" value="apply">
+            Apply
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <script>
+      // --- Elements ---
+      const cardEl = document.querySelector('.card');
+      const wrapEl = document.querySelector('.wrap');
+      const gridEl = document.getElementById("grid");
+      const statusEl = document.getElementById("status");
+      const newRoundBtn = document.getElementById("newRound");
+      const resetAllBtn = document.getElementById("resetAll");
+      const openSettingsBtn = document.getElementById("openSettings");
+      const settingsDialog = document.getElementById("settingsDialog");
+      const applySettingsBtn = document.getElementById("applySettings");
+
+      // Controls inside dialog
+      const themeEl = document.getElementById("theme");
+      const glyphsEl = document.getElementById("glyphs");
+      const modeEl = document.getElementById("mode");
+      const firstPlayerEl = document.getElementById("firstPlayer");
+      const handicapEl = document.getElementById("handicap");
+
+      const scoreXEl = document.getElementById("scoreX");
+      const scoreOEl = document.getElementById("scoreO");
+      const scoreDEl = document.getElementById("scoreD");
+      const bannerEl = document.getElementById("banner");
+      const confettiEl = document.getElementById("confetti");
+
+      const WIN_LINES = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
+
+      let board,
+        current,
+        locked,
+        scores,
+        mode,
+        aiPlayer,
+        humanPlayer,
+        glyphMode,
+        handicap;
+
+      function fitCardToWindow() {
+        const card = cardEl;
+        if (!card) return;
+        const prevTransform = card.style.transform;
+        card.style.transform = 'none';
+        const rect = card.getBoundingClientRect();
+        const cs = wrapEl ? getComputedStyle(wrapEl) : null;
+        const padX = cs ? (parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)) : 0;
+        const padY = cs ? (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) : 0;
+        const availW = Math.max(1, window.innerWidth - padX);
+        const availH = Math.max(1, window.innerHeight - padY);
+        const scaleW = availW / Math.max(1, rect.width);
+        const scaleH = availH / Math.max(1, rect.height);
+        const scale = Math.min(1, scaleW, scaleH);
+        card.style.transform = scale < 1 ? `scale(${scale})` : 'none';
+        card.style.marginTop = '0px';
+      }
+
+      function initState() {
+        document.body.setAttribute(
+          "data-theme",
+          themeEl.value === "night" ? "night" : "day"
+        );
+        glyphMode = glyphsEl.value; // 'standard' or 'ornate'
+        handicap = +handicapEl.value; // 0..2
+        board = Array(9).fill("");
+        mode = modeEl.value; // 'pvp' or 'ai'
+        current = firstPlayerEl.value; // 'X' or 'O'
+        locked = false;
+        aiPlayer = "O";
+        humanPlayer = aiPlayer === "X" ? "O" : "X";
+        drawBoard();
+        updateStatus(`Turn: <span class="badge">${current}</span>`);
+        hideBanner();
+        clearConfetti();
+        maybeAIMove();
+        fitCardToWindow();
+      }
+
+      function drawBoard() {
+        gridEl.innerHTML = "";
+        for (let i = 0; i < 9; i++) {
+          const cell = document.createElement("button");
+          cell.className = "cell";
+          cell.setAttribute("role", "gridcell");
+          cell.setAttribute("aria-label", `Cell ${i + 1}`);
+          cell.dataset.idx = i;
+          cell.addEventListener("click", onCellClick);
+          gridEl.appendChild(cell);
+        }
+        syncCells();
+      }
+
+      function displayGlyph(mark) {
+        if (glyphMode !== "ornate") return mark; // standard X/O
+        return mark === "X" ? "🗡️" : "🟢"; // gladius / laurel dot
+      }
+
+      function syncCells(highlight = []) {
+        const cells = gridEl.children;
+        for (let i = 0; i < 9; i++) {
+          const v = board[i];
+          const c = cells[i];
+          c.textContent = v ? displayGlyph(v) : "";
+          c.classList.toggle("mark-X", v === "X");
+          c.classList.toggle("mark-O", v === "O");
+          c.classList.toggle("win", highlight.includes(i));
+          c.classList.toggle("disabled", locked || v !== "");
+        }
+      }
+
+      function onCellClick(e) {
+        const i = +e.currentTarget.dataset.idx;
+        if (locked || board[i]) return;
+        place(i, current);
+        const res = evaluate();
+        if (res.done) return endRound(res);
+        swap();
+        maybeAIMove();
+      }
+
+      function place(i, mark) {
+        board[i] = mark;
+        const cell = gridEl.children[i];
+        cell.textContent = displayGlyph(mark);
+        cell.classList.add(`mark-${mark}`, "pop");
+        setTimeout(() => cell.classList.remove("pop"), 240);
+      }
+
+      function swap() {
+        current = current === "X" ? "O" : "X";
+        updateStatus(`Turn: <span class="badge">${current}</span>`);
+      }
+
+      function evaluate() {
+        for (const line of WIN_LINES) {
+          const [a, b, c] = line;
+          if (board[a] && board[a] === board[b] && board[b] === board[c])
+            return { done: true, winner: board[a], line };
+        }
+        if (board.every(Boolean)) return { done: true, winner: null };
+        return { done: false };
+      }
+
+      function endRound({ winner, line }) {
+        locked = true;
+        // Only add win highlight; avoid reflow-heavy changes
+        if (line) syncCells(line);
+        else syncCells();
+        if (winner) {
+          updateStatus(
+            `<span class="badge gold">${winner}</span> claims victory!`
+          );
+          showBanner(`${winner} Triumphs`);
+          burstConfetti();
+          if (winner === "X") scores.X++;
+          else scores.O++;
+        } else {
+          updateStatus(`Pax Romana — Draw.`);
+          showBanner(`Pax Romana — Draw`);
+          scores.D++;
+        }
+        renderScores();
+      }
+
+      function updateStatus(html) {
+        statusEl.innerHTML = html;
+      }
+      function renderScores() {
+        scoreXEl.textContent = scores.X;
+        scoreOEl.textContent = scores.O;
+        scoreDEl.textContent = scores.D;
+      }
+
+      // --- Confetti (Canvas-based: zero DOM churn, no layout flashing) ---
+      const prefersReducedMotion =
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let cf = {
+        canvas: null,
+        ctx: null,
+        particles: [],
+        rafId: null,
+        running: false,
+        dpr: Math.max(1, window.devicePixelRatio || 1),
+      };
+
+      function setupConfetti() {
+        if (prefersReducedMotion) return; // respect user setting
+        if (!cf.canvas) {
+          cf.canvas = document.createElement("canvas");
+          cf.ctx = cf.canvas.getContext("2d");
+          confettiEl.innerHTML = "";
+          confettiEl.appendChild(cf.canvas);
+          resizeConfetti();
+          window.addEventListener("resize", resizeConfetti);
+        }
+      }
+
+      function resizeConfetti() {
+        if (!cf.canvas) return;
+        const rect = confettiEl.getBoundingClientRect();
+        cf.canvas.width = Math.max(1, Math.floor(rect.width * cf.dpr));
+        cf.canvas.height = Math.max(1, Math.floor(rect.height * cf.dpr));
+      }
+
+      function burstConfetti() {
+        setupConfetti();
+        if (prefersReducedMotion) return;
+        clearConfetti();
+        const styles = getComputedStyle(document.body);
+        const palette = [
+          styles.getPropertyValue("--gold").trim() || "#c9a227",
+          styles.getPropertyValue("--imperial-red").trim() || "#7b1113",
+          styles.getPropertyValue("--laurel").trim() || "#2a7b3f",
+        ];
+        const rect = confettiEl.getBoundingClientRect();
+        const W = rect.width,
+          H = rect.height;
+        const N = Math.min(120, Math.max(40, Math.floor((W * H) / 12000))); // scale with area
+        for (let i = 0; i < N; i++) {
+          cf.particles.push({
+            x: Math.random() * W,
+            y: -10 - Math.random() * 30,
+            vx: (Math.random() - 0.5) * 2.2,
+            vy: 1.4 + Math.random() * 1.6,
+            s: 4 + Math.random() * 6,
+            r: Math.random() * Math.PI,
+            vr: -0.15 + Math.random() * 0.3,
+            g: 0.12 + Math.random() * 0.06,
+            color: palette[Math.floor(Math.random() * palette.length)],
+            life: 0,
+            ttl: 120 + Math.random() * 80,
+          });
+        }
+        if (!cf.running) {
+          cf.running = true;
+          tickConfetti();
+        }
+      }
+
+      function tickConfetti() {
+        if (!cf.running || !cf.ctx) return;
+        const rect = confettiEl.getBoundingClientRect();
+        const ctx = cf.ctx;
+        const W = rect.width;
+        const H = rect.height;
+        const dpr = cf.dpr;
+        // Clear
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, cf.canvas.width, cf.canvas.height);
+        ctx.scale(dpr, dpr);
+        // Draw / Update
+        for (let i = cf.particles.length - 1; i >= 0; i--) {
+          const p = cf.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.g;
+          p.r += p.vr;
+          p.life++;
+          // cull
+          if (p.y - p.s > H + 20 || p.life > p.ttl) {
+            cf.particles.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.r);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6);
+          ctx.restore();
+        }
+        if (cf.particles.length === 0) {
+          cf.running = false;
+          return;
+        }
+        cf.rafId = requestAnimationFrame(tickConfetti);
+      }
+
+      function clearConfetti() {
+        if (!cf.ctx) return;
+        cf.particles.length = 0;
+        if (cf.rafId) cancelAnimationFrame(cf.rafId);
+        cf.rafId = null;
+        cf.running = false;
+        cf.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        cf.ctx.clearRect(
+          0,
+          0,
+          cf.canvas ? cf.canvas.width : 0,
+          cf.canvas ? cf.canvas.height : 0
+        );
+      }
+
+      // --- Banner ---
+      function showBanner(text) {
+        bannerEl.textContent = text;
+        bannerEl.classList.add("show");
+      }
+      function hideBanner() {
+        bannerEl.classList.remove("show");
+        bannerEl.textContent = "";
+      }
+
+      // --- AI ---
+      function maybeAIMove() {
+        if (mode !== "ai") return;
+        if (current !== aiPlayer) return;
+        setTimeout(() => {
+          const { move } = pickAIMove();
+          if (move != null) {
+            place(move, aiPlayer);
+            const res = evaluate();
+            if (res.done) return endRound(res);
+            swap();
+          }
+        }, 220);
+      }
+
+      function pickAIMove() {
+        if (handicap === 2 && Math.random() < 0.66)
+          return { move: randomReasonableMove(board) };
+        if (handicap === 1 && Math.random() < 0.33)
+          return { move: randomReasonableMove(board) };
+        return minimaxPick(board.slice(), aiPlayer);
+      }
+
+      function randomReasonableMove(s) {
+        const prefs = [4, 0, 2, 6, 8, 1, 3, 5, 7];
+        return prefs.find((i) => !s[i]);
+      }
+      function minimaxPick(state, player) {
+        const res = minimax(state, player, 0);
+        return { move: res.move };
+      }
+
+      function minimax(state, player, depth) {
+        const evalRes = evaluateStatic(state);
+        if (evalRes !== null)
+          return { score: evalRes - depth * Math.sign(evalRes), move: null };
+        const moves = availableMoves(state);
+        let best = {
+          score: player === aiPlayer ? -Infinity : Infinity,
+          move: moves[0],
+        };
+        for (const m of moves) {
+          state[m] = player;
+          const next = minimax(state, player === "X" ? "O" : "X", depth + 1);
+          state[m] = "";
+          if (player === aiPlayer) {
+            if (next.score > best.score) best = { score: next.score, move: m };
+          } else {
+            if (next.score < best.score) best = { score: next.score, move: m };
+          }
+        }
+        return best;
+      }
+
+      function evaluateStatic(s) {
+        for (const [a, b, c] of WIN_LINES)
+          if (s[a] && s[a] === s[b] && s[b] === s[c])
+            return s[a] === aiPlayer ? 10 : -10;
+        if (s.every(Boolean)) return 0;
+        return null;
+      }
+      function availableMoves(s) {
+        return s.map((v, i) => (v ? null : i)).filter((i) => i !== null);
+      }
+
+      // --- Settings Dialog logic ---
+      openSettingsBtn.addEventListener("click", () => {
+        if (!settingsDialog.open) settingsDialog.showModal();
+      });
+      applySettingsBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        settingsDialog.close("apply");
+        initState();
+      });
+      settingsDialog.addEventListener("close", () => {
+        if (settingsDialog.returnValue !== "apply") {
+          /* no-op */
+        }
+      });
+
+      // --- Buttons ---
+      newRoundBtn.addEventListener("click", () => {
+        initState();
+      });
+      resetAllBtn.addEventListener("click", () => {
+        scores = { X: 0, O: 0, D: 0 };
+        renderScores();
+        initState();
+      });
+
+      // --- Boot ---
+      scores = { X: 0, O: 0, D: 0 };
+      renderScores();
+      // defaults
+      themeEl.value = "day";
+      glyphsEl.value = "standard";
+      modeEl.value = "pvp";
+      firstPlayerEl.value = "X";
+      handicapEl.value = "0";
+      initState();
+
+      window.addEventListener('resize', fitCardToWindow);
+      window.addEventListener('orientationchange', fitCardToWindow);
+      window.addEventListener('load', fitCardToWindow);
+    </script>
+  </body>
+</html>

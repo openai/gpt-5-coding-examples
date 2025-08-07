@@ -1,0 +1,9 @@
+id: event-count-down
+title: Event Countdown
+prompt: |
+  Create a single-page app in a single HTML file that builds a live event countdown.
+  - Inputs: event name, date/time, location, background image upload.
+  - Display large animated countdown numbers, subtle background parallax effect, and a “Save to Calendar” button.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/event-count-down.png
+tags:
+  - utility

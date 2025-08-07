@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Festival Lights Show</title>
+  <meta name="description" content="Control a vibrant, music-synced virtual light show with colors and patterns." />
+  <style>
+    :root {
+      --bg-1: 255, 80, 120;
+      --bg-2: 80, 140, 255;
+      --bg-3: 120, 255, 180;
+      --panel: 18, 18, 30;
+      --text: 250, 250, 255;
+      --muted: 190, 200, 210;
+      --accent: 255, 200, 50;
+      --ring: 255, 255, 255;
+      --shadow: 0 30px 100px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(var(--bg-1), .25), transparent 70%),
+                  radial-gradient(1200px 800px at 90% 20%, rgba(var(--bg-2), .25), transparent 70%),
+                  radial-gradient(1200px 800px at 40% 80%, rgba(var(--bg-3), .25), transparent 70%),
+                  linear-gradient(135deg, #0a0a12, #151522 60%, #0b0b14);
+      color: rgb(var(--text));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+      overflow: hidden;
+    }
+
+    
+    .orb {
+      position: absolute;
+      inset: auto;
+      filter: blur(50px);
+      opacity: .35;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      animation: float 16s ease-in-out infinite;
+      border-radius: 50%;
+    }
+    .orb:nth-child(1) { width: 40vmax; height: 40vmax; background: radial-gradient(circle at 40% 40%, rgba(255,100,150,.8), rgba(255,100,150,0)); left: -10vmax; top: -10vmax; animation-duration: 20s; }
+    .orb:nth-child(2) { width: 30vmax; height: 30vmax; background: radial-gradient(circle at 60% 40%, rgba(90,160,255,.8), rgba(90,160,255,0)); right: -8vmax; top: 10vmax; animation-duration: 18s; }
+    .orb:nth-child(3) { width: 35vmax; height: 35vmax; background: radial-gradient(circle at 50% 50%, rgba(120,255,200,.8), rgba(120,255,200,0)); left: 20vmax; bottom: -10vmax; animation-duration: 22s; }
+    @keyframes float {
+      0%, 100% { transform: translate3d(0,0,0) scale(1); }
+      50% { transform: translate3d(0,-2vmax,0) scale(1.05); }
+    }
+
+    header {
+      position: absolute; inset: 0 auto auto 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; gap: 16px;
+      background: linear-gradient(180deg, rgba(10,10,18,.75), rgba(10,10,18,0));
+      z-index: 3;
+    }
+    header h1 {
+      margin: 0; font-size: 20px; letter-spacing: .5px;
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .badge {
+      padding: 4px 8px; border-radius: 999px;
+      background: linear-gradient(90deg, #ff5fbf, #ffc24d, #5bffb6);
+      color: #0a0a12; font-weight: 700; font-size: 12px;
+    }
+
+    .panel {
+      position: absolute; left: 16px; right: 16px; bottom: 16px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      background: rgba(var(--panel), .78);
+      backdrop-filter: blur(8px) saturate(140%);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; padding: 12px;
+      box-shadow: var(--shadow);
+      z-index: 3;
+    }
+    .section { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .section h3 { margin: 0 8px 0 0; font-size: 12px; letter-spacing: .7px; text-transform: uppercase; color: rgba(var(--muted), .9); }
+
+    .color-swatch { width: 26px; height: 26px; border-radius: 8px; border: 2px solid rgba(255,255,255,.25); cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+    .color-swatch:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+    .color-input { height: 34px; width: 44px; border: none; background: transparent; cursor: pointer; }
+
+    select, input[type="range"], button {
+      background: rgba(255,255,255,.06); color: rgb(var(--text));
+      border-radius: 10px; border: 1px solid rgba(255,255,255,.12);
+      padding: 8px 10px; font-size: 14px; outline: none;
+    }
+    input[type="range"] { height: 30px; accent-color: #ffc24d; }
+    button { cursor: pointer; transition: transform .1s ease, background .2s ease; }
+    button:hover { transform: translateY(-1px); background: rgba(255,255,255,.12); }
+    .primary { background: linear-gradient(90deg, #ff5fbf, #ffc24d, #5bffb6); color: #081018; border: none; }
+    .ghost { background: rgba(255,255,255,.06); }
+
+    .toolbar-spacer { flex: 1; }
+    .pill { padding: 6px 10px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); }
+
+    
+    #stage-wrap { position: absolute; inset: 64px 16px 96px 16px; border-radius: 20px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), var(--shadow); }
+    #stage { width: 100%; height: 100%; display: block; background: radial-gradient(1600px 800px at 50% 10%, rgba(255,255,255,.02), transparent), #0b0b14; }
+
+    
+    .legend { position: absolute; right: 20px; top: 70px; display: flex; gap: 8px; z-index: 3; }
+    .legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    footer { position: absolute; right: 16px; bottom: 20px; font-size: 12px; color: rgba(var(--muted), .9); z-index: 3; }
+
+    
+    @media (max-width: 900px) {
+      .panel { grid-template-columns: 1fr; gap: 14px; }
+      header h1 { font-size: 18px; }
+      #stage-wrap { inset: 80px 12px 140px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+
+  <header>
+    <h1>
+      <span aria-hidden="true" style="display:inline-flex; width:22px; height:22px; border-radius:6px; background: conic-gradient(from 0deg,#ff5fbf,#ffc24d,#5bffb6,#5aa0ff,#ff5fbf); box-shadow: 0 0 18px rgba(255,200,80,.6), 0 0 40px rgba(90,160,255,.3);"></span>
+      Festival Lights Show
+      <span class="badge">Live</span>
+    </h1>
+    <div class="legend" aria-hidden="true">
+      <span class="pill">Music Sync Ready</span>
+    </div>
+  </header>
+
+  <div id="stage-wrap" aria-label="Virtual light stage">
+    <canvas id="stage"></canvas>
+  </div>
+
+  <div class="panel" role="group" aria-label="Controls">
+    <div class="section">
+      <h3>Colors</h3>
+      <div id="swatches"></div>
+      <input id="colorPicker" class="color-input" type="color" value="#ff5fbf" aria-label="Pick color"/>
+      <button id="randomizeColors" class="ghost" title="Randomize colors">Shuffle</button>
+    </div>
+
+    <div class="section">
+      <h3>Pattern</h3>
+      <select id="pattern">
+        <option value="solid">Solid</option>
+        <option value="rainbow">Rainbow</option>
+        <option value="wave">Wave</option>
+        <option value="spiral">Spiral</option>
+        <option value="sparkle">Sparkle</option>
+        <option value="checker">Checker</option>
+        <option value="orbit">Orbit</option>
+        <option value="equalizer">Equalizer</option>
+      </select>
+      <label class="pill" for="speed" style="display:inline-flex; align-items:center; gap:8px;">Speed <input id="speed" type="range" min="0" max="1.5" step="0.01" value="0.6"/></label>
+      <label class="pill" for="intensity" style="display:inline-flex; align-items:center; gap:8px;">Intensity <input id="intensity" type="range" min="0" max="1" step="0.01" value="0.9"/></label>
+      <label class="pill" for="grid" style="display:inline-flex; align-items:center; gap:8px;">Grid <input id="grid" type="range" min="8" max="28" step="1" value="18"/></label>
+    </div>
+
+    <div class="section">
+      <h3>Music</h3>
+      <button id="togglePlay" class="primary">Play Demo Beat</button>
+      <input id="file" type="file" accept="audio/*"/>
+      <button id="mic" class="ghost">Mic</button>
+      <span class="pill" id="syncState">Sync: Off</span>
+    </div>
+
+    <div class="section" style="justify-content:flex-end;">
+      <button id="randomizeAll" class="primary">Surprise Me</button>
+      <button id="clearSparkle" class="ghost">Calm</button>
+      <button id="pause" class="ghost">Pause Visuals</button>
+    </div>
+  </div>
+
+  <footer>
+    Pro tip: Try Equalizer with Mic for reactive lights.
+  </footer>
+
+  <script>
+    
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const hsl = (h, s, l) => `hsl(${h} ${s}% ${l}%)`;
+    const rand = (a = 1, b) => b === undefined ? Math.random() * a : a + Math.random() * (b - a);
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0, DPR = Math.min(2, window.devicePixelRatio || 1);
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      W = Math.floor(rect.width);
+      H = Math.floor(rect.height);
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    addEventListener('resize', resize, { passive: true });
+    resize();
+
+    
+    const state = {
+      grid: 18,
+      speed: 0.6,
+      intensity: 0.9,
+      baseHue: 320,
+      colors: ['#ff5fbf', '#ffc24d', '#5bffb6', '#5aa0ff'],
+      pattern: 'wave',
+      paused: false,
+      sparkleMap: new Map(),
+      t: 0,
+    };
+
+    
+    const swatchWrap = document.getElementById('swatches');
+    const colorPicker = document.getElementById('colorPicker');
+    function renderSwatches() {
+      swatchWrap.innerHTML = '';
+      state.colors.forEach((c, i) => {
+        const el = document.createElement('button');
+        el.className = 'color-swatch';
+        el.style.background = c;
+        el.title = `Color ${i+1}`;
+        el.addEventListener('click', () => {
+          state.colors[i] = colorPicker.value;
+          renderSwatches();
+        });
+        swatchWrap.appendChild(el);
+      });
+    }
+    colorPicker.addEventListener('input', (e) => {
+      // no-op; color applied when clicking a swatch to replace
+    });
+    document.getElementById('randomizeColors').addEventListener('click', () => {
+      state.colors = Array.from({ length: 4 }, () => `hsl(${Math.floor(rand(0,360))} ${Math.floor(rand(60,95))}% ${Math.floor(rand(45,70))}%)`);
+      renderSwatches();
+    });
+    renderSwatches();
+
+    
+    const patternSel = document.getElementById('pattern');
+    const speedInput = document.getElementById('speed');
+    const gridInput = document.getElementById('grid');
+    const intensityInput = document.getElementById('intensity');
+    patternSel.value = state.pattern;
+    speedInput.value = state.speed;
+    gridInput.value = state.grid;
+    intensityInput.value = state.intensity;
+    patternSel.addEventListener('change', e => state.pattern = e.target.value);
+    speedInput.addEventListener('input', e => state.speed = parseFloat(e.target.value));
+    gridInput.addEventListener('input', e => state.grid = parseInt(e.target.value, 10));
+    intensityInput.addEventListener('input', e => state.intensity = parseFloat(e.target.value));
+
+    document.getElementById('randomizeAll').addEventListener('click', () => {
+      patternSel.value = state.pattern = pick(['solid','rainbow','wave','spiral','sparkle','checker','orbit','equalizer']);
+      speedInput.value = state.speed = rand(0.15, 1.2).toFixed(2);
+      gridInput.value = state.grid = Math.floor(rand(10, 26));
+      intensityInput.value = state.intensity = rand(.6, 1).toFixed(2);
+      state.colors = Array.from({ length: 4 }, () => `hsl(${Math.floor(rand(0,360))} ${Math.floor(rand(60,95))}% ${Math.floor(rand(45,70))}%)`);
+      renderSwatches();
+    });
+
+    document.getElementById('pause').addEventListener('click', () => {
+      state.paused = !state.paused;
+      document.getElementById('pause').textContent = state.paused ? 'Resume Visuals' : 'Pause Visuals';
+    });
+
+    document.getElementById('clearSparkle').addEventListener('click', () => state.sparkleMap.clear());
+
+    
+    const syncState = document.getElementById('syncState');
+    const toggleBtn = document.getElementById('togglePlay');
+    const fileInput = document.getElementById('file');
+    const micBtn = document.getElementById('mic');
+
+    let audioCtx, analyser, srcNode, dataArray, micStream, mediaEl, gainNode;
+    let demoPlaying = false;
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.85;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        gainNode = audioCtx.createGain();
+        gainNode.gain.value = 0.9;
+        analyser.connect(gainNode).connect(audioCtx.destination);
+      }
+    }
+
+    function connectSource(node) {
+      if (srcNode && srcNode.disconnect) try { srcNode.disconnect(); } catch(e){}
+      srcNode = node;
+      srcNode.connect(analyser);
+      syncState.textContent = 'Sync: On';
+    }
+
+    function stopMediaEl() {
+      if (mediaEl) {
+        try { mediaEl.pause(); } catch(e){}
+        try { mediaEl.srcObject = null; } catch(e){}
+        mediaEl.remove();
+        mediaEl = null;
+      }
+    }
+
+    function stopMic() {
+      if (micStream) {
+        const tracks = micStream.getTracks();
+        tracks.forEach(t => t.stop());
+        micStream = null;
+      }
+    }
+
+    function createDemoBeatBuffer(ctx) {
+      // Procedural drum-ish loop: kick, snare, hat -> 120 BPM
+      const bpm = 120;
+      const sr = ctx.sampleRate;
+      const barSec = 60 / bpm * 4;
+      const length = Math.floor(barSec * sr);
+      const ch = 2;
+      const buffer = ctx.createBuffer(ch, length, sr);
+      function env(len) { const a = new Float32Array(len); for (let i=0;i<len;i++){ a[i] = Math.exp(-6*i/len);} return a; }
+      const kickEnv = env(Math.floor(.12*sr));
+      const snrEnv = env(Math.floor(.08*sr));
+      const hatEnv = env(Math.floor(.03*sr));
+      for (let c=0;c<ch;c++) {
+        const out = buffer.getChannelData(c);
+        // hi-hat every 8th
+        for (let s=0; s<length; s++) {
+          const t = s/sr;
+          const eighth = Math.floor(t / (60/bpm/2));
+          const hatOn = (s % Math.floor(sr*60/bpm/2)) === 0;
+          if (hatOn && s + hatEnv.length < length) {
+            for (let i=0;i<hatEnv.length;i++) out[s+i] += (Math.random()*2-1)*0.1*hatEnv[i];
+          }
+        }
+        // kicks on 1 and 3, snares on 2 and 4
+        const beats = [0, 2, 1, 3];
+        for (let b=0;b<4;b++) {
+          const beatTime = b * 60/bpm; // quarter note spacing
+          const idx = Math.floor(beatTime*sr);
+          if (b===0 || b===2) {
+            for (let i=0;i<kickEnv.length && idx+i<length;i++) {
+              out[idx+i] += Math.sin(2*Math.PI*(60 + i*0.5)/sr * i) * 0.9 * kickEnv[i];
+            }
+          } else {
+            for (let i=0;i<snrEnv.length && idx+i<length;i++) {
+              out[idx+i] += (Math.random()*2-1) * 0.6 * snrEnv[i];
+            }
+          }
+        }
+      }
+      return buffer;
+    }
+
+    toggleBtn.addEventListener('click', async () => {
+      ensureAudio();
+      stopMic();
+      stopMediaEl();
+      if (!demoPlaying) {
+        const src = audioCtx.createBufferSource();
+        src.buffer = createDemoBeatBuffer(audioCtx);
+        src.loop = true;
+        connectSource(src);
+        src.start();
+        demoPlaying = true;
+        toggleBtn.textContent = 'Stop Demo Beat';
+      } else {
+        if (srcNode && srcNode.stop) try { srcNode.stop(); } catch(e){}
+        demoPlaying = false;
+        toggleBtn.textContent = 'Play Demo Beat';
+        syncState.textContent = 'Sync: Off';
+      }
+    });
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      ensureAudio(); stopMic();
+      stopMediaEl();
+      mediaEl = new Audio();
+      mediaEl.src = URL.createObjectURL(file);
+      mediaEl.crossOrigin = 'anonymous';
+      mediaEl.loop = true;
+      const mediaSrc = audioCtx.createMediaElementSource(mediaEl);
+      connectSource(mediaSrc);
+      mediaEl.play();
+      demoPlaying = false; toggleBtn.textContent = 'Play Demo Beat';
+    });
+
+    micBtn.addEventListener('click', async () => {
+      ensureAudio(); stopMediaEl();
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const micSrc = audioCtx.createMediaStreamSource(micStream);
+        connectSource(micSrc);
+        demoPlaying = false; toggleBtn.textContent = 'Play Demo Beat';
+      } catch (err) {
+        alert('Microphone access denied');
+      }
+    });
+
+    
+    function drawLights(t) {
+      const n = state.grid;
+      const cols = n, rows = n;
+      const pad = 18;
+      const w = W - pad*2, h = H - pad*2;
+      const cell = Math.min(w/cols, h/rows);
+      const cx = (W - cell*cols)/2, cy = (H - cell*rows)/2;
+      ctx.clearRect(0,0,W,H);
+
+      
+      const grd = ctx.createRadialGradient(W/2,H/3, Math.min(W,H)/12, W/2,H/2, Math.max(W,H));
+      grd.addColorStop(0, 'rgba(255,255,255,0.04)');
+      grd.addColorStop(1, 'rgba(0,0,0,0.25)');
+      ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
+
+      
+      let bass=0, mid=0, treb=0, energy=0;
+      if (analyser) {
+        analyser.getByteFrequencyData(dataArray);
+        const N = dataArray.length;
+        const third = Math.floor(N/3);
+        const sliceAvg = (s, e) => dataArray.slice(s,e).reduce((a,b)=>a+b,0)/Math.max(1,(e-s));
+        bass = sliceAvg(0, third)/255;
+        mid = sliceAvg(third, third*2)/255;
+        treb = sliceAvg(third*2, N)/255;
+        energy = (bass*1.3 + mid + treb*0.8) / 3.1;
+      }
+
+      const tSec = t/1000 * state.speed;
+      const glow = 0.6 + 0.4*Math.sin(tSec*2*Math.PI*0.2);
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      
+      for (let y=0; y<rows; y++) {
+        for (let x=0; x<cols; x++) {
+          const i = y*cols + x;
+          const px = (x + 0.5) * cell;
+          const py = (y + 0.5) * cell;
+          const r = cell*0.35;
+          const [fill, bright] = colorFor(i, x, y, cols, rows, tSec, { bass, mid, treb, energy });
+          const b = clamp(bright * state.intensity, 0, 1);
+
+          
+          ctx.beginPath();
+          const g = ctx.createRadialGradient(px,py, r*0.1, px,py, r*2.2);
+          g.addColorStop(0, fill);
+          g.addColorStop(0.3, fill);
+          g.addColorStop(1, `rgba(255,255,255,0)`);
+          ctx.fillStyle = g;
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = 0.75 * b * (0.7 + 0.3*glow);
+          ctx.arc(px, py, r*2.2, 0, Math.PI*2);
+          ctx.fill();
+
+          
+          ctx.beginPath();
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = fill;
+          ctx.arc(px, py, r, 0, Math.PI*2);
+          ctx.fill();
+
+          
+          const hl = ctx.createRadialGradient(px-r*0.4, py-r*0.4, 0, px-r*0.4, py-r*0.4, r);
+          hl.addColorStop(0, 'rgba(255,255,255,.35)');
+          hl.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.globalAlpha = 0.6;
+          ctx.fillStyle = hl;
+          ctx.beginPath();
+          ctx.arc(px, py, r, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    
+    function colorFor(i, x, y, cols, rows, t, audio) {
+      const { pattern, colors } = state;
+      const hueBase = (x/cols)*360 + (y/rows)*60 + t*40;
+      const c1 = colors[0];
+      const c2 = colors[1];
+      const c3 = colors[2];
+      const c4 = colors[3];
+      let bright = 1;
+      let fill = c1;
+      const nx = x/cols, ny = y/rows;
+      const cx = cols/2, cy = rows/2;
+      const dx = x - cx, dy = y - cy;
+      const dist = Math.hypot(dx, dy);
+      const ang = Math.atan2(dy, dx);
+
+      if (pattern === 'solid') {
+        const hue = (state.baseHue + t*60) % 360;
+        fill = hsl(hue, 90, 60);
+        bright = 0.9 + 0.1*Math.sin(t*2 + nx*2 + ny*2);
+      } else if (pattern === 'rainbow') {
+        const hue = (hueBase) % 360;
+        fill = hsl(hue, 100, 60);
+        bright = 0.7 + 0.3*Math.sin(t*2 + dist*0.25);
+      } else if (pattern === 'wave') {
+        const w = Math.sin((nx*3 + t*0.8)*Math.PI*2) * 0.5 + 0.5;
+        const hue = (w*360 + t*90) % 360;
+        fill = hsl(hue, 95, 60);
+        bright = 0.6 + 0.4*Math.sin((ny*4 + t*1.2)*Math.PI*2);
+      } else if (pattern === 'spiral') {
+        const hue = ( (ang*180/Math.PI + 180) + t*120 ) % 360;
+        fill = hsl(hue, 95, 60);
+        bright = 0.55 + 0.45*Math.sin(dist*0.35 + t*2.4);
+      } else if (pattern === 'sparkle') {
+        const key = i;
+        const prev = state.sparkleMap.get(key) || 0;
+        let v = prev * 0.9;
+        if (Math.random() < 0.04) v = 1.0;
+        state.sparkleMap.set(key, v);
+        const hue = (t*160 + i*3) % 360;
+        fill = hsl(hue, 100, 65);
+        bright = 0.2 + 0.8*v;
+      } else if (pattern === 'checker') {
+        const is = ((x>>1) + (y>>1)) % 2 === 0;
+        fill = is ? c2 : c4;
+        bright = 0.6 + 0.4*Math.sin((x+y + t*4));
+      } else if (pattern === 'orbit') {
+        const rings = 6;
+        const ring = Math.floor(dist / (Math.max(cols, rows)/2/rings));
+        const hue = (ring*60 + t*100) % 360;
+        fill = hsl(hue, 95, 60);
+        bright = 0.55 + 0.45*Math.sin(t*3 + ring + ang*2);
+      } else if (pattern === 'equalizer') {
+        const band = Math.floor( (x/cols) * 8 );
+        let val = 0.35;
+        if (analyser) {
+          const N = dataArray.length; const per = Math.floor(N/8);
+          let s = band*per, e = Math.min(N, s+per);
+          let m = 0; for (let k=s;k<e;k++) m += dataArray[k]; m /= Math.max(1,(e-s));
+          val = m/255;
+        }
+        const hue = (band*40 + t*40) % 360;
+        fill = hsl(hue, 100, 60);
+        const cutoff = 1 - (y/rows);
+        bright = val > cutoff ? 0.9 : 0.15;
+      }
+
+      
+      if (analyser) {
+        const boost = 0.6 + 0.8*audio.energy;
+        bright *= boost;
+      }
+      return [fill, bright];
+    }
+
+    let last = 0;
+    function frame(t) {
+      if (!last) last = t;
+      const dt = (t - last) / 1000;
+      last = t;
+      state.t += dt;
+      if (!state.paused) drawLights(t);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

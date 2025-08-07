@@ -1,0 +1,14 @@
+id: event-feedback
+title: Event Feedback Dashboard
+prompt: |
+  Create a single-page app in a single HTML file that provides the following features using modern, user-friendly web frontend components suitable for business users:
+  - Display a large table view listing all database rows. The data includes event participant feedback submissions with columns for date, event name, participant name, rating, and feedback.
+  - Feedback should be a bit long, but the table should nicely display it as well
+  - Add a search bar at the top that allows users to filter entries by keyword.
+  - Place an "AI summary" section at the top with a close button.
+  - Populate the table with a realistic, randomly generated dataset containing 30 entries.
+  - Enable users to sort the table by clicking on a column header; the table should reorder the rows in ascending or descending order, with icons indicating the current sort direction.
+  - Pay attention to details: ensure the layout and UI remain intact, colors are used effectively (a monotone business palette is safe, but feel free to be creative!), and no part of the interface appears broken.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/event-feedback.png
+tags:
+  - app

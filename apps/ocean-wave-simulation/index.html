@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ocean Wave Simulation</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(255, 255, 255, 0.08);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --text: #e8f2ff;
+      --accent: #7cc6ff;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 800px at 50% 20%, #0f1b33, #070b15 70%);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      overflow: hidden;
+    }
+    .wrap {
+      position: fixed;
+      inset: 0;
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    .ui {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+      min-width: 260px;
+    }
+    .title {
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      color: #d9ecff;
+    }
+    .row { display: grid; grid-template-columns: 1fr 70px; gap: 10px; align-items: center; margin: 10px 0; }
+    .row label { font-size: 12px; opacity: 0.9; }
+    .row input[type="range"] { width: 100%; }
+    .value { text-align: right; font-variant-numeric: tabular-nums; opacity: 0.85; font-size: 12px; }
+    .fineprint {
+      margin-top: 10px; font-size: 11px; opacity: 0.7; line-height: 1.4;
+    }
+
+    .badge {
+      position: absolute; right: 18px; top: 18px; padding: 8px 10px; font-size: 12px;
+      background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+      color: #d1e7ff; letter-spacing: 0.3px;
+    }
+
+    .header {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      top: 16px; padding: 10px 14px; border-radius: 12px;
+      color: #dff1ff; font-weight: 500; letter-spacing: 0.4px; font-size: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+      backdrop-filter: blur(10px) saturate(120%);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none; height: 4px; border-radius: 999px;
+      background: linear-gradient(90deg, #5fb8ff, #86e0ff);
+      outline: none; opacity: 0.95;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #bfe6ff);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px; height: 16px; border: none; border-radius: 50%; background: #d8f0ff; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="gl"></canvas>
+    <div class="header">Ocean Wave Simulation</div>
+    <div class="badge">Calm Mode</div>
+    <div class="ui" role="group" aria-label="Ocean controls">
+      <p class="title">Environment</p>
+      <div class="row">
+        <label for="wind">Wind speed</label>
+        <div class="value" id="windVal">1.0</div>
+      </div>
+      <input id="wind" type="range" min="0" max="3" step="0.01" value="1" aria-label="Wind speed" />
+
+      <div class="row">
+        <label for="height">Wave height</label>
+        <div class="value" id="heightVal">1.0</div>
+      </div>
+      <input id="height" type="range" min="0" max="2" step="0.01" value="1" aria-label="Wave height" />
+
+      <div class="row">
+        <label for="light">Lighting</label>
+        <div class="value" id="lightVal">Dawn</div>
+      </div>
+      <input id="light" type="range" min="0" max="1" step="0.001" value="0.35" aria-label="Lighting" />
+
+      <div class="fineprint">Tip: drag the sliders and relax. Lighting blends from night (0) to noon (1).</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gl');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const gl = canvas.getContext('webgl');
+    if (!gl) {
+      alert('WebGL is required but not supported by your browser.');
+    }
+
+    function resize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const vert = `
+      attribute vec2 a_pos;
+      varying vec2 v_uv;
+      void main(){
+        v_uv = a_pos * 0.5 + 0.5;
+        gl_Position = vec4(a_pos, 0.0, 1.0);
+      }
+    `;
+
+    const frag = `
+      precision highp float;
+      varying vec2 v_uv;
+      uniform vec2 u_res;
+      uniform float u_time;
+      uniform float u_wind;
+      uniform float u_height;
+      uniform float u_light;
+
+      mat2 rot(float a) { float s = sin(a), c = cos(a); return mat2(c, -s, s, c); }
+
+      void waves(in vec2 p, out float H, out vec2 grad) {
+        H = 0.0; grad = vec2(0.0);
+        float t = u_time;
+        float wind = u_wind;
+        float ampBase = 0.045 * (0.6 + u_height);
+        float choppy = mix(0.7, 1.4, clamp(wind/3.0, 0.0, 1.0));
+
+        for (int i = 0; i < 8; i++) {
+          float fi = float(i);
+          float ang = (0.0 + (fi - 3.5) * 0.18);
+          vec2 dir = normalize(vec2(cos(ang), sin(ang)));
+          float k = 0.6 * pow(1.45, fi);
+          float w = sqrt(9.8 * k) * (0.5 + 0.5 * wind) + 0.2 * fi;
+          float a = ampBase * pow(0.68, fi);
+          float phase = dot(dir * k, p) - w * t;
+          float s = sin(phase);
+          float c = cos(phase);
+          H += a * s;
+          grad += a * c * dir * k * choppy;
+        }
+      }
+
+      vec3 skyColor(vec3 rd) {
+        float y = clamp(rd.y * 0.5 + 0.5, 0.0, 1.0);
+        vec3 nightTop = vec3(0.02, 0.05, 0.12);
+        vec3 nightHorizon = vec3(0.05, 0.09, 0.16);
+        vec3 dayTop = vec3(0.20, 0.45, 0.85);
+        vec3 dayHorizon = vec3(0.65, 0.80, 1.00);
+        vec3 top = mix(nightTop, dayTop, u_light);
+        vec3 hor = mix(nightHorizon, dayHorizon, u_light);
+        vec3 sky = mix(hor, top, smoothstep(0.0, 1.0, y));
+        return sky;
+      }
+
+      void main(){
+        vec2 uv = (gl_FragCoord.xy / u_res) * 2.0 - 1.0;
+        uv.x *= u_res.x / u_res.y;
+
+        vec3 ro = vec3(0.0, 1.8 + 0.5 * u_height, 3.5);
+        vec3 ta = vec3(0.0, 0.2, 0.0);
+
+        vec3 ww = normalize(ta - ro);
+        vec3 uu = normalize(cross(vec3(0.0,1.0,0.0), ww));
+        vec3 vv = cross(ww, uu);
+        float fov = radians(70.0);
+        vec3 rd = normalize(uu * uv.x + vv * uv.y + ww * (1.0 / tan(0.5 * fov)));
+
+        float t = (0.0 - ro.y) / rd.y;
+        t = max(t, 0.0);
+        vec3 pos = ro + rd * t;
+
+        float H; vec2 grad;
+        waves(pos.xz, H, grad);
+        vec3 n = normalize(vec3(-grad.x, 1.0, -grad.y));
+
+        float elev = mix(radians(8.0), radians(70.0), u_light);
+        vec3 ld = normalize(vec3(0.35, sin(elev), -cos(elev)));
+        vec3 sunWarm = vec3(1.05, 0.85, 0.70);
+        vec3 sunCool = vec3(1.0, 0.98, 0.95);
+        vec3 lcol = mix(sunWarm, sunCool, smoothstep(0.2, 1.0, u_light));
+
+        vec3 deep = mix(vec3(0.01, 0.08, 0.12), vec3(0.02, 0.18, 0.28), 0.6 + 0.4 * u_height);
+        float facing = clamp(1.0 - dot(rd, n), 0.0, 1.0);
+        float fresnel = mix(0.02, 1.0, pow(facing, 3.0));
+
+        vec3 rdir = reflect(rd, n);
+        vec3 rcol = skyColor(rdir);
+
+        float atten = exp(-3.0 * max(0.0, -pos.y + H));
+        vec3 base = deep * (0.5 + 0.5 * u_light);
+
+        float diff = max(dot(n, ld), 0.0);
+        vec3 sky = skyColor(rd);
+        vec3 ambient = sky * (0.25 + 0.35 * u_light);
+        float spec = pow(max(dot(reflect(-ld, n), -rd), 0.0), mix(60.0, 100.0, u_light)) * (0.15 + 0.55 * u_light);
+
+        vec3 color = mix(base * (ambient + 0.8 * diff * lcol) * (0.9 + 0.2 * atten) + lcol * spec, rcol, fresnel);
+
+        float fog = smoothstep(0.5, 1.5, length(pos.xz) * 0.15);
+        vec3 fogCol = skyColor(normalize(vec3(0.0, 0.3, -1.0)));
+        color = mix(color, fogCol, fog * 0.35);
+
+        color = color / (color + vec3(1.0));
+        color = pow(color, vec3(0.95));
+
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `;
+
+    function compile(type, src) {
+      const sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(sh) || 'Shader compile error');
+      }
+      return sh;
+    }
+
+    function makeProgram(vs, fs) {
+      const prog = gl.createProgram();
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(prog) || 'Program link error');
+      }
+      return prog;
+    }
+
+    const prog = makeProgram(vert, frag);
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([
+        -1, -1,
+         3, -1,
+        -1,  3,
+      ]),
+      gl.STATIC_DRAW
+    );
+    const aPos = gl.getAttribLocation(prog, 'a_pos');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const uRes = gl.getUniformLocation(prog, 'u_res');
+    const uTime = gl.getUniformLocation(prog, 'u_time');
+    const uWind = gl.getUniformLocation(prog, 'u_wind');
+    const uHeight = gl.getUniformLocation(prog, 'u_height');
+    const uLight = gl.getUniformLocation(prog, 'u_light');
+
+    const $ = (id) => document.getElementById(id);
+    const windEl = $('wind'), heightEl = $('height'), lightEl = $('light');
+    const windVal = $('windVal'), heightVal = $('heightVal'), lightVal = $('lightVal');
+
+    function labelLight(v) {
+      if (v < 0.15) return 'Night';
+      if (v < 0.35) return 'Dawn';
+      if (v < 0.6) return 'Morning';
+      if (v < 0.85) return 'Afternoon';
+      return 'Noon';
+    }
+    function syncLabels() {
+      windVal.textContent = (+windEl.value).toFixed(2);
+      heightVal.textContent = (+heightEl.value).toFixed(2);
+      lightVal.textContent = labelLight(+lightEl.value);
+    }
+    syncLabels();
+    [windEl, heightEl, lightEl].forEach(el => el.addEventListener('input', syncLabels));
+
+    let start = performance.now();
+    function frame(now) {
+      const t = (now - start) * 0.001;
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, t);
+      gl.uniform1f(uWind, parseFloat(windEl.value));
+      gl.uniform1f(uHeight, parseFloat(heightEl.value));
+      gl.uniform1f(uLight, parseFloat(lightEl.value));
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

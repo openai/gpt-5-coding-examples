@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grab Your Badge:</title>
+  <meta name="description" content="Create a polished, printable event name holder with image and social links." />
+  <style>
+    :root {
+      --bg: #0f1226;
+      --panel: #141834;
+      --muted: #8d93b5;
+      --text: #e9ecff;
+      --subtext: #c9ceff;
+      --accent: #7c5cff;
+      --accent-2: #3ad1ff;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 10% 10%, #1a1f47 0%, #0f1226 60%), var(--bg);
+      background-attachment: fixed;
+      line-height: 1.2;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 24px;
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    /* Page title spanning both columns */
+    .page-title {
+      grid-column: 1 / -1;
+      margin: 0 0 8px 0;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      font-size: clamp(26px, 6vw, 56px);
+      line-height: 1.1;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: title-shimmer 10s ease-in-out infinite;
+      text-shadow: 0 1px 18px rgba(124, 92, 255, 0.14);
+    }
+    .page-title::before {
+      content: "";
+      width: 18px; height: 18px; border-radius: 6px;
+      background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent));
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18), 0 0 26px rgba(124,92,255,0.16);
+      flex: 0 0 auto;
+      animation: title-spin 16s linear infinite;
+    }
+    .page-title::after {
+      content: "";
+      position: absolute;
+      left: 28px; right: 6px; bottom: -6px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 70%, transparent), color-mix(in oklab, var(--accent-2) 30%, transparent), transparent 80%);
+      opacity: 0.9;
+      filter: blur(0.1px);
+      pointer-events: none;
+    }
+    @keyframes title-shimmer {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes title-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06)), var(--panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .brand .logo {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent));
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18);
+    }
+    .brand small { color: var(--muted); font-weight: 500; }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    button, .button {
+      appearance: none; border: 0; cursor: pointer; color: #0b0d1d; font-weight: 700;
+      background: linear-gradient(180deg, #ffffff, #eaeaff);
+      padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    button.secondary { background: #1e244f; color: var(--subtext); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 4px 14px rgba(0,0,0,0.25); }
+    button:active { transform: translateY(1px); }
+
+    .controls { padding: 18px; }
+    .controls form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .controls .full { grid-column: 1 / -1; }
+    .controls .row { display: contents; }
+
+    label { display: block; color: var(--muted); font-size: 12px; margin: 0 0 8px; letter-spacing: 0.3px; }
+    input[type="text"], input[type="url"], input[type="file"], .color-picker {
+      width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06); color: var(--text);
+      outline: none;
+    }
+    input::placeholder { color: #a8aecf; opacity: 0.7; }
+    .help { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .row-inline { display: flex; gap: 12px; align-items: center; }
+    .color-picker { height: 42px; padding: 0; }
+
+    .preview { padding: 18px; display: grid; gap: 12px; }
+    .badge-wrap { display: grid; place-items: center; }
+    .badge-outer { width: min(95%, 760px); aspect-ratio: 1.6; }
+    .badge { position: relative; width: 100%; height: 100%; border-radius: 20px; overflow: hidden; 
+      background: radial-gradient(120% 120% at 10% 10%, color-mix(in oklab, var(--accent) 36%, transparent) 0, transparent 36%), 
+                  linear-gradient(160deg, #0b0f29 0%, #0d1336 60%, #0b0f29 100%);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.06);
+      display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 0;
+    }
+
+    @media (max-width: 560px) {
+      .badge-outer { aspect-ratio: 1/1.1; }
+      .badge { grid-template-columns: 1fr; }
+    }
+
+    .left-pane {
+      position: relative; padding: 18px; background:
+        conic-gradient(from 220deg, color-mix(in oklab, var(--accent) 70%, transparent) 0 12%, transparent 12% 100%),
+        linear-gradient(180deg, color-mix(in oklab, var(--accent) 22%, transparent), transparent 60%);
+      border-right: 1px dashed rgba(255,255,255,0.12);
+      display: grid; align-content: space-between;
+    }
+    .event {
+      display: grid; gap: 6px;
+    }
+    .event .title { font-weight: 800; letter-spacing: 0.6px; font-size: clamp(14px, 2.2vw, 20px); }
+    .event .subtitle { color: var(--subtext); opacity: 0.9; font-size: clamp(11px, 1.6vw, 13px); }
+
+    .avatar {
+      width: min(54%, 168px); aspect-ratio: 1; border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.28));
+      align-self: end;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .avatar .placeholder { width: 100%; height: 100%; display: grid; place-items: center; color: var(--muted); font-weight: 700; font-size: 14px; }
+
+    .right-pane { position: relative; padding: 22px 22px; display: grid; grid-template-rows: auto 1fr auto; gap: 8px; }
+
+    .name-block { display: grid; gap: 6px; align-content: start; }
+    .first-name, .last-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .first-name {
+      font-weight: 900; letter-spacing: 0.4px; line-height: 1.05;
+      font-size: clamp(28px, 14vw, 220px);
+    }
+    .last-name {
+      font-weight: 800; color: var(--subtext); opacity: 0.96;
+      font-size: clamp(16px, 4.8vw, 34px);
+    }
+
+    .divider { height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.06)); margin: 6px 0; }
+
+    .socials { display: flex; flex-wrap: wrap; gap: 10px 16px; align-self: end; }
+    .chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; 
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: var(--subtext);
+      max-width: 100%; font-size: clamp(12px, 1.8vw, 14px); }
+    .chip span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+    /* chips now use plain text labels instead of brand logos */
+
+    .accent-band { position: absolute; inset: auto 0 0 0; height: 10px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+
+    @media print {
+      body { background: white; }
+      .app { display: block; padding: 0; }
+      header, .controls, .preview > h2, .actions { display: none !important; }
+      .badge-outer { width: 100%; max-width: none; }
+      .badge { border: none; box-shadow: none; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1 class="page-title">Welcome to Dev Summit 2025</h1>
+    <section class="panel">
+      <header>
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>Grab Your Badge:<br /><small>Create a printable badge</small></div>
+        </div>
+        <div class="actions">
+          <button class="secondary" id="resetBtn" title="Reset all inputs">Reset</button>
+        </div>
+      </header>
+      <div class="controls">
+        <form id="form" autocomplete="off">
+          <div>
+            <label for="firstName">First name</label>
+            <input type="text" id="firstName" placeholder="Kazuhiro" />
+          </div>
+          <div>
+            <label for="lastName">Last name</label>
+            <input type="text" id="lastName" placeholder="Sera" />
+          </div>
+
+          <div class="full">
+            <label>Accent</label>
+            <div class="row-inline">
+              <input aria-label="Accent color" class="color-picker" id="accent" type="color" value="#7c5cff" />
+              <button type="button" class="secondary" id="randomize">Randomize</button>
+            </div>
+            <div class="help">Choose a brand color. The card uses complementary accents automatically.</div>
+          </div>
+
+          <div class="full">
+            <label for="avatar">Photo (square works best)</label>
+            <input type="file" id="avatar" accept="image/*" />
+          </div>
+
+          <div class="full">
+            <label>Socials</label>
+          </div>
+          <div>
+            <label for="x">X (formerly Twitter)</label>
+            <input type="text" id="x" placeholder="@seratch" />
+          </div>
+          <div>
+            <label for="linkedin">LinkedIn</label>
+            <input type="text" id="linkedin" placeholder="in/seratch" />
+          </div>
+          <div class="full">
+            <label for="github">GitHub</label>
+            <input type="text" id="github" placeholder="seratch" />
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel preview">
+      <h2 style="margin: 6px 6px 0 12px; color: var(--muted); font-size: 14px; font-weight: 600; letter-spacing: 0.3px;">Live preview</h2>
+      <div class="badge-wrap">
+        <div class="badge-outer">
+          <div class="badge" id="badge">
+            <div class="left-pane">
+              <div class="event">
+                <div class="title">Dev Summit 2025</div>
+                <div class="subtitle">Attendee</div>
+              </div>
+              <div class="avatar" id="avatarBox" aria-label="Photo">
+                <div class="placeholder">Your photo</div>
+              </div>
+            </div>
+            <div class="right-pane">
+              <div class="name-block">
+                <div class="first-name" id="firstNamePreview">Kazuhiro</div>
+                <div class="last-name" id="lastNamePreview">Sera</div>
+              </div>
+              <div class="divider" role="presentation"></div>
+              <div class="socials" id="socials">
+                
+              </div>
+            </div>
+            <div class="accent-band"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const qs = (s, el=document) => el.querySelector(s);
+    const ce = (tag, props={}) => Object.assign(document.createElement(tag), props);
+
+    const firstName = qs('#firstName');
+    const lastName = qs('#lastName');
+    const x = qs('#x');
+    const linkedin = qs('#linkedin');
+    const github = qs('#github');
+    const avatar = qs('#avatar');
+    const accent = qs('#accent');
+
+    const firstNamePreview = qs('#firstNamePreview');
+    const lastNamePreview = qs('#lastNamePreview');
+    const socials = qs('#socials');
+    const avatarBox = qs('#avatarBox');
+
+    function hexToHsl(hex) {
+      let r = 0, g = 0, b = 0;
+      hex = hex.replace('#','');
+      if (hex.length === 3) { r = parseInt(hex[0]+hex[0],16); g = parseInt(hex[1]+hex[1],16); b = parseInt(hex[2]+hex[2],16); }
+      else if (hex.length === 6) { r = parseInt(hex.substring(0,2),16); g = parseInt(hex.substring(2,4),16); b = parseInt(hex.substring(4,6),16); }
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r,g,b), min = Math.min(r,g,b);
+      let h, s, l = (max + min) / 2;
+      if (max === min) { h = s = 0; }
+      else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+    function hslToHex(h, s, l) {
+      s/=100; l/=100;
+      const c = (1 - Math.abs(2*l - 1)) * s;
+      const x = c * (1 - Math.abs((h/60)%2 - 1));
+      const m = l - c/2;
+      let r=0,g=0,b=0;
+      if (0<=h && h<60) { r=c; g=x; b=0; }
+      else if (60<=h && h<120) { r=x; g=c; b=0; }
+      else if (120<=h && h<180) { r=0; g=c; b=x; }
+      else if (180<=h && h<240) { r=0; g=x; b=c; }
+      else if (240<=h && h<300) { r=x; g=0; b=c; }
+      else if (300<=h && h<360) { r=c; g=0; b=x; }
+      const toHex = v => (Math.round((v+m)*255).toString(16).padStart(2,'0'));
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+    function complementary(hex) {
+      const {h, s, l} = hexToHsl(hex);
+      const comp = (h + 200) % 360; // pleasant offset vs pure 180 complement
+      return hslToHex(comp, Math.min(100, s + 10), Math.min(70, Math.max(30, l)));
+    }
+
+    function fitText(el, maxPx, minPx) {
+      const parent = el.parentElement;
+      const maxWidth = parent.clientWidth - 8;
+      let lo = minPx, hi = maxPx, best = minPx;
+      el.style.fontSize = `${hi}px`;
+      for (let i = 0; i < 16; i++) {
+        const mid = (lo + hi) / 2;
+        el.style.fontSize = `${mid}px`;
+        const fits = el.scrollWidth <= maxWidth;
+        if (fits) { best = mid; lo = mid + 0.1; } else { hi = mid - 0.1; }
+      }
+      el.style.fontSize = `${Math.max(minPx, Math.min(maxPx, best))}px`;
+    }
+
+    function updateName() {
+      const f = firstName.value.trim() || 'Kazuhiro';
+      const l = lastName.value.trim() || 'Sera';
+      firstNamePreview.textContent = f;
+      lastNamePreview.textContent = l;
+      requestAnimationFrame(() => {
+        fitText(firstNamePreview, 220, 18);
+        fitText(lastNamePreview, 34, 14);
+      });
+    }
+
+    // Brand logo SVGs removed; use plain text labels instead
+
+    function sanitizeHandle(v) { return v.replace(/\s+/g, ' ').trim(); }
+
+    function makeChip(label, value) {
+      const chip = ce('div', { className: 'chip' });
+      const labelEl = ce('strong', { textContent: `${label}:` });
+      const valueEl = ce('span');
+      valueEl.textContent = value;
+      chip.append(labelEl, valueEl);
+      return chip;
+    }
+
+    function updateSocials() {
+      socials.textContent = '';
+      const sx = sanitizeHandle(x.value);
+      const sl = sanitizeHandle(linkedin.value);
+      const sg = sanitizeHandle(github.value);
+      if (sx) socials.appendChild(makeChip('X', sx));
+      if (sl) socials.appendChild(makeChip('LinkedIn', sl));
+      if (sg) socials.appendChild(makeChip('GitHub', sg));
+    }
+
+    function updateAccent() {
+      const base = accent.value || '#7c5cff';
+      const comp = complementary(base);
+      document.documentElement.style.setProperty('--accent', base);
+      document.documentElement.style.setProperty('--accent-2', comp);
+    }
+
+    function handleAvatar(file) {
+      if (!file) return;
+      const img = new Image();
+      img.onload = () => {
+        avatarBox.innerHTML = '';
+        avatarBox.appendChild(img);
+      };
+      img.onerror = () => {
+        avatarBox.innerHTML = '<div class="placeholder">Invalid image</div>';
+      };
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.readAsDataURL(file);
+    }
+
+    function randomNiceColor() {
+      const h = Math.floor(Math.random() * 360);
+      const s = 65 + Math.floor(Math.random()*20); // saturated
+      const l = 50 + Math.floor(Math.random()*10);
+      return hslToHex(h, s, l);
+    }
+
+    firstName.addEventListener('input', updateName);
+    lastName.addEventListener('input', updateName);
+    x.addEventListener('input', updateSocials);
+    linkedin.addEventListener('input', updateSocials);
+    github.addEventListener('input', updateSocials);
+    accent.addEventListener('input', updateAccent);
+    avatar.addEventListener('change', (e) => handleAvatar(e.target.files?.[0]));
+
+    qs('#randomize').addEventListener('click', () => {
+      accent.value = randomNiceColor();
+      updateAccent();
+    });
+    
+    qs('#resetBtn').addEventListener('click', () => {
+      firstName.value = '';
+      lastName.value = '';
+      x.value = '';
+      linkedin.value = '';
+      github.value = '';
+      avatar.value = '';
+      avatarBox.innerHTML = '<div class="placeholder">Your photo</div>';
+      updateName();
+      updateSocials();
+    });
+
+    updateAccent();
+    updateName();
+    updateSocials();
+  </script>
+</body>
+</html>

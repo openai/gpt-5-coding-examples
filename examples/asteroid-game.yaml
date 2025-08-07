@@ -1,0 +1,8 @@
+id: asteroid-game
+title: Asteroid Game
+prompt: |
+  Make a 2d space game, in which I can fly a ship, avoid and blow up asteroids, and dogfight with other computer-controlled AI. Be creative with the design of the ships. Ensure the gameplay works and is fun.
+  Output code in a single next.js page.tsx file, which can be pasted directly into a next.js app created by create-next-app, alongside any context or instructions needed to run it.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/asteroid-game.png
+tags:
+  - game

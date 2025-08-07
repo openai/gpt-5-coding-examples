@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Falling Fruit Catcher</title>
+  <style>
+    :root {
+      --bg1: #8be9fd;
+      --bg2: #ffb86c;
+      --accent: #ff79c6;
+      --accent2: #50fa7b;
+      --text: #222;
+      --panel: #ffffffdd;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .frame {
+      width: min(92vw, 960px);
+      aspect-ratio: 16 / 10;
+      background: #fff7;
+      border-radius: 24px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 20px 50px #00000033, inset 0 0 0 3px #ffffff99;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header.ui {
+      position: absolute;
+      z-index: 3;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .score, .misses {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 8px 14px;
+      font-weight: 800;
+      font-size: clamp(16px, 2.5vw, 22px);
+      letter-spacing: 0.5px;
+      box-shadow: 0 6px 18px #0001;
+    }
+
+    .misses {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .help {
+      position: absolute;
+      z-index: 3;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .hint {
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: clamp(12px, 1.8vw, 16px);
+      box-shadow: 0 4px 12px #0001;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 2;
+      pointer-events: auto;
+    }
+
+    .card {
+      background: #ffffffee;
+      border-radius: 20px;
+      padding: clamp(18px, 3vw, 28px) clamp(22px, 4vw, 36px);
+      box-shadow: 0 16px 40px #00000033, inset 0 0 0 3px #fff8;
+      text-align: center;
+      max-width: 85%;
+    }
+
+    .title {
+      font-size: clamp(26px, 5vw, 40px);
+      margin: 0 0 6px;
+      line-height: 1.1;
+      color: #222;
+      text-shadow: 0 2px 0 #fff;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: #333;
+      font-size: clamp(14px, 2.5vw, 18px);
+    }
+
+    .btn {
+      border: 0;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #ff92d7);
+      color: white;
+      font-weight: 800;
+      font-size: clamp(14px, 2.5vw, 18px);
+      box-shadow: 0 10px 22px #ff79c655, inset 0 -3px 0 #0002;
+      cursor: pointer;
+      transition: transform 0.08s ease;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="frame" id="frame">
+    <header class="ui">
+      <div class="score" id="score">Score: 0</div>
+      <div class="misses" id="misses" aria-live="polite" aria-atomic="true" title="Misses">
+        Misses:
+        <span id="hearts" style="font-size: 1.2em">❤️❤️❤️</span>
+      </div>
+    </header>
+
+    <canvas id="game" width="960" height="600" aria-label="Falling fruit catcher game"></canvas>
+
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <h1 class="title">Falling Fruit Catcher 🍎🍌🍓</h1>
+        <p class="subtitle">Catch as many fruits as you can! Miss 3 and it's game over.</p>
+        <p class="subtitle">Move with your mouse or use Arrow Keys.</p>
+        <button class="btn" id="startBtn">Start Game</button>
+      </div>
+    </div>
+
+    <div class="help">
+      <div class="hint">Arrow Keys or Mouse to move</div>
+      <div class="hint">Big, colorful fruits for kids to catch!</div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      const overlay = document.getElementById('overlay');
+      const startBtn = document.getElementById('startBtn');
+      const scoreEl = document.getElementById('score');
+      const heartsEl = document.getElementById('hearts');
+      const frame = document.getElementById('frame');
+
+      // Fit canvas to CSS size while keeping crisp rendering
+      function fitCanvas() {
+        const rect = frame.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      fitCanvas();
+      window.addEventListener('resize', fitCanvas);
+
+      const rand = (min, max) => Math.random() * (max - min) + min;
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+      const fruitsList = ['🍎', '🍌', '🍊', '🍇', '🍓', '🍉', '🍐'];
+
+      const game = {
+        running: false,
+        score: 0,
+        misses: 0,
+        maxMisses: 3,
+        basket: { x: 400, y: 0, w: 140, h: 28, speed: 600, color: '#ff9f1c' },
+        fruits: [],
+        lastSpawn: 0,
+        spawnInterval: 900,
+        minSpawnInterval: 350,
+        time: 0
+      };
+
+      function resetGame() {
+        game.running = true;
+        game.score = 0;
+        game.misses = 0;
+        game.fruits = [];
+        game.lastSpawn = 0;
+        game.spawnInterval = 900;
+        scoreEl.textContent = 'Score: 0';
+        heartsEl.textContent = '❤️❤️❤️';
+        overlay.classList.add('hidden');
+        // Position basket
+        const rect = frame.getBoundingClientRect();
+        game.basket.x = rect.width / 2 - game.basket.w / 2;
+        game.basket.y = rect.height - 70;
+        game.time = performance.now();
+        requestAnimationFrame(loop);
+      }
+
+      function endGame() {
+        game.running = false;
+        overlay.querySelector('.title').textContent = `Game Over! Score: ${game.score}`;
+        overlay.querySelector('.subtitle').textContent = `Missed 3 fruits. Click Start to try again!`;
+        overlay.classList.remove('hidden');
+      }
+
+      startBtn.addEventListener('click', resetGame);
+      overlay.addEventListener('click', (e) => {
+        if (e.target.classList.contains('overlay')) return;
+      });
+
+      // Controls
+      const keys = { left: false, right: false };
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+        if ((e.key === ' ' || e.key === 'Enter') && !game.running) resetGame();
+      });
+      window.addEventListener('keyup', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+      });
+
+      // Mouse / touch controls
+      function pointerToCanvasX(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        return clientX - rect.left;
+      }
+      frame.addEventListener('mousemove', (e) => {
+        const x = pointerToCanvasX(e.clientX);
+        game.basket.x = clamp(x - game.basket.w / 2, 0, frame.clientWidth - game.basket.w);
+      });
+      frame.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches[0]) {
+          const x = pointerToCanvasX(e.touches[0].clientX);
+          game.basket.x = clamp(x - game.basket.w / 2, 0, frame.clientWidth - game.basket.w);
+        }
+      }, { passive: true });
+
+      class Fruit {
+        constructor(x, size, speed, emoji) {
+          this.x = x;
+          this.y = -size;
+          this.vy = speed;
+          this.size = size; // radius for layout, font size for emojis
+          this.spin = rand(-0.8, 0.8);
+          this.rot = 0;
+          this.emoji = emoji;
+        }
+      }
+
+      function spawnFruit() {
+        const W = frame.clientWidth;
+        const size = rand(34, 52); // Large for kids
+        const x = rand(size, W - size);
+        const speed = rand(180, 300); // px per second
+        const emoji = fruitsList[(Math.random() * fruitsList.length) | 0];
+        game.fruits.push(new Fruit(x, size, speed, emoji));
+      }
+
+      function update(dt) {
+        // Move basket with keyboard
+        let dir = 0;
+        if (keys.left) dir -= 1;
+        if (keys.right) dir += 1;
+        if (dir !== 0) {
+          game.basket.x += dir * game.basket.speed * dt;
+          game.basket.x = clamp(game.basket.x, 0, frame.clientWidth - game.basket.w);
+        }
+
+        // Spawn fruits, ramp up difficulty a bit
+        game.lastSpawn += dt * 1000;
+        if (game.lastSpawn >= game.spawnInterval) {
+          spawnFruit();
+          game.lastSpawn = 0;
+          game.spawnInterval = Math.max(game.minSpawnInterval, game.spawnInterval - 6);
+        }
+
+        // Update fruits
+        const basket = game.basket;
+        const bottom = frame.clientHeight;
+        for (let i = game.fruits.length - 1; i >= 0; i--) {
+          const f = game.fruits[i];
+          f.y += f.vy * dt;
+          f.rot += f.spin * dt;
+
+          // Catch detection (AABB overlap with circle center)
+          if (f.y + f.size >= basket.y && f.y - f.size <= basket.y + basket.h) {
+            if (f.x >= basket.x && f.x <= basket.x + basket.w) {
+              // Caught!
+              game.fruits.splice(i, 1);
+              game.score += 1;
+              scoreEl.textContent = `Score: ${game.score}`;
+              // Fun particle pop
+              pop(f.x, f.y);
+              continue;
+            }
+          }
+
+          // Missed
+          if (f.y - f.size > bottom) {
+            game.fruits.splice(i, 1);
+            game.misses += 1;
+            heartsEl.textContent = '❤️'.repeat(Math.max(0, game.maxMisses - game.misses));
+            if (game.misses >= game.maxMisses) {
+              endGame();
+              return;
+            }
+          }
+        }
+      }
+
+      function drawBackground(ctx, W, H) {
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, '#fdfbfb');
+        g.addColorStop(1, '#ebedee');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+
+        // Decorative clouds
+        const cloud = (x, y, s, color) => {
+          ctx.save();
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(x, y, 18 * s, 0, Math.PI * 2);
+          ctx.arc(x + 22 * s, y + 6 * s, 22 * s, 0, Math.PI * 2);
+          ctx.arc(x - 20 * s, y + 10 * s, 16 * s, 0, Math.PI * 2);
+          ctx.arc(x + 8 * s, y + 16 * s, 18 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        };
+        cloud(80, 70, 1.2, '#ffffffcc');
+        cloud(220, 95, 1.0, '#ffffffcc');
+        cloud(W - 120, 70, 1.1, '#ffffffcc');
+
+        // Gentle ground
+        const gg = ctx.createLinearGradient(0, H - 120, 0, H);
+        gg.addColorStop(0, '#b8ffcc');
+        gg.addColorStop(1, '#7dffab');
+        ctx.fillStyle = gg;
+        ctx.fillRect(0, H - 80, W, 80);
+      }
+
+      function draw() {
+        const W = frame.clientWidth;
+        const H = frame.clientHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawBackground(ctx, W, H);
+
+        // Draw basket
+        const b = game.basket;
+        ctx.save();
+        ctx.shadowColor = '#00000033';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#ffd166';
+        // Base
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        // Curvy rim
+        ctx.fillStyle = '#ef476f';
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y);
+        ctx.quadraticCurveTo(b.x + b.w / 2, b.y - 18, b.x + b.w, b.y);
+        ctx.lineTo(b.x + b.w, b.y + 8);
+        ctx.quadraticCurveTo(b.x + b.w / 2, b.y - 10, b.x, b.y + 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Draw fruits (emoji text for big, playful visuals)
+        for (const f of game.fruits) {
+          ctx.save();
+          ctx.translate(f.x, f.y);
+          ctx.rotate(f.rot);
+          ctx.font = `${f.size * 1.8}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = '#00000033';
+          ctx.shadowBlur = 8;
+          ctx.fillText(f.emoji, 0, 0);
+          ctx.restore();
+        }
+      }
+
+      // Simple particle pop on catch
+      const pops = [];
+      function pop(x, y) {
+        const count = 12;
+        for (let i = 0; i < count; i++) {
+          const a = (i / count) * Math.PI * 2;
+          pops.push({ x, y, vx: Math.cos(a) * rand(80, 180), vy: Math.sin(a) * rand(80, 180), life: 0.5, r: rand(3, 6), c: `hsl(${(Math.random()*360)|0} 90% 60%)` });
+        }
+      }
+      function updatePops(dt) {
+        for (let i = pops.length - 1; i >= 0; i--) {
+          const p = pops[i];
+          p.life -= dt;
+          if (p.life <= 0) { pops.splice(i, 1); continue; }
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += 400 * dt; // gravity
+        }
+      }
+      function drawPops() {
+        ctx.save();
+        for (const p of pops) {
+          ctx.globalAlpha = Math.max(0, p.life * 2);
+          ctx.fillStyle = p.c;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function loop(t) {
+        if (!game.running) return;
+        const now = performance.now();
+        const dt = Math.min(0.033, (now - game.time) / 1000);
+        game.time = now;
+
+        update(dt);
+        updatePops(dt);
+        draw();
+        drawPops();
+
+        if (game.running) requestAnimationFrame(loop);
+      }
+
+      // Initialize basket position relative to frame
+      const rect = frame.getBoundingClientRect();
+      game.basket.x = rect.width / 2 - game.basket.w / 2;
+      game.basket.y = rect.height - 70;
+
+      // Focus for keyboard input on click
+      frame.tabIndex = 0;
+      frame.addEventListener('click', () => frame.focus());
+    })();
+  </script>
+</body>
+</html>
+

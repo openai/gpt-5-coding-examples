@@ -1,0 +1,11 @@
+id: trivia-quiz-game
+title: Trivia Quiz
+prompt: |
+  Create a single-page app in a single HTML file that hosts a themed trivia quiz.
+  - Inputs: question text, multiple-choice answers, correct answer.
+  - Show one question at a time with card-style layout, large readable text, and animated feedback (green check or red X).
+  - Include a progress bar at the top and final score display at the end.
+  - Create 10 built-in quiz and display them randomly; the quiz must be basic level for US citizens
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/trivia-quiz-game.png
+tags:
+  - game

@@ -1,0 +1,7 @@
+id: espresso
+title: Bay AreaEspresso Lab
+prompt: |
+  Please generate a beautiful, realistic landing page for a service that provides the ultimate coffee enthusiast a $200/month subscription that provides equipment rental and coaching for coffee roasting and creating the ultimate espresso. The target audience is a bay area middle-aged person who might work in tech and is educated, has disposable income, and is passionate about the art and science of coffee. Optimize for conversion for a 6 month signup.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/espresso.png
+tags:
+  - landing

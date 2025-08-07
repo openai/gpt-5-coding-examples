@@ -1,0 +1,11 @@
+id: falling-object-catcher
+title: Falling Fruit Catcher
+prompt: |
+  Create a single-page app in a single HTML file for a falling objects game.
+  - Player controls a basket at the bottom (arrow keys or mouse) to catch falling fruits.
+  - Score increases with each catch; missing 3 ends the game.
+  - Use bright, playful colors, smooth animations, and clear score display.
+  - The falling objects should be large enough for kids
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/falling-object-catcher.png
+tags:
+  - game

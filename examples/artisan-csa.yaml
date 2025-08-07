@@ -1,0 +1,16 @@
+id: artisan-csa
+title: Artisan CSA
+prompt: |
+  Title: Artisan CSA — Hand-Drawn Farm Landing
+  Prompt:
+  Create a single-page app, in a single HTML file, for a community-supported agriculture program with a hand-drawn, watercolor aesthetic.
+  Visuals: paper texture background, ink-style SVG illustrations, warm serif headings, muted earth-tone palette; gentle parallax on illustrations.  
+  Hero: seasonal basket illustration, short pitch, ZIP checker input to confirm delivery area; CTA “Join the harvest.”
+  Share: grid of seasonal boxes (Spring/Summer/Fall/Winter) with rollover tooltips listing typical produce; allergen icons.
+  Plans: slider for weekly vs bi-weekly; price updates in real time; add-ons (eggs, flowers, bread) with toggles.
+  Map: embedded static map image with delivery radius overlay; pickup locations list with distance badges.
+  Testimonials: card carousel with farmer portraits drawn as line art.
+  FAQ + Contact: accordion with smooth open/close; simple email form; accessibility and keyboard support; fully responsive.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/artisan-csa.png
+tags:
+  - landing

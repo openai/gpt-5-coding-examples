@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MochaWallet — Eliminate Student Debt Fast and Free</title>
+    <meta
+      name="description"
+      content="MochaWallet rounds up purchases and routes payments to your highest‑impact student loan. Social matching, cashback, achievements. No hidden fees. Bank‑level security."
+    />
+    <meta name="theme-color" content="#3b2a23" />
+    <style>
+      :root {
+        --bg: #0f0e0d;
+        --card: #191615;
+        --elev: #221e1c;
+        --text: #f6f2ee;
+        --muted: #c8c0ba;
+        --primary: #c08a5a; /* mocha */
+        --primary-600: #a67447;
+        --primary-700: #8e623a;
+        --accent: #64d2b3; /* mint */
+        --danger: #ff6b6b;
+        --success: #37c48f;
+        --warning: #ffb020;
+        --ring: rgba(255, 255, 255, 0.12);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35),
+          0 1px 0 rgba(255, 255, 255, 0.04) inset;
+        --radius: 14px;
+        --radius-lg: 20px;
+        --container: 1180px;
+        --btn-h: 48px; /* consistent interactive size */
+        --btn-r: 999px;
+        --gap: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+          "Segoe UI Emoji";
+        color: var(--text);
+        background: radial-gradient(
+            1200px 600px at 80% -10%,
+            #2b221d 0%,
+            rgba(43, 34, 29, 0) 60%
+          ),
+          radial-gradient(
+            1000px 400px at -10% 0%,
+            #1b2623 0%,
+            rgba(27, 38, 35, 0) 55%
+          ),
+          var(--bg);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      .container {
+        width: min(100% - 32px, var(--container));
+        margin: 0 auto;
+      }
+
+      .skip {
+        position: absolute;
+        left: -9999px;
+        top: auto;
+      }
+      .skip:focus {
+        left: 12px;
+        top: 12px;
+        background: #000;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        z-index: 9999;
+      }
+
+      /* Header */
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: saturate(150%) blur(8px);
+        background: linear-gradient(
+          180deg,
+          rgba(15, 14, 13, 0.75),
+          rgba(15, 14, 13, 0.35) 60%,
+          rgba(15, 14, 13, 0)
+        );
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 68px;
+      }
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .logo-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: conic-gradient(
+          from 210deg at 50% 50%,
+          #c08a5a,
+          #8e623a 33%,
+          #3b2a23 66%,
+          #c08a5a
+        );
+        box-shadow: 0 6px 18px rgba(192, 138, 90, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        position: relative;
+      }
+      .logo-mark::after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.25);
+      }
+      .logo span {
+        font-size: 1.05rem;
+      }
+
+      .nav-links {
+        display: none;
+        gap: 18px;
+        color: var(--muted);
+      }
+      .nav-links a {
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+      .nav-links a:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        height: var(--btn-h);
+        padding: 0 18px;
+        border-radius: var(--btn-r);
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: transform 0.06s ease, box-shadow 0.2s ease,
+          background 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+      }
+      .btn:focus-visible {
+        outline: 3px solid rgba(100, 210, 179, 0.5);
+        outline-offset: 2px;
+      }
+      .btn-primary {
+        background: linear-gradient(180deg, var(--primary), var(--primary-700));
+        color: #111;
+        box-shadow: 0 10px 28px rgba(192, 138, 90, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--text);
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+      .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      /* Hero */
+      .hero {
+        padding: 40px 0 20px;
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.25px;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        background: rgba(100, 210, 179, 0.1);
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(100, 210, 179, 0.2);
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        line-height: 1.05;
+        margin: 10px 0 14px;
+        letter-spacing: -0.02em;
+      }
+      .hero p {
+        color: var(--muted);
+        font-size: clamp(1rem, 2.6vw, 1.125rem);
+        max-width: 60ch;
+      }
+
+      .hero-cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 18px;
+      }
+      .trust {
+        display: flex;
+        gap: 16px;
+        margin-top: 18px;
+        color: var(--muted);
+        align-items: center;
+      }
+      .trust .dot {
+        width: 6px;
+        height: 6px;
+        background: var(--accent);
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(100, 210, 179, 0.18);
+      }
+
+      /* Phone mock */
+      .phone-wrap {
+        display: grid;
+        place-items: center;
+      }
+
+      .device {
+        width: min(100%, 340px);
+        aspect-ratio: 9/19.5;
+        border-radius: 36px;
+        padding: 14px;
+        background: linear-gradient(225deg, #2b2826, #1e1b1a);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55),
+          0 2px 0 rgba(255, 255, 255, 0.08) inset;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        position: relative;
+      }
+      .notch {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 18px;
+        background: #0b0a0a;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+      }
+      .device-screen {
+        position: absolute;
+        inset: 8px;
+        border-radius: 28px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #0f1311, #15110f);
+      }
+
+      .app-statusbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        color: #d4d4d8;
+        font-size: 12px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.06),
+          rgba(255, 255, 255, 0)
+        );
+      }
+
+      .app-header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 14px;
+      }
+      .balance-card {
+        background: #171412;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 12px 14px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        box-shadow: var(--shadow);
+      }
+      .balance-card h4 {
+        margin: 0;
+        font-size: 12px;
+        color: #b9b4af;
+        letter-spacing: 0.25px;
+      }
+      .balance-amt {
+        font: 700 22px/1.2 ui-sans-serif, system-ui;
+      }
+
+      .ring {
+        width: 60px;
+        height: 60px;
+        position: relative;
+        display: grid;
+        place-items: center;
+      }
+      .ring svg {
+        transform: rotate(-90deg);
+      }
+      .ring .pct {
+        position: absolute;
+        font-size: 12px;
+        color: #cfcac5;
+      }
+
+      .feed {
+        padding: 8px 14px 14px;
+        display: grid;
+        gap: 10px;
+      }
+      .feed h5 {
+        margin: 2px 0 0;
+        font-size: 12px;
+        color: #b9b4af;
+        letter-spacing: 0.25px;
+      }
+
+      .item {
+        display: grid;
+        grid-template-columns: 36px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        background: #141110;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 10px;
+      }
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        color: #111;
+        font-weight: 800;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+      .store {
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .meta {
+        color: #b9b4af;
+        font-size: 12px;
+      }
+      .delta {
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .match {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        background: rgba(55, 196, 143, 0.1);
+        border: 1px solid rgba(55, 196, 143, 0.35);
+        color: #b5f5df;
+      }
+      .match .delta {
+        color: #b5f5df;
+      }
+
+      /* Sections */
+      section {
+        padding: 64px 0;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 26px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+      .sec-title {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        margin: 0 0 10px;
+      }
+      .lead {
+        color: var(--muted);
+        max-width: 65ch;
+      }
+
+      /* Feature bullets */
+      .bullet {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 12px;
+        align-items: start;
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: #141110;
+      }
+      .bullet svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      /* Calculator */
+      .calc {
+        display: grid;
+        gap: 14px;
+      }
+      .calc .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+      }
+      .calc .value {
+        font-weight: 700;
+      }
+      .range {
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        outline: none;
+      }
+      .range::-webkit-slider-thumb {
+        appearance: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 2px solid #0f0e0d;
+        box-shadow: 0 4px 10px rgba(100, 210, 179, 0.5);
+        cursor: pointer;
+      }
+
+      /* Footer */
+      footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--muted);
+        padding-bottom: 40px;
+      }
+
+      /* Responsive */
+      @media (min-width: 860px) {
+        .nav-links {
+          display: flex;
+        }
+        .hero {
+          padding: 72px 0 36px;
+        }
+        .hero-grid {
+          grid-template-columns: 1.05fr 0.95fr;
+          gap: 36px;
+        }
+        .grid-2 {
+          grid-template-columns: 1.2fr 0.8fr;
+          gap: 22px;
+        }
+        .grid-3 {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header>
+      <div class="container nav">
+        <a class="logo" href="#top" aria-label="MochaWallet Home">
+          <span class="logo-mark" aria-hidden="true"></span>
+          <span>MochaWallet</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="#how">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#security">Security</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-ghost" href="#download">Get the app</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="stack">
+            <div class="eyebrow">Round up. Match up. Pay off.</div>
+            <h1>Eliminate student debt fast and free</h1>
+            <p>
+              Connect your bank accounts, cards, and loan servicers. MochaWallet
+              rounds up everyday purchases and automatically routes payments to
+              the highest‑impact loan at the right time. No hidden fees.
+              Bank‑level security.
+            </p>
+            <div class="hero-cta">
+              <a
+                class="btn btn-primary"
+                href="#download"
+                aria-label="Get the MochaWallet app"
+                >Get the app</a
+              >
+              <a class="btn btn-ghost" href="#how">See how it works</a>
+            </div>
+            <div class="trust">
+              <span class="dot"></span>
+              <span
+                >End‑to‑end encryption • AES‑256 at rest • Continuous
+                audits</span
+              >
+            </div>
+          </div>
+
+          <div class="phone-wrap">
+            <div
+              class="device"
+              aria-label="MochaWallet in‑app preview"
+              role="img"
+            >
+              <div class="notch" aria-hidden="true"></div>
+              <div class="device-screen">
+                <div class="app-statusbar">
+                  <span>9:41</span>
+                  <span>🔒 LTE ⏚ 100%</span>
+                </div>
+
+                <div class="app-header">
+                  <div class="balance-card">
+                    <div>
+                      <h4>Loan balance</h4>
+                      <div class="balance-amt" id="balanceAmt">$24,380.12</div>
+                    </div>
+                    <div class="ring" aria-label="54% paid">
+                      <svg width="60" height="60" viewBox="0 0 120 120">
+                        <circle
+                          cx="60"
+                          cy="60"
+                          r="52"
+                          stroke="rgba(255,255,255,.12)"
+                          stroke-width="12"
+                          fill="none"
+                        />
+                        <circle
+                          id="ringProg"
+                          cx="60"
+                          cy="60"
+                          r="52"
+                          stroke="url(#g)"
+                          stroke-width="12"
+                          stroke-linecap="round"
+                          fill="none"
+                          stroke-dasharray="326.72"
+                          stroke-dashoffset="326.72"
+                        />
+                        <defs>
+                          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#64d2b3" />
+                            <stop offset="100%" stop-color="#c08a5a" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      <div class="pct" id="ringPct">54%</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="feed">
+                  <h5>Round‑up feed</h5>
+
+                  <div class="item">
+                    <div
+                      class="avatar"
+                      style="
+                        background: linear-gradient(135deg, #ffd89a, #f9b47f);
+                      "
+                    >
+                      C
+                    </div>
+                    <div>
+                      <div class="store">Cafe Latte</div>
+                      <div class="meta">$4.30 • rounded +$0.70</div>
+                    </div>
+                    <div class="delta">+$0.70</div>
+                  </div>
+
+                  <div class="item">
+                    <div
+                      class="avatar"
+                      style="
+                        background: linear-gradient(135deg, #9bd6ff, #6db7ff);
+                      "
+                    >
+                      G
+                    </div>
+                    <div>
+                      <div class="store">Grocer</div>
+                      <div class="meta">$52.12 • rounded +$0.88</div>
+                    </div>
+                    <div class="delta">+$0.88</div>
+                  </div>
+
+                  <div class="item match">
+                    <div
+                      class="avatar"
+                      style="
+                        background: linear-gradient(135deg, #b6f5e4, #7fe2c7);
+                      "
+                    >
+                      M
+                    </div>
+                    <div>
+                      <div class="store">Matched contribution</div>
+                      <div class="meta">Employer matched your round‑ups</div>
+                    </div>
+                    <div class="delta">+ $5.00</div>
+                  </div>
+
+                  <div class="item">
+                    <div
+                      class="avatar"
+                      style="
+                        background: linear-gradient(135deg, #ffc6cf, #ff8aa0);
+                      "
+                    >
+                      T
+                    </div>
+                    <div>
+                      <div class="store">Transit</div>
+                      <div class="meta">$2.75 • rounded +$0.25</div>
+                    </div>
+                    <div class="delta">+$0.25</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="how">
+        <div class="container grid-2">
+          <div class="card">
+            <h2 class="sec-title">How it works</h2>
+            <p class="lead">
+              Link your bank accounts, cards, and student loan servicers
+              securely. We round up daily purchases to the next dollar and
+              automate payments to the highest‑impact loan based on balance,
+              APR, and payoff horizon.
+            </p>
+            <div class="grid-3" style="margin-top: 12px">
+              <div class="bullet">
+                <div aria-hidden="true">🔗</div>
+                <div>
+                  <div class="store">Connect</div>
+                  <div class="meta">
+                    Banks, cards, and loan servicers in minutes.
+                  </div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">🪙</div>
+                <div>
+                  <div class="store">Round up</div>
+                  <div class="meta">
+                    Every purchase contributes a little toward your debt.
+                  </div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">🧭</div>
+                <div>
+                  <div class="store">Smart routing</div>
+                  <div class="meta">
+                    Payments target the highest‑impact loan at the right time.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin: 0 0 6px">Social matching calculator</h3>
+            <p class="meta" style="margin: 0 0 12px">
+              See how friends, family, or your employer can accelerate payoff.
+            </p>
+            <div class="calc">
+              <div class="row">
+                <label for="matchPct">Match percentage</label>
+                <div class="value" id="matchPctVal">50%</div>
+              </div>
+              <input
+                class="range"
+                type="range"
+                id="matchPct"
+                min="0"
+                max="200"
+                value="50"
+              />
+
+              <div class="row">
+                <div>
+                  <div class="store">Avg daily round‑ups</div>
+                  <div class="meta">Based on your spend</div>
+                </div>
+                <div class="value" id="avgDaily">$1.75</div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <div class="store">With matching</div>
+                  <div class="meta">Estimated monthly total</div>
+                </div>
+                <div class="value" id="withMatch">$79.0</div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <div class="store">Time saved</div>
+                  <div class="meta">Rough estimate vs. no matching</div>
+                </div>
+                <div class="value" id="timeSaved">5.4 months</div>
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  gap: 10px;
+                  margin-top: 8px;
+                  flex-wrap: wrap;
+                "
+              >
+                <button class="btn btn-primary" onclick="scrollToDownload()">
+                  Get the app
+                </button>
+                <button
+                  class="btn btn-ghost"
+                  onclick="document.getElementById('faq').scrollIntoView({behavior: 'smooth'})"
+                >
+                  Questions?
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="container">
+          <h2 class="sec-title">Features that help you finish faster</h2>
+          <p class="lead">
+            Social matching, cashback rewards, progress achievements, and
+            transparent pricing ensure you stay motivated without surprises.
+          </p>
+
+          <div class="grid-3" style="margin-top: 16px">
+            <div class="card">
+              <div class="bullet">
+                <div aria-hidden="true">👥</div>
+                <div>
+                  <div class="store">Social matching</div>
+                  <div class="meta">
+                    Invite friends, family, or your employer to match round‑ups
+                    automatically.
+                  </div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">🏆</div>
+                <div>
+                  <div class="store">Achievements</div>
+                  <div class="meta">
+                    Unlock milestones and streaks as you crush your balance.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="bullet">
+                <div aria-hidden="true">💸</div>
+                <div>
+                  <div class="store">Cashback rewards</div>
+                  <div class="meta">
+                    Partner offers boost your round‑ups with extra cash back.
+                  </div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">🚫</div>
+                <div>
+                  <div class="store">No hidden fees</div>
+                  <div class="meta">
+                    No monthly fees, no gotchas. You keep more of your money.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="bullet">
+                <div aria-hidden="true">🛡️</div>
+                <div>
+                  <div class="store">Bank‑level security</div>
+                  <div class="meta">
+                    End‑to‑end encryption in transit, AES‑256 at rest,
+                    continuous independent audits.
+                  </div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">🔐</div>
+                <div>
+                  <div class="store">Privacy first</div>
+                  <div class="meta">
+                    Read‑only connections to financial data; revoke access
+                    anytime.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="security">
+        <div class="container grid-2">
+          <div class="card">
+            <h2 class="sec-title">Security, by design</h2>
+            <p class="lead">
+              We secure data using TLS 1.3 with forward secrecy, end‑to‑end
+              encryption in transit, AES‑256 encryption at rest, hardware
+              security modules for key management, and continuous SOC‑type
+              audits.
+            </p>
+            <div class="grid-3" style="margin-top: 12px">
+              <div class="bullet">
+                <div aria-hidden="true">🧪</div>
+                <div>
+                  <div class="store">Continuous audits</div>
+                  <div class="meta">
+                    Independent security testing and alerting 24/7.
+                  </div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">💳</div>
+                <div>
+                  <div class="store">Bank integrations</div>
+                  <div class="meta">
+                    Secure, read‑only connections via vetted providers.
+                  </div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">🧯</div>
+                <div>
+                  <div class="store">Account protection</div>
+                  <div class="meta">
+                    Biometric login, 2FA, and anomaly detection.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="margin: 0 0 10px">Smart routing prioritizes impact</h3>
+            <p class="meta" style="margin: 0 0 14px">
+              MochaWallet allocates round‑ups to the loan with the highest
+              expected interest savings first.
+            </p>
+            <ol style="margin: 0; padding-left: 18px">
+              <li>Rank loans by APR, remaining term, and balance.</li>
+              <li>Allocate round‑ups to top priority until threshold met.</li>
+              <li>Rebalance as balances and rates change.</li>
+            </ol>
+            <div class="card" style="margin-top: 14px; background: #141110">
+              <div
+                class="row"
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr auto;
+                  gap: 10px;
+                  align-items: center;
+                "
+              >
+                <div>
+                  <div class="store">Highest impact: Loan B</div>
+                  <div class="meta">6.9% APR • $12,420 balance</div>
+                </div>
+                <div
+                  class="btn btn-ghost"
+                  aria-disabled="true"
+                  style="cursor: default"
+                >
+                  Auto‑routing
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="download">
+        <div class="container grid-2">
+          <div class="card">
+            <h2 class="sec-title">Get started free</h2>
+            <p class="lead">
+              Download the app, connect your accounts, and see your first
+              round‑ups move within a day.
+            </p>
+            <form
+              id="joinForm"
+              class="calc"
+              onsubmit="return handleJoin(event)"
+            >
+              <div class="row">
+                <label for="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="you@domain.com"
+                  aria-required="true"
+                  style="
+                    height: var(--btn-h);
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.16);
+                    background: #12100f;
+                    color: var(--text);
+                    padding: 0 12px;
+                    width: 100%;
+                  "
+                />
+              </div>
+              <div class="row">
+                <label for="platform">Platform</label>
+                <select
+                  id="platform"
+                  name="platform"
+                  style="
+                    height: var(--btn-h);
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.16);
+                    background: #12100f;
+                    color: var(--muted);
+                    padding: 0 12px;
+                  "
+                >
+                  <option>iOS</option>
+                  <option>Android</option>
+                </select>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  gap: 10px;
+                  align-items: center;
+                  flex-wrap: wrap;
+                "
+              >
+                <button class="btn btn-primary" type="submit">
+                  Send download link
+                </button>
+                <span class="meta">No hidden fees. Ever.</span>
+              </div>
+              <div id="joinMsg" class="meta" aria-live="polite"></div>
+            </form>
+          </div>
+          <div class="card">
+            <h3 style="margin: 0 0 10px">What users say</h3>
+            <div class="grid-3">
+              <div class="bullet">
+                <div aria-hidden="true">⭐️⭐️⭐️⭐️⭐️</div>
+                <div>
+                  <div class="store">Paid off 6 months sooner</div>
+                  <div class="meta">Matching plus cashback really adds up.</div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">⚡️</div>
+                <div>
+                  <div class="store">Set it and forget it</div>
+                  <div class="meta">
+                    Auto‑routing means I don’t have to think about it.
+                  </div>
+                </div>
+              </div>
+              <div class="bullet">
+                <div aria-hidden="true">🔒</div>
+                <div>
+                  <div class="store">Feels secure</div>
+                  <div class="meta">
+                    2FA + biometric login gives peace of mind.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq">
+        <div class="container">
+          <h2 class="sec-title">FAQ</h2>
+          <details class="card" style="margin-bottom: 10px">
+            <summary><strong>How do round‑ups work?</strong></summary>
+            MochaWallet rounds each purchase to the nearest dollar and saves the
+            difference. We aggregate and route those savings as extra payments
+            to your highest‑impact loan.
+          </details>
+          <details class="card" style="margin-bottom: 10px">
+            <summary><strong>Are there any fees?</strong></summary>
+            No hidden fees. No monthly fee. You keep your rewards.
+          </details>
+          <details class="card" style="margin-bottom: 10px">
+            <summary><strong>How is my data secured?</strong></summary>
+            We use end‑to‑end encryption in transit, AES‑256 at rest, strict
+            access controls, and continuous audits.
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div
+        class="container"
+        style="
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <div class="logo" style="opacity: 0.9">
+          <span class="logo-mark" aria-hidden="true"></span>
+          <span>MochaWallet</span>
+        </div>
+        <div class="meta">
+          © <span id="year"></span> MochaWallet, Inc. All rights reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const ring = document.getElementById("ringProg");
+      const ringPct = document.getElementById("ringPct");
+      const CIRC = 2 * Math.PI * 52; // r=52
+      const pct = 54; // demo progress
+      const targetOffset = CIRC * (1 - pct / 100);
+      if (ring) {
+        ring.style.transition =
+          "stroke-dashoffset 1200ms cubic-bezier(.22,.8,.2,1)";
+        requestAnimationFrame(() => {
+          ring.style.strokeDashoffset = targetOffset;
+        });
+      }
+
+      const matchRange = document.getElementById("matchPct");
+      const matchVal = document.getElementById("matchPctVal");
+      const avgDaily = document.getElementById("avgDaily");
+      const withMatch = document.getElementById("withMatch");
+      const timeSaved = document.getElementById("timeSaved");
+
+      function fmt(n) {
+        return n.toLocaleString(undefined, {
+          maximumFractionDigits: 2,
+          minimumFractionDigits: 1,
+        });
+      }
+
+      function recalc() {
+        const pct = Number(matchRange.value);
+        matchVal.textContent = pct + "%";
+        const baseDaily = 1.75; // demo average
+        const matched = baseDaily * (1 + pct / 100);
+        const monthly = matched * 30; // approx
+        avgDaily.textContent = "$" + fmt(baseDaily);
+        withMatch.textContent = "$" + fmt(monthly);
+        const monthsSaved = Math.min(
+          24,
+          (pct / 100) * 10.8 + (monthly > 100 ? 3 : 0)
+        );
+        timeSaved.textContent = fmt(monthsSaved) + " months";
+      }
+      matchRange?.addEventListener("input", recalc);
+      recalc();
+
+      function scrollToDownload() {
+        document
+          .getElementById("download")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      function handleJoin(e) {
+        e.preventDefault();
+        const email = document.getElementById("email").value.trim();
+        const platform = document.getElementById("platform").value;
+        const msg = document.getElementById("joinMsg");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          msg.textContent = "Enter a valid email to receive the download link.";
+          msg.style.color = "#ffb4b4";
+          return false;
+        }
+        msg.style.color = "";
+        msg.textContent = "✓ Link sent to " + email + " for " + platform + ".";
+        e.target.reset();
+        return false;
+      }
+    </script>
+  </body>
+</html>
