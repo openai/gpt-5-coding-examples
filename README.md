@@ -6,7 +6,7 @@ These demos were selected to showcase the model’s strengths in coding — espe
 
 ## Explore Examples
 
-You can explore the demos by cloning this repo and running it locally:
+You can explore the demos by cloning this repo and running it locally.
 
 ```
 cd front-end
@@ -15,6 +15,8 @@ npm run dev
 ```
 
 The app will be available at `localhost:3000`.
+
+You can also visit the [hosted version](https://gpt5-coding-examples.vercel.app/).
 
 From there, you can view any example, see the zero-shot prompt that created the code, and remix it for your own ideas.
 
