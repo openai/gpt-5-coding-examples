@@ -11,6 +11,7 @@ interface SearchBarProps {
 export function SearchBar({ onSearch, placeholder = "Search examples..." }: SearchBarProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [query, setQuery] = React.useState("");
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const debounceRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -32,11 +33,39 @@ export function SearchBar({ onSearch, placeholder = "Search examples..." }: Sear
     inputRef.current?.focus();
   }, [onSearch]);
 
+  const handleClose = React.useCallback(() => {
+    if (!query) {
+      setIsExpanded(false);
+    }
+  }, [query]);
+
   React.useEffect(() => {
     if (isExpanded && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isExpanded]);
+
+  React.useEffect(() => {
+    if (!isExpanded) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        handleClose();
+      }
+    };
+
+    const handleScroll = () => {
+      handleClose();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [isExpanded, handleClose]);
 
   React.useEffect(() => {
     if (debounceRef.current) {
@@ -67,7 +96,7 @@ export function SearchBar({ onSearch, placeholder = "Search examples..." }: Sear
   }, [query, onSearch]);
 
   return (
-    <div className="relative flex items-center justify-center">
+    <div ref={containerRef} className="relative flex items-center justify-center">
       <div
         className={`
           flex items-center gap-2 transition-all duration-300 ease-in-out
