@@ -56,7 +56,7 @@ export const CopyButton = ({
       onClick={handleClick}
       className="flex items-center gap-2 cursor-pointer z-10"
     >
-      <div className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-100">
+      <div className="p-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors duration-100">
         {copied ? (
           <Check key="copied-icon" size={16} />
         ) : (

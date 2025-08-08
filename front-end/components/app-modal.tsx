@@ -27,7 +27,7 @@ export function AppModal({ active, open, onOpenChange }: AppModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="h-[90vh] w-full md:min-w-[80vw] md:h-[80vh] p-4 overflow-scroll">
         {active && (
-          <div className="flex w-full h-full flex-col gap-6 md:flex-row">
+          <div className="flex w-full h-full flex-col-reverse gap-6 md:flex-row">
             <div className="flex w-full flex-col md:w-2/3">
               <div className="flex-1 w-full rounded border">
                 <iframe
@@ -59,7 +59,7 @@ export function AppModal({ active, open, onOpenChange }: AppModalProps) {
                       )}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 text-sm bg-black text-white px-2.5 py-1 rounded-lg"
+                      className="flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg"
                     >
                       <Shuffle size={16} /> Open in ChatGPT
                     </Link>
