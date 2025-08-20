@@ -4,8 +4,31 @@ prompt: |
   Create a single-page app in a single HTML file with the following requirements:
   - Name: Online Poll Board
   - Goal: Let visitors vote on topics (mock).
-  - Features: List of polls, vote count animations, results display.
-  - The UI should be engaging and easy to use; the background should be a light delightful color.
+  - Features:
+      - List of polls with titles and short descriptions
+      - Interactive voting buttons (upvote/downvote or options)
+      - Vote count animations
+      - Real-time results display with percentages
+      - Highlight the leading option visually
+      - A "Create New Poll" form (mock, no backend)
+      - Filter/search polls by keyword
+      - Sort polls by most recent or most voted
+      - Reset votes option (mock)
+  - UI/Design:
+      - Engaging and easy to use
+      - Light, delightful background color
+      - Card-style layout for polls
+      - Smooth hover and click animations
+      - Responsive design for desktop and mobile
+  - Extra:
+      - Use local storage to persist mock votes
+      - Show a fun "Thank you for voting!" message
+      - Include a header with app name and a simple logo placeholder
+      - Footer with mock links (About, Contact, Privacy)
 screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/online-poll-board.png
 tags:
   - app
+  - interactive
+  - polls
+  - single-page
+  - frontend
