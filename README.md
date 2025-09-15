@@ -28,7 +28,7 @@ If you want to experiment with similar prompts, you can try GPT-5 in your prefer
 - **Your favorite IDE or coding tool** – Use GPT-5 within your existing workflow to generate and refine code.
 - **[ChatGPT](https://chatgpt.com)** – Open ChatGPT and choose GPT-5 to generate and preview code in the browser.
 
-Choose an example, copy its prompt for inspiration, and adapt it to your own needs.  
+Choose an example, copy its prompt for inspiration, and adapt it to your own needs.
 Let GPT-5 build your idea, then iterate on the prompt or code to explore variations.
 
 ### For Developers: Codex CLI
@@ -59,5 +59,9 @@ If you don’t have a coding environment, you can use [**ChatGPT**](https://chat
 With this method, _anyone_ can create a working single-page app — no local setup required.
 
 > [!NOTE]
-> We are not accepting contributions at this time.  
+> We are not accepting contributions at this time.
 > This repo is for **reference and inspiration only**. If you’d like to build on these ideas, please fork the repo for your own experiments.
+
+
+---
+*Documentation formatting improved for better readability.*
