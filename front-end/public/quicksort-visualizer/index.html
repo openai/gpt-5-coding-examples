@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickSort Visualizer</title>
+  <meta name="description" content="クイックソートアルゴリズムを視覚的に理解できるインタラクティブな可視化ツール">
+  <style>
+    /* CSS変数定義 */
+    :root {
+      /* ダークテーマ */
+      --bg-dark: #0a0e1a;
+      --panel-dark: #151922;
+      --border-dark: #1f2937;
+      --text-dark: #e5e7eb;
+      --muted-dark: #9ca3af;
+
+      /* ライトテーマ */
+      --bg-light: #f8fafc;
+      --panel-light: #ffffff;
+      --border-light: #e2e8f0;
+      --text-light: #1e293b;
+      --muted-light: #64748b;
+
+      /* 棒グラフの色（状態別） */
+      --bar-default: #3b82f6;    /* 青 - デフォルト */
+      --bar-pivot: #f59e0b;      /* オレンジ - ピボット */
+      --bar-comparing: #8b5cf6;  /* 紫 - 比較中 */
+      --bar-swapping: #ef4444;   /* 赤 - スワップ中 */
+      --bar-sorted: #10b981;     /* 緑 - ソート済み */
+
+      /* アクセントカラー */
+      --accent-primary: #06b6d4;
+      --accent-secondary: #a78bfa;
+
+      /* シャドウ */
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+      color-scheme: dark;
+    }
+
+    /* ライトモード */
+    body.light {
+      --bg: var(--bg-light);
+      --panel: var(--panel-light);
+      --border: var(--border-light);
+      --text: var(--text-light);
+      --muted: var(--muted-light);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      color-scheme: light;
+    }
+
+    /* ダークモード（デフォルト） */
+    body, body.dark {
+      --bg: var(--bg-dark);
+      --panel: var(--panel-dark);
+      --border: var(--border-dark);
+      --text: var(--text-dark);
+      --muted: var(--muted-dark);
+    }
+
+    /* 基本スタイル */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100vh;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* ヘッダー */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px clamp(16px, 4vw, 28px);
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: 0.5px;
+    }
+
+    .brand .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--bar-pivot), var(--bar-swapping));
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .theme-toggle {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.06s ease, background 0.2s ease;
+      font-size: 1.25rem;
+    }
+
+    .theme-toggle:hover {
+      background: var(--border);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.95);
+    }
+
+    /* メインコンテンツ */
+    main {
+      padding: 20px clamp(16px, 4vw, 28px);
+      overflow-y: auto;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    /* ビジュアライザー */
+    .visualizer-container {
+      min-height: 400px;
+    }
+
+    .operation-display {
+      text-align: center;
+      padding: 16px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .operation-display p {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .empty-message {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    /* 棒グラフ */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 300px;
+      padding: 10px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+      border-radius: 12px;
+    }
+
+    .bar {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      min-width: 8px;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.3s ease, background-color 0.2s ease, transform 0.2s ease;
+      will-change: height, background-color;
+    }
+
+    .bar-value {
+      position: absolute;
+      top: -20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text);
+      opacity: 0.8;
+    }
+
+    /* 棒の色分け */
+    .bar-default {
+      background: var(--bar-default);
+    }
+
+    .bar-pivot {
+      background: var(--bar-pivot);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+      animation: pivot-glow 1s ease-in-out infinite;
+    }
+
+    .bar-comparing {
+      background: var(--bar-comparing);
+      animation: compare-blink 0.8s ease-in-out;
+    }
+
+    .bar-swapping {
+      background: var(--bar-swapping);
+      animation: swap-pulse 0.6s ease-in-out;
+    }
+
+    .bar-sorted {
+      background: var(--bar-sorted);
+      animation: sorted-celebrate 0.5s ease-out;
+    }
+
+    /* アニメーション */
+    @keyframes pivot-glow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    @keyframes compare-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes swap-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); filter: brightness(1.2); }
+    }
+
+    @keyframes sorted-celebrate {
+      0% { transform: translateY(0); }
+      30% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* コントロールパネル */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .control-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.125rem;
+      transition: transform 0.06s ease, background 0.2s ease, border-color 0.2s ease;
+      user-select: none;
+      min-width: 44px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--border);
+      border-color: var(--accent-primary);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+
+    .btn.primary:hover:not(:disabled) {
+      filter: brightness(1.1);
+    }
+
+    /* シークバー */
+    .seek-bar {
+      margin: 16px 0;
+    }
+
+    .seek-bar input[type="range"] {
+      width: 100%;
+    }
+
+    .step-counter {
+      display: block;
+      text-align: center;
+      margin-top: 8px;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    /* 入力フィールド */
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: var(--accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      transition: border-color 0.2s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+    }
+
+    .range-display {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .range-value {
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* フッター */
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 16px;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      font-size: 0.875rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-label {
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .control-buttons {
+        justify-content: center;
+      }
+
+      .bar-value {
+        font-size: 0.625rem;
+        top: -16px;
+      }
+
+      footer {
+        font-size: 0.75rem;
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body class="dark">
+  <div id="root"></div>
+
+  <!-- React CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useMemo } = React;
+
+    // ========================================
+    // クイックソートアルゴリズムとステップ生成
+    // ========================================
+
+    /**
+     * クイックソートの全ステップを生成する関数
+     * @param {number[]} arr - ソート対象の配列
+     * @returns {Array} ステップオブジェクトの配列
+     */
+    function generateQuickSortSteps(arr) {
+      const steps = [];
+      const array = [...arr]; // 元の配列を保護
+
+      /**
+       * ステップを記録するヘルパー関数
+       */
+      function recordStep(type, indices, description) {
+        steps.push({
+          type,
+          array: [...array], // 配列のスナップショット
+          indices: { ...indices },
+          description
+        });
+      }
+
+      /**
+       * パーティション処理
+       */
+      function partition(low, high, sortedIndices) {
+        const pivot = array[high];
+
+        // ピボット選択を記録
+        recordStep('pivot', {
+          pivot: high,
+          sorted: [...sortedIndices],
+          comparing: [],
+          swapping: []
+        }, `ピボット ${pivot} (インデックス ${high}) を選択`);
+
+        let i = low - 1;
+
+        for (let j = low; j < high; j++) {
+          // 比較を記録
+          recordStep('compare', {
+            pivot: high,
+            comparing: [j, high],
+            sorted: [...sortedIndices],
+            swapping: []
+          }, `${array[j]} とピボット ${pivot} を比較`);
+
+          if (array[j] <= pivot) {
+            i++;
+            if (i !== j) {
+              // スワップ前の値を保存
+              const temp1 = array[i];
+              const temp2 = array[j];
+
+              // 実際にスワップ
+              [array[i], array[j]] = [array[j], array[i]];
+
+              // スワップを記録
+              recordStep('swap', {
+                swapping: [i, j],
+                pivot: high,
+                sorted: [...sortedIndices],
+                comparing: []
+              }, `${temp2} と ${temp1} を交換`);
+            }
+          }
+        }
+
+        // ピボットを正しい位置に配置
+        if (i + 1 !== high) {
+          const temp1 = array[i + 1];
+          const temp2 = array[high];
+
+          [array[i + 1], array[high]] = [array[high], array[i + 1]];
+
+          recordStep('swap', {
+            swapping: [i + 1, high],
+            sorted: [...sortedIndices],
+            pivot: null,
+            comparing: []
+          }, `ピボット ${temp2} を正しい位置 ${i + 1} に配置`);
+        }
+
+        return i + 1;
+      }
+
+      /**
+       * クイックソート本体（再帰）
+       */
+      function quickSort(low, high, sortedIndices = []) {
+        if (low < high) {
+          const pivotIndex = partition(low, high, sortedIndices);
+
+          // ピボットはソート済み
+          sortedIndices.push(pivotIndex);
+          recordStep('sorted', {
+            sorted: [...sortedIndices],
+            pivot: null,
+            comparing: [],
+            swapping: []
+          }, `インデックス ${pivotIndex} (値: ${array[pivotIndex]}) がソート完了`);
+
+          // 左側を再帰的にソート
+          quickSort(low, pivotIndex - 1, sortedIndices);
+
+          // 右側を再帰的にソート
+          quickSort(pivotIndex + 1, high, sortedIndices);
+        } else if (low === high) {
+          // 単一要素はソート済み
+          sortedIndices.push(low);
+          recordStep('sorted', {
+            sorted: [...sortedIndices],
+            pivot: null,
+            comparing: [],
+            swapping: []
+          }, `インデックス ${low} (値: ${array[low]}) がソート完了`);
+        }
+      }
+
+      // 初期状態を記録
+      recordStep('initial', {
+        sorted: [],
+        pivot: null,
+        comparing: [],
+        swapping: []
+      }, '初期状態 - クイックソートを開始します');
+
+      // ソート実行
+      const sortedIndices = [];
+      quickSort(0, array.length - 1, sortedIndices);
+
+      // 完了状態を記録
+      recordStep('complete', {
+        sorted: array.map((_, i) => i),
+        pivot: null,
+        comparing: [],
+        swapping: []
+      }, 'ソート完了！');
+
+      return steps;
+    }
+
+    // ========================================
+    // カスタムフック
+    // ========================================
+
+    /**
+     * クイックソートのステップ管理フック
+     */
+    function useQuickSort(arraySize, initialState, customValues) {
+      const [sortSteps, setSortSteps] = useState([]);
+
+      /**
+       * 配列を生成する関数
+       */
+      const generateArray = useCallback(() => {
+        let arr;
+
+        switch (initialState) {
+          case 'random':
+            // ランダムな1-100の整数
+            arr = Array.from({ length: arraySize }, () =>
+              Math.floor(Math.random() * 100) + 1
+            );
+            break;
+
+          case 'reversed':
+            // 逆順（大きい順）
+            arr = Array.from({ length: arraySize }, (_, i) =>
+              arraySize - i
+            );
+            break;
+
+          case 'nearlySorted':
+            // ほぼソート済み（順序の20%をランダムに入れ替え）
+            arr = Array.from({ length: arraySize }, (_, i) => i + 1);
+            const swapCount = Math.max(1, Math.floor(arraySize * 0.2));
+            for (let i = 0; i < swapCount; i++) {
+              const idx1 = Math.floor(Math.random() * arraySize);
+              const idx2 = Math.floor(Math.random() * arraySize);
+              [arr[idx1], arr[idx2]] = [arr[idx2], arr[idx1]];
+            }
+            break;
+
+          case 'custom':
+            if (customValues) {
+              // カンマ区切りの文字列をパース
+              arr = customValues
+                .split(',')
+                .map(v => parseInt(v.trim(), 10))
+                .filter(v => !isNaN(v) && v >= 1 && v <= 100);
+
+              // 有効な値が5個未満または50個超の場合はランダムに
+              if (arr.length < 5 || arr.length > 50) {
+                console.warn('カスタム入力が無効です。ランダム配列を生成します。');
+                arr = Array.from({ length: arraySize }, () =>
+                  Math.floor(Math.random() * 100) + 1
+                );
+              }
+            } else {
+              // customValuesが未設定の場合
+              arr = Array.from({ length: arraySize }, () =>
+                Math.floor(Math.random() * 100) + 1
+              );
+            }
+            break;
+
+          default:
+            arr = Array.from({ length: arraySize }, () =>
+              Math.floor(Math.random() * 100) + 1
+            );
+        }
+
+        return arr;
+      }, [arraySize, initialState, customValues]);
+
+      /**
+       * 新しい配列を生成してソートステップを作成
+       */
+      const regenerate = useCallback(() => {
+        const arr = generateArray();
+        const steps = generateQuickSortSteps(arr);
+        setSortSteps(steps);
+        return steps.length;
+      }, [generateArray]);
+
+      return { sortSteps, regenerate };
+    }
+
+    /**
+     * キーボードショートカットフック
+     */
+    function useKeyboardShortcuts(handlers) {
+      useEffect(() => {
+        function handleKeyDown(e) {
+          // 入力フィールドにフォーカスがある場合はスキップ
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+            return;
+          }
+
+          switch (e.key) {
+            case ' ':
+              e.preventDefault();
+              handlers.onPlayPause?.();
+              break;
+            case 'ArrowLeft':
+              e.preventDefault();
+              handlers.onStepBackward?.();
+              break;
+            case 'ArrowRight':
+              e.preventDefault();
+              handlers.onStepForward?.();
+              break;
+            case 'Home':
+              e.preventDefault();
+              handlers.onJumpToStart?.();
+              break;
+            case 'End':
+              e.preventDefault();
+              handlers.onJumpToEnd?.();
+              break;
+            default:
+              break;
+          }
+        }
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [handlers]);
+    }
+
+    // ========================================
+    // コンポーネント
+    // ========================================
+
+    /**
+     * ヘッダーコンポーネント
+     */
+    function Header({ theme, onThemeToggle }) {
+      return (
+        <header>
+          <div className="brand">
+            <div className="logo"></div>
+            <span>QuickSort Visualizer</span>
+          </div>
+          <button
+            className="theme-toggle"
+            onClick={onThemeToggle}
+            aria-label={theme === 'dark' ? 'ライトモードに切替' : 'ダークモードに切替'}
+          >
+            {theme === 'dark' ? '🌙' : '☀️'}
+          </button>
+        </header>
+      );
+    }
+
+    /**
+     * 棒グラフコンポーネント
+     */
+    function BarChart({ array, indices }) {
+      const maxValue = Math.max(...array, 1); // ゼロ除算を防ぐ
+      const { pivot, comparing, swapping, sorted } = indices;
+
+      return (
+        <div className="bar-chart" role="img" aria-label="ソート状態の棒グラフ">
+          {array.map((value, index) => {
+            // 色分けロジック（優先順位順）
+            let colorClass = 'bar-default';
+
+            if (sorted && sorted.includes(index)) {
+              colorClass = 'bar-sorted';
+            } else if (pivot === index) {
+              colorClass = 'bar-pivot';
+            } else if (swapping && swapping.includes(index)) {
+              colorClass = 'bar-swapping';
+            } else if (comparing && comparing.includes(index)) {
+              colorClass = 'bar-comparing';
+            }
+
+            // 高さをパーセンテージで計算
+            const heightPercent = (value / maxValue) * 100;
+
+            return (
+              <div
+                key={`${index}-${value}`}
+                className={`bar ${colorClass}`}
+                style={{
+                  height: `${heightPercent}%`,
+                  flex: `1 1 ${100 / array.length}%`
+                }}
+                role="presentation"
+              >
+                <span className="bar-value">{value}</span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    /**
+     * ビジュアライザーコンポーネント
+     */
+    function Visualizer({ step }) {
+      if (!step) {
+        return (
+          <div className="card visualizer-container">
+            <div className="operation-display">
+              <p className="empty-message">
+                「新しい配列を生成」ボタンをクリックして開始してください
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+      const { array, indices, description } = step;
+
+      return (
+        <div className="card visualizer-container">
+          <div className="operation-display">
+            <p>{description}</p>
+          </div>
+          <BarChart array={array} indices={indices} />
+        </div>
+      );
+    }
+
+    /**
+     * 再生コントロールコンポーネント
+     */
+    function PlaybackControls({
+      isPlaying,
+      onPlayPause,
+      onStepForward,
+      onStepBackward,
+      onJumpToStart,
+      onJumpToEnd,
+      currentStep,
+      totalSteps,
+      playbackSpeed,
+      onSpeedChange,
+      onSeek,
+      disabled
+    }) {
+      return (
+        <div className="card">
+          <h2 className="card-title">再生コントロール</h2>
+
+          <div className="control-buttons">
+            <button
+              className="btn"
+              onClick={onJumpToStart}
+              disabled={disabled || currentStep === 0}
+              title="最初へ (Home)"
+              aria-label="最初へジャンプ"
+            >
+              ⏮
+            </button>
+
+            <button
+              className="btn"
+              onClick={onStepBackward}
+              disabled={disabled || currentStep === 0}
+              title="前へ (←)"
+              aria-label="1ステップ戻る"
+            >
+              ⏪
+            </button>
+
+            <button
+              className="btn primary"
+              onClick={onPlayPause}
+              disabled={disabled}
+              title={isPlaying ? "一時停止 (Space)" : "再生 (Space)"}
+              aria-label={isPlaying ? "一時停止" : "再生"}
+            >
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+
+            <button
+              className="btn"
+              onClick={onStepForward}
+              disabled={disabled || currentStep === totalSteps - 1}
+              title="次へ (→)"
+              aria-label="1ステップ進む"
+            >
+              ⏩
+            </button>
+
+            <button
+              className="btn"
+              onClick={onJumpToEnd}
+              disabled={disabled || currentStep === totalSteps - 1}
+              title="最後へ (End)"
+              aria-label="最後へジャンプ"
+            >
+              ⏭
+            </button>
+          </div>
+
+          <div className="seek-bar">
+            <input
+              type="range"
+              min="0"
+              max={Math.max(0, totalSteps - 1)}
+              value={currentStep}
+              onChange={e => onSeek(parseInt(e.target.value, 10))}
+              disabled={disabled}
+              aria-label="シークバー"
+            />
+            <span className="step-counter">
+              ステップ {currentStep + 1} / {totalSteps}
+            </span>
+          </div>
+
+          <div className="control-group">
+            <label htmlFor="speed-select" className="control-label">再生速度</label>
+            <select
+              id="speed-select"
+              value={playbackSpeed}
+              onChange={e => onSpeedChange(parseFloat(e.target.value))}
+              disabled={disabled}
+            >
+              <option value="0.25">0.25x (スローモーション)</option>
+              <option value="0.5">0.5x</option>
+              <option value="1">1x (標準)</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x (高速)</option>
+            </select>
+          </div>
+        </div>
+      );
+    }
+
+    /**
+     * データコントロールコンポーネント
+     */
+    function DataControls({
+      arraySize,
+      onArraySizeChange,
+      initialState,
+      onInitialStateChange,
+      customValues,
+      onCustomValuesChange,
+      onGenerate,
+      disabled
+    }) {
+      return (
+        <div className="card">
+          <h2 className="card-title">データ設定</h2>
+
+          <div className="control-group">
+            <div className="range-display">
+              <label htmlFor="array-size" className="control-label">配列サイズ</label>
+              <span className="range-value">{arraySize}</span>
+            </div>
+            <input
+              id="array-size"
+              type="range"
+              min="5"
+              max="50"
+              value={arraySize}
+              onChange={e => onArraySizeChange(parseInt(e.target.value, 10))}
+              disabled={disabled}
+            />
+          </div>
+
+          <div className="control-group">
+            <label htmlFor="initial-state" className="control-label">初期状態</label>
+            <select
+              id="initial-state"
+              value={initialState}
+              onChange={e => onInitialStateChange(e.target.value)}
+              disabled={disabled}
+            >
+              <option value="random">ランダム</option>
+              <option value="reversed">逆順</option>
+              <option value="nearlySorted">ほぼソート済み</option>
+              <option value="custom">手動入力</option>
+            </select>
+          </div>
+
+          {initialState === 'custom' && (
+            <div className="control-group">
+              <label htmlFor="custom-input" className="control-label">
+                値を入力 (カンマ区切り)
+              </label>
+              <input
+                id="custom-input"
+                type="text"
+                placeholder="例: 5,3,8,1,9,2,7"
+                value={customValues || ''}
+                onChange={e => onCustomValuesChange(e.target.value)}
+                disabled={disabled}
+              />
+              <p className="hint">1〜100の整数を5〜50個入力してください</p>
+            </div>
+          )}
+
+          <button
+            className="btn primary"
+            onClick={onGenerate}
+            disabled={disabled}
+            style={{ width: '100%', marginTop: '8px' }}
+          >
+            新しい配列を生成
+          </button>
+        </div>
+      );
+    }
+
+    /**
+     * フッターコンポーネント
+     */
+    function Footer({ stats }) {
+      return (
+        <footer>
+          <div className="stat-item">
+            <span className="stat-label">比較:</span>
+            <span className="stat-value">{stats.comparisons}回</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">スワップ:</span>
+            <span className="stat-value">{stats.swaps}回</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">総ステップ:</span>
+            <span className="stat-value">{stats.totalSteps}</span>
+          </div>
+        </footer>
+      );
+    }
+
+    // ========================================
+    // メインアプリコンポーネント
+    // ========================================
+
+    function App() {
+      // 状態管理
+      const [theme, setTheme] = useState('dark');
+      const [arraySize, setArraySize] = useState(20);
+      const [initialState, setInitialState] = useState('random');
+      const [customValues, setCustomValues] = useState('');
+      const [currentStepIndex, setCurrentStepIndex] = useState(0);
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
+      // カスタムフック
+      const { sortSteps, regenerate } = useQuickSort(arraySize, initialState, customValues);
+
+      // 現在のステップ
+      const currentStep = sortSteps[currentStepIndex] || null;
+
+      // 統計情報
+      const stats = useMemo(() => ({
+        totalSteps: sortSteps.length,
+        comparisons: sortSteps.filter(s => s.type === 'compare').length,
+        swaps: sortSteps.filter(s => s.type === 'swap').length
+      }), [sortSteps]);
+
+      // テーマ切替
+      const handleThemeToggle = useCallback(() => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+      }, []);
+
+      // テーマをbodyに適用
+      useEffect(() => {
+        document.body.className = theme;
+      }, [theme]);
+
+      // 配列生成
+      const handleGenerate = useCallback(() => {
+        setIsPlaying(false);
+        setCurrentStepIndex(0);
+        regenerate();
+      }, [regenerate]);
+
+      // 再生/一時停止
+      const handlePlayPause = useCallback(() => {
+        setIsPlaying(prev => !prev);
+      }, []);
+
+      // ステップ移動
+      const handleStepForward = useCallback(() => {
+        setCurrentStepIndex(prev => Math.min(prev + 1, sortSteps.length - 1));
+      }, [sortSteps.length]);
+
+      const handleStepBackward = useCallback(() => {
+        setCurrentStepIndex(prev => Math.max(prev - 1, 0));
+      }, []);
+
+      const handleJumpToStart = useCallback(() => {
+        setCurrentStepIndex(0);
+        setIsPlaying(false);
+      }, []);
+
+      const handleJumpToEnd = useCallback(() => {
+        setCurrentStepIndex(sortSteps.length - 1);
+        setIsPlaying(false);
+      }, [sortSteps.length]);
+
+      const handleSeek = useCallback((index) => {
+        setCurrentStepIndex(index);
+      }, []);
+
+      // 自動再生ロジック
+      useEffect(() => {
+        if (!isPlaying || sortSteps.length === 0) return;
+
+        const interval = 1000 / playbackSpeed; // 速度に応じた間隔
+
+        const timer = setInterval(() => {
+          setCurrentStepIndex(prev => {
+            const next = prev + 1;
+            if (next >= sortSteps.length) {
+              setIsPlaying(false); // 自動停止
+              return prev;
+            }
+            return next;
+          });
+        }, interval);
+
+        return () => clearInterval(timer);
+      }, [isPlaying, playbackSpeed, sortSteps.length]);
+
+      // キーボードショートカット
+      useKeyboardShortcuts({
+        onPlayPause: handlePlayPause,
+        onStepForward: handleStepForward,
+        onStepBackward: handleStepBackward,
+        onJumpToStart: handleJumpToStart,
+        onJumpToEnd: handleJumpToEnd
+      });
+
+      const disabled = sortSteps.length === 0;
+
+      return (
+        <>
+          <Header theme={theme} onThemeToggle={handleThemeToggle} />
+
+          <main>
+            <div className="container">
+              <Visualizer step={currentStep} />
+
+              <div className="controls-grid">
+                <PlaybackControls
+                  isPlaying={isPlaying}
+                  onPlayPause={handlePlayPause}
+                  onStepForward={handleStepForward}
+                  onStepBackward={handleStepBackward}
+                  onJumpToStart={handleJumpToStart}
+                  onJumpToEnd={handleJumpToEnd}
+                  currentStep={currentStepIndex}
+                  totalSteps={sortSteps.length}
+                  playbackSpeed={playbackSpeed}
+                  onSpeedChange={setPlaybackSpeed}
+                  onSeek={handleSeek}
+                  disabled={disabled}
+                />
+
+                <DataControls
+                  arraySize={arraySize}
+                  onArraySizeChange={setArraySize}
+                  initialState={initialState}
+                  onInitialStateChange={setInitialState}
+                  customValues={customValues}
+                  onCustomValuesChange={setCustomValues}
+                  onGenerate={handleGenerate}
+                  disabled={isPlaying}
+                />
+              </div>
+            </div>
+          </main>
+
+          <Footer stats={stats} />
+        </>
+      );
+    }
+
+    // ========================================
+    // レンダリング
+    // ========================================
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

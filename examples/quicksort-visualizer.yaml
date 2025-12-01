@@ -1,0 +1,28 @@
+id: quicksort-visualizer
+title: QuickSort Visualizer
+prompt: |
+  Create a single-page app in a single HTML file with the following requirements:
+  - Name: QuickSort Visualizer
+  - Goal: Visualize the quicksort algorithm step-by-step with complete playback control
+  - Features:
+    - Complete playback controls (play/pause, step forward/backward, jump to start/end, seek bar, speed adjustment 0.25x-2x)
+    - Data customization:
+      - Array size adjustment (5-50 elements)
+      - Initial state selection (random, reversed, nearly sorted, manual input)
+      - Manual input with comma-separated values (1-100)
+    - Color-coded visualization:
+      - Blue: default (unprocessed elements)
+      - Orange: pivot element
+      - Purple: elements being compared
+      - Red: elements being swapped
+      - Green: sorted elements
+    - Current operation description in Japanese
+    - Statistics display (comparisons, swaps, total steps)
+    - Dark/light theme toggle
+    - Keyboard shortcuts (Space: play/pause, arrows: step, Home/End: jump)
+  - The UI should be modern, clean, educational, and accessible
+  - All comments and descriptions in Japanese
+screenshot_url: /qsort.png
+tags:
+  - educational
+  - interactive
