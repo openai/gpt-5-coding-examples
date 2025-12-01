@@ -198,7 +198,17 @@
       const rand = (min, max) => Math.random() * (max - min) + min;
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
+      // フルーツごとのスコア設定
       const fruitsList = ['🍎', '🍌', '🍊', '🍇', '🍓', '🍉', '🍐'];
+      const fruitScores = {
+        '🍎': 1, // リンゴ: 基本スコア
+        '🍌': 2, // バナナ
+        '🍊': 2, // オレンジ
+        '🍇': 5, // ブドウ: 小さいので高得点
+        '🍓': 3, // イチゴ
+        '🍉': 4, // スイカ: 大きいので中得点
+        '🍐': 2  // 梨
+      };
 
       const game = {
         running: false,
@@ -272,7 +282,7 @@
       }, { passive: true });
 
       class Fruit {
-        constructor(x, size, speed, emoji) {
+        constructor(x, size, speed, emoji, score) {
           this.x = x;
           this.y = -size;
           this.vy = speed;
@@ -280,6 +290,7 @@
           this.spin = rand(-0.8, 0.8);
           this.rot = 0;
           this.emoji = emoji;
+          this.score = score; // フルーツごとのスコア
         }
       }
 
@@ -289,7 +300,8 @@
         const x = rand(size, W - size);
         const speed = rand(180, 300); // px per second
         const emoji = fruitsList[(Math.random() * fruitsList.length) | 0];
-        game.fruits.push(new Fruit(x, size, speed, emoji));
+        const score = fruitScores[emoji]; // フルーツに応じたスコアを取得
+        game.fruits.push(new Fruit(x, size, speed, emoji, score));
       }
 
       function update(dt) {
@@ -323,7 +335,7 @@
             if (f.x >= basket.x && f.x <= basket.x + basket.w) {
               // Caught!
               game.fruits.splice(i, 1);
-              game.score += 1;
+              game.score += f.score; // フルーツごとのスコアを加算
               scoreEl.textContent = `Score: ${game.score}`;
               // Fun particle pop
               pop(f.x, f.y);
