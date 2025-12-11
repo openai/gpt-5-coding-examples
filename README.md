@@ -1,6 +1,6 @@
 # GPT-5 Coding Examples
 
-This repository contains a curated collection of demo applications **generated entirely in a single [GPT-5](https://platform.openai.com/docs/models/gpt-5) prompt**, without writing any code by hand.
+This repository contains a curated collection of demo applications **generated entirely in a single [GPT-5](https://platform.openai.com/docs/models/gpt-5) or [GPT-5.2](https://platform.openai.com/docs/models/gpt-5.2) prompt**, without writing any code by hand.
 
 These demos were selected to showcase the model’s strengths in coding — especially quickly scaffolding websites, front-end applications, games, and interactive UIs from natural-language descriptions. They’re intended as inspiration for you to build your own ideas.
 
