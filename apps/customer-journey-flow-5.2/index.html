@@ -1,0 +1,1380 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Customer Journey Flow</title>
+  <style>
+    :root{
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e5e7eb;
+      --border2: #d1d5db;
+      --blue: #2563eb;
+      --blue2: #1d4ed8;
+      --shadow: 0 10px 25px rgba(2, 6, 23, .08);
+      --shadow2: 0 6px 16px rgba(2, 6, 23, .08);
+      --radius: 12px;
+      --grid: rgba(148,163,184,.22);
+      --grid2: rgba(148,163,184,.12);
+      --wire: #94a3b8;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background:var(--bg);
+      overflow:hidden;
+    }
+
+    #app{
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    #topbar{
+      height:60px;
+      background:var(--panel);
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 14px;
+      gap:12px;
+    }
+
+    #brand{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      min-width:240px;
+    }
+    #brand h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+      font-weight:700;
+    }
+    #brand .subtitle{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:520px;
+    }
+
+    #toolbar{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--border2);
+      background:linear-gradient(#fff, #fbfdff);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:12.5px;
+      font-weight:600;
+      line-height:1;
+      cursor:pointer;
+      box-shadow: 0 1px 0 rgba(2,6,23,.02);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{border-color:#cbd5e1}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{
+      background:linear-gradient(#2b6fff, #225fe6);
+      border-color:rgba(29,78,216,.7);
+      color:#fff;
+      box-shadow: 0 10px 20px rgba(37,99,235,.18);
+    }
+    .btn.danger{
+      background:linear-gradient(#fff, #fff);
+      border-color:#fecaca;
+      color:#b91c1c;
+    }
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    #content{
+      flex:1;
+      display:flex;
+      min-height:0;
+    }
+
+    #canvasWrap{
+      flex:1;
+      min-width:0;
+      position:relative;
+      overflow:auto;
+      background:var(--bg);
+    }
+
+    #world{
+      position:relative;
+      width:2600px;
+      height:1600px;
+      margin:0;
+      background:
+        linear-gradient(to right, var(--grid2) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid2) 1px, transparent 1px),
+        linear-gradient(to right, var(--grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+      background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+      background-position: 0 0, 0 0, 0 0, 0 0;
+    }
+
+    #wires{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+    }
+    #wires .wire{
+      stroke:var(--wire);
+      stroke-width:2.5;
+      fill:none;
+      opacity:.95;
+      pointer-events:stroke;
+      cursor:pointer;
+    }
+    #wires .wire:hover{stroke:#64748b}
+    #wires .wire.selected{
+      stroke:var(--blue);
+      stroke-width:3.2;
+      opacity:1;
+    }
+    #wires .wire.temp{
+      stroke:var(--blue);
+      stroke-dasharray: 6 6;
+      opacity:.8;
+      pointer-events:none;
+    }
+
+    #nodesLayer{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .node{
+      position:absolute;
+      width:220px;
+      min-height:120px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow: var(--shadow2);
+      padding:12px 12px 12px 12px;
+      pointer-events:auto;
+      user-select:none;
+      cursor:grab;
+    }
+    .node:active{cursor:grabbing}
+    .node.selected{
+      border-color:rgba(37,99,235,.55);
+      box-shadow: 0 18px 40px rgba(37,99,235,.12), var(--shadow2);
+    }
+    .node .title{
+      font-weight:800;
+      font-size:13.5px;
+      margin:0 0 6px 0;
+      padding-right:24px;
+    }
+    .node .desc{
+      font-size:12px;
+      line-height:1.35;
+      color:var(--muted);
+      margin:0;
+      white-space:pre-wrap;
+      min-height:44px;
+    }
+
+    .handle{
+      position:absolute;
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      border:2px solid rgba(148,163,184,.9);
+      background:#fff;
+      top:50%;
+      transform:translateY(-50%);
+      box-shadow: 0 4px 10px rgba(2,6,23,.08);
+      cursor:crosshair;
+    }
+    .handle.in{ left:-8px; }
+    .handle.out{ right:-8px; }
+    .node.selected .handle{
+      border-color: rgba(37,99,235,.95);
+    }
+    .handle:hover{
+      transform:translateY(-50%) scale(1.08);
+      border-color: rgba(37,99,235,.95);
+    }
+
+    .mini{
+      position:absolute;
+      right:10px;
+      top:10px;
+      font-size:11px;
+      color:var(--muted);
+      opacity:.9;
+      display:flex;
+      gap:6px;
+      align-items:center;
+    }
+    .pill{
+      border:1px solid var(--border);
+      background:#f8fafc;
+      padding:2px 6px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:10px;
+      letter-spacing:.2px;
+      color:#334155;
+    }
+
+    #sidebar{
+      width:340px;
+      background:var(--panel);
+      border-left:1px solid var(--border);
+      padding:14px;
+      overflow:auto;
+    }
+    #sidebar h2{
+      margin:0 0 10px 0;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    #sidebar .hint{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+      margin:0 0 12px 0;
+    }
+    .section{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      margin:10px 0;
+      background:#fff;
+    }
+    .section .sectionTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:10px;
+    }
+    .section .sectionTitle .label{
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.2px;
+      color:#0f172a;
+    }
+    .section .sectionTitle .sub{
+      font-size:11px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    label{
+      display:block;
+      font-size:11px;
+      font-weight:700;
+      color:#334155;
+      margin:10px 0 6px;
+    }
+    input[type="text"], textarea{
+      width:100%;
+      border:1px solid var(--border2);
+      border-radius:12px;
+      padding:10px 10px;
+      font-size:12.5px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+    }
+    textarea{
+      min-height:86px;
+      resize:vertical;
+      line-height:1.35;
+    }
+    input[type="text"]:focus, textarea:focus{
+      border-color: rgba(37,99,235,.55);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+
+    .row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .row .btn{flex:1}
+    .list{
+      margin:8px 0 0 0;
+      padding:0;
+      list-style:none;
+    }
+    .list li{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:8px 8px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin:7px 0;
+      background:#fff;
+      font-size:12px;
+      color:#0f172a;
+    }
+    .list li .meta{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:11px;
+      border:1px solid var(--border);
+      background:#f8fafc;
+      padding:2px 6px;
+      border-radius:8px;
+      color:#334155;
+      font-weight:700;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:16px;
+      transform:translateX(-50%);
+      background:rgba(15,23,42,.92);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:12px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .15s ease, transform .15s ease;
+      box-shadow: 0 12px 30px rgba(2,6,23,.2);
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(-2px);
+    }
+
+    /* Reduce accidental text selection while dragging */
+    .dragging, .dragging *{
+      cursor:grabbing !important;
+      user-select:none !important;
+    }
+
+    @media (max-width: 980px){
+      #sidebar{display:none}
+      #brand .subtitle{display:none}
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="topbar">
+      <div id="brand" aria-label="Customer Journey Flow">
+        <h1>Customer Journey Flow</h1>
+        <div class="subtitle">Visualize a customer’s steps from awareness to purchase — edit stages and drag-to-connect.</div>
+      </div>
+      <div id="toolbar" role="toolbar" aria-label="Diagram actions">
+        <button class="btn primary" id="addStageBtn" type="button">Add stage</button>
+        <button class="btn" id="autoLayoutBtn" type="button">Auto layout</button>
+        <button class="btn" id="centerBtn" type="button">Center view</button>
+        <button class="btn" id="exportBtn" type="button">Export JSON</button>
+        <button class="btn" id="importBtn" type="button">Import JSON</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none" />
+      </div>
+    </div>
+
+    <div id="content">
+      <div id="canvasWrap" aria-label="Journey canvas">
+        <div id="world" aria-label="Diagram world">
+          <svg id="wires" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+              </marker>
+            </defs>
+          </svg>
+          <div id="nodesLayer" aria-label="Stages"></div>
+        </div>
+      </div>
+
+      <aside id="sidebar" aria-label="Inspector">
+        <h2>Inspector</h2>
+        <p class="hint">
+          Select a stage to edit it. Drag a stage to reposition.
+          Drag from the <strong>right</strong> dot to another stage to create a connection.
+          Select a wire to delete it.
+        </p>
+
+        <div class="section" id="selectionSection">
+          <div class="sectionTitle">
+            <div class="label">Selection</div>
+            <div class="sub" id="selectionMeta">None</div>
+          </div>
+
+          <div id="noSelection">
+            <div class="hint" style="margin:0">
+              Click a stage (card) or a connection (wire).
+              <div style="margin-top:10px">
+                <span class="kbd">Del</span> deletes selected stage/connection.
+              </div>
+            </div>
+          </div>
+
+          <div id="stageEditor" style="display:none">
+            <label for="stageTitle">Stage name</label>
+            <input id="stageTitle" type="text" autocomplete="off" />
+
+            <label for="stageDesc">Description</label>
+            <textarea id="stageDesc"></textarea>
+
+            <div class="row" style="margin-top:10px">
+              <button class="btn" id="duplicateStageBtn" type="button">Duplicate</button>
+              <button class="btn danger" id="deleteStageBtn" type="button">Delete</button>
+            </div>
+
+            <div style="margin-top:10px">
+              <div class="hint" style="margin:0">
+                Tip: Keep stages short and action-oriented (e.g., “Compare options”, “Request demo”, “Checkout”).
+              </div>
+            </div>
+          </div>
+
+          <div id="connEditor" style="display:none">
+            <div class="hint" id="connSummary" style="margin:0 0 10px 0"></div>
+            <div class="row">
+              <button class="btn danger" id="deleteConnBtn" type="button">Delete connection</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="connectionsSection">
+          <div class="sectionTitle">
+            <div class="label">Connections</div>
+            <div class="sub" id="connectionsMeta">—</div>
+          </div>
+          <ul class="list" id="connectionsList"></ul>
+        </div>
+
+        <div class="section">
+          <div class="sectionTitle">
+            <div class="label">Shortcuts</div>
+            <div class="sub">Keyboard</div>
+          </div>
+          <div class="hint" style="margin:0">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+              <span class="kbd">Del</span><span>Delete selected</span>
+              <span style="width:10px"></span>
+              <span class="kbd">Esc</span><span>Clear selection</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const KEY = "customer-journey-flow.v1";
+      const $ = (sel, root=document) => root.querySelector(sel);
+      const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+      const canvasWrap = $("#canvasWrap");
+      const world = $("#world");
+      const wiresSvg = $("#wires");
+      const nodesLayer = $("#nodesLayer");
+
+      const addStageBtn = $("#addStageBtn");
+      const autoLayoutBtn = $("#autoLayoutBtn");
+      const centerBtn = $("#centerBtn");
+      const exportBtn = $("#exportBtn");
+      const importBtn = $("#importBtn");
+      const importFile = $("#importFile");
+
+      const selectionMeta = $("#selectionMeta");
+      const noSelection = $("#noSelection");
+      const stageEditor = $("#stageEditor");
+      const connEditor = $("#connEditor");
+      const stageTitle = $("#stageTitle");
+      const stageDesc = $("#stageDesc");
+      const deleteStageBtn = $("#deleteStageBtn");
+      const duplicateStageBtn = $("#duplicateStageBtn");
+      const deleteConnBtn = $("#deleteConnBtn");
+      const connSummary = $("#connSummary");
+
+      const connectionsMeta = $("#connectionsMeta");
+      const connectionsList = $("#connectionsList");
+
+      const toastEl = $("#toast");
+
+      const state = {
+        nodes: [],
+        conns: [],
+        selectedNodeId: null,
+        selectedConnId: null,
+        draggingNode: null, // {id, pointerId, offsetX, offsetY}
+        connecting: null,   // {fromId, pointerId, tempPath}
+      };
+
+      const nodeEls = new Map(); // id -> el
+      const connEls = new Map(); // id -> path
+
+      const uid = () => {
+        try { return crypto.randomUUID(); } catch { return "id-" + Math.random().toString(16).slice(2) + Date.now().toString(16); }
+      };
+
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+      const toast = (msg) => {
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(toastEl._t);
+        toastEl._t = setTimeout(() => toastEl.classList.remove("show"), 1200);
+      };
+
+      const isTypingInField = () => {
+        const ae = document.activeElement;
+        if (!ae) return false;
+        const tag = ae.tagName?.toLowerCase();
+        return tag === "input" || tag === "textarea" || ae.isContentEditable;
+      };
+
+      const worldPointFromClient = (clientX, clientY) => {
+        const wr = world.getBoundingClientRect();
+        return { x: clientX - wr.left, y: clientY - wr.top };
+      };
+
+      const getNodeById = (id) => state.nodes.find(n => n.id === id) || null;
+      const getConnById = (id) => state.conns.find(c => c.id === id) || null;
+
+      const ensureSvgSetup = () => {
+        // Set marker color via currentColor on path by applying color property.
+        wiresSvg.style.color = getComputedStyle(document.documentElement).getPropertyValue("--wire") || "#94a3b8";
+      };
+
+      const defaultModel = () => {
+        const baseY = 180;
+        const startX = 120;
+        const gap = 280;
+
+        const nodes = [
+          {
+            id: uid(),
+            x: startX + 0*gap,
+            y: baseY,
+            title: "Awareness",
+            desc: "Customer first discovers your product through ads, content, referrals, or social.",
+          },
+          {
+            id: uid(),
+            x: startX + 1*gap,
+            y: baseY,
+            title: "Consideration",
+            desc: "Customer compares options, reads reviews, and checks fit for their needs.",
+          },
+          {
+            id: uid(),
+            x: startX + 2*gap,
+            y: baseY,
+            title: "Decision",
+            desc: "Customer evaluates pricing and trust signals; final questions get answered.",
+          },
+          {
+            id: uid(),
+            x: startX + 3*gap,
+            y: baseY,
+            title: "Purchase",
+            desc: "Customer completes checkout (or signs) and receives confirmation.",
+          }
+        ];
+
+        const conns = [
+          { id: uid(), from: nodes[0].id, to: nodes[1].id },
+          { id: uid(), from: nodes[1].id, to: nodes[2].id },
+          { id: uid(), from: nodes[2].id, to: nodes[3].id },
+        ];
+
+        return { nodes, conns };
+      };
+
+      const sanitizeModel = (model) => {
+        if (!model || typeof model !== "object") return null;
+        const nodes = Array.isArray(model.nodes) ? model.nodes : [];
+        const conns = Array.isArray(model.conns) ? model.conns : [];
+        const safeNodes = [];
+        const ids = new Set();
+
+        for (const n of nodes) {
+          if (!n || typeof n !== "object") continue;
+          let id = String(n.id || "");
+          if (!id || ids.has(id)) id = uid();
+          ids.add(id);
+          safeNodes.push({
+            id,
+            x: Number.isFinite(n.x) ? n.x : 100,
+            y: Number.isFinite(n.y) ? n.y : 100,
+            title: String(n.title ?? "Stage"),
+            desc: String(n.desc ?? ""),
+          });
+        }
+
+        const nodeIdSet = new Set(safeNodes.map(n => n.id));
+        const safeConns = [];
+        const connSeen = new Set();
+        for (const c of conns) {
+          if (!c || typeof c !== "object") continue;
+          const from = String(c.from || "");
+          const to = String(c.to || "");
+          if (!nodeIdSet.has(from) || !nodeIdSet.has(to) || from === to) continue;
+
+          const key = from + "->" + to;
+          if (connSeen.has(key)) continue;
+          connSeen.add(key);
+
+          let id = String(c.id || "");
+          if (!id) id = uid();
+          safeConns.push({ id, from, to });
+        }
+
+        if (safeNodes.length === 0) return null;
+        return { nodes: safeNodes, conns: safeConns };
+      };
+
+      let saveTimer = null;
+      const scheduleSave = () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          try {
+            localStorage.setItem(KEY, JSON.stringify({ nodes: state.nodes, conns: state.conns }));
+          } catch {}
+        }, 250);
+      };
+
+      const load = () => {
+        try {
+          const raw = localStorage.getItem(KEY);
+          if (!raw) return false;
+          const model = sanitizeModel(JSON.parse(raw));
+          if (!model) return false;
+          state.nodes = model.nodes;
+          state.conns = model.conns;
+          return true;
+        } catch {
+          return false;
+        }
+      };
+
+      const selectNode = (id) => {
+        state.selectedNodeId = id;
+        state.selectedConnId = null;
+        renderSelection();
+        renderNodes();
+        renderConnections();
+        renderConnectionsList();
+      };
+
+      const selectConn = (id) => {
+        state.selectedConnId = id;
+        state.selectedNodeId = null;
+        renderSelection();
+        renderNodes();
+        renderConnections();
+        renderConnectionsList();
+      };
+
+      const clearSelection = () => {
+        state.selectedNodeId = null;
+        state.selectedConnId = null;
+        renderSelection();
+        renderNodes();
+        renderConnections();
+        renderConnectionsList();
+      };
+
+      const nodeAnchor = (nodeId, side) => {
+        const el = nodeEls.get(nodeId);
+        if (!el) return { x: 0, y: 0 };
+        const handle = el.querySelector(".handle." + side);
+        const hr = handle.getBoundingClientRect();
+        const wr = world.getBoundingClientRect();
+        return { x: hr.left - wr.left + hr.width/2, y: hr.top - wr.top + hr.height/2 };
+      };
+
+      const connectionPathD = (fromPt, toPt) => {
+        const dxRaw = Math.abs(toPt.x - fromPt.x);
+        let dx = clamp(dxRaw * 0.5, 70, 260);
+        if (toPt.x < fromPt.x) dx = clamp(dxRaw * 0.25, 70, 220);
+        const c1x = fromPt.x + dx;
+        const c1y = fromPt.y;
+        const c2x = toPt.x - dx;
+        const c2y = toPt.y;
+        return `M ${fromPt.x.toFixed(2)} ${fromPt.y.toFixed(2)} C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(2)} ${c2y.toFixed(2)}, ${toPt.x.toFixed(2)} ${toPt.y.toFixed(2)}`;
+      };
+
+      const renderNodes = () => {
+        // Remove missing
+        for (const [id, el] of nodeEls.entries()) {
+          if (!state.nodes.some(n => n.id === id)) {
+            el.remove();
+            nodeEls.delete(id);
+          }
+        }
+
+        for (const node of state.nodes) {
+          let el = nodeEls.get(node.id);
+          if (!el) {
+            el = document.createElement("div");
+            el.className = "node";
+            el.dataset.nodeId = node.id;
+            el.innerHTML = `
+              <div class="mini">
+                <span class="pill" data-role="inCount">0</span>
+                <span class="pill" data-role="outCount">0</span>
+              </div>
+              <div class="title" data-role="title"></div>
+              <div class="desc" data-role="desc"></div>
+              <div class="handle in" data-role="in" title="Incoming"></div>
+              <div class="handle out" data-role="out" title="Drag to connect"></div>
+            `;
+            nodesLayer.appendChild(el);
+            nodeEls.set(node.id, el);
+
+            // Node selection + dragging
+            el.addEventListener("pointerdown", (e) => {
+              if (e.button !== 0) return;
+              if (e.target.closest(".handle")) return; // handled separately
+              e.preventDefault();
+              e.stopPropagation();
+              selectNode(node.id);
+
+              const pt = worldPointFromClient(e.clientX, e.clientY);
+              const n = getNodeById(node.id);
+              if (!n) return;
+
+              state.draggingNode = {
+                id: node.id,
+                pointerId: e.pointerId,
+                offsetX: pt.x - n.x,
+                offsetY: pt.y - n.y
+              };
+
+              document.body.classList.add("dragging");
+              el.setPointerCapture(e.pointerId);
+            });
+
+            el.addEventListener("pointermove", (e) => {
+              const drag = state.draggingNode;
+              if (!drag || drag.id !== node.id || drag.pointerId !== e.pointerId) return;
+              e.preventDefault();
+
+              const n = getNodeById(node.id);
+              if (!n) return;
+
+              const pt = worldPointFromClient(e.clientX, e.clientY);
+              const worldW = world.clientWidth;
+              const worldH = world.clientHeight;
+
+              const elW = el.offsetWidth || 220;
+              const elH = el.offsetHeight || 120;
+
+              n.x = clamp(pt.x - drag.offsetX, 10, Math.max(10, worldW - elW - 10));
+              n.y = clamp(pt.y - drag.offsetY, 10, Math.max(10, worldH - elH - 10));
+
+              el.style.left = n.x + "px";
+              el.style.top = n.y + "px";
+              requestConnectionsUpdate();
+            });
+
+            const endDrag = (e) => {
+              const drag = state.draggingNode;
+              if (!drag || drag.id !== node.id) return;
+              if (drag.pointerId !== e.pointerId) return;
+              try { el.releasePointerCapture(e.pointerId); } catch {}
+              state.draggingNode = null;
+              document.body.classList.remove("dragging");
+              scheduleSave();
+            };
+
+            el.addEventListener("pointerup", endDrag);
+            el.addEventListener("pointercancel", endDrag);
+
+            // Connection drag from out handle
+            const outHandle = el.querySelector(".handle.out");
+            outHandle.addEventListener("pointerdown", (e) => {
+              if (e.button !== 0) return;
+              e.preventDefault();
+              e.stopPropagation();
+              selectNode(node.id);
+
+              const tempPath = ensureTempPath();
+              state.connecting = { fromId: node.id, pointerId: e.pointerId, tempPath };
+
+              outHandle.setPointerCapture(e.pointerId);
+              updateTempPathToPointer(e);
+            });
+
+            outHandle.addEventListener("pointermove", (e) => {
+              if (!state.connecting) return;
+              if (state.connecting.fromId !== node.id) return;
+              if (state.connecting.pointerId !== e.pointerId) return;
+              e.preventDefault();
+              updateTempPathToPointer(e);
+            });
+
+            const endConnect = (e) => {
+              const connDrag = state.connecting;
+              if (!connDrag) return;
+              if (connDrag.fromId !== node.id) return;
+              if (connDrag.pointerId !== e.pointerId) return;
+              e.preventDefault();
+              finalizeConnectionDrag(e);
+            };
+            outHandle.addEventListener("pointerup", endConnect);
+            outHandle.addEventListener("pointercancel", endConnect);
+
+            // Clicking node without dragging should select
+            el.addEventListener("click", (e) => {
+              e.stopPropagation();
+              selectNode(node.id);
+            });
+          }
+
+          // Update content/position/selection
+          el.style.left = node.x + "px";
+          el.style.top = node.y + "px";
+          el.classList.toggle("selected", state.selectedNodeId === node.id);
+
+          el.querySelector('[data-role="title"]').textContent = node.title || "Stage";
+          el.querySelector('[data-role="desc"]').textContent = node.desc || "";
+
+          const inCount = state.conns.filter(c => c.to === node.id).length;
+          const outCount = state.conns.filter(c => c.from === node.id).length;
+          el.querySelector('[data-role="inCount"]').textContent = "In " + inCount;
+          el.querySelector('[data-role="outCount"]').textContent = "Out " + outCount;
+        }
+      };
+
+      const ensureTempPath = () => {
+        let temp = wiresSvg.querySelector("path.wire.temp");
+        if (!temp) {
+          temp = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          temp.setAttribute("class", "wire temp");
+          temp.setAttribute("marker-end", "url(#arrow)");
+          wiresSvg.appendChild(temp);
+        }
+        temp.style.display = "";
+        return temp;
+      };
+
+      const hideTempPath = () => {
+        const temp = wiresSvg.querySelector("path.wire.temp");
+        if (temp) temp.style.display = "none";
+      };
+
+      const updateTempPathToPointer = (e) => {
+        const connDrag = state.connecting;
+        if (!connDrag) return;
+        const fromPt = nodeAnchor(connDrag.fromId, "out");
+        const toPt = worldPointFromClient(e.clientX, e.clientY);
+        connDrag.tempPath.setAttribute("d", connectionPathD(fromPt, toPt));
+        connDrag.tempPath.style.setProperty("color", getComputedStyle(document.documentElement).getPropertyValue("--blue") || "#2563eb");
+      };
+
+      const findDropTargetNodeId = (clientX, clientY) => {
+        const el = document.elementFromPoint(clientX, clientY);
+        if (!el) return null;
+        const inHandle = el.closest?.(".handle.in");
+        if (inHandle) {
+          const nodeEl = inHandle.closest(".node");
+          return nodeEl?.dataset?.nodeId || null;
+        }
+        const nodeEl = el.closest?.(".node");
+        if (nodeEl) return nodeEl.dataset.nodeId || null;
+        return null;
+      };
+
+      const addConnection = (fromId, toId) => {
+        if (fromId === toId) return null;
+        if (!getNodeById(fromId) || !getNodeById(toId)) return null;
+        const exists = state.conns.some(c => c.from === fromId && c.to === toId);
+        if (exists) return null;
+        const c = { id: uid(), from: fromId, to: toId };
+        state.conns.push(c);
+        scheduleSave();
+        renderConnections();
+        renderNodes();
+        renderConnectionsList();
+        return c.id;
+      };
+
+      const finalizeConnectionDrag = (e) => {
+        const connDrag = state.connecting;
+        if (!connDrag) return;
+
+        hideTempPath();
+
+        // Release capture
+        const fromEl = nodeEls.get(connDrag.fromId);
+        const outHandle = fromEl?.querySelector(".handle.out");
+        try { outHandle?.releasePointerCapture(connDrag.pointerId); } catch {}
+
+        const toId = findDropTargetNodeId(e.clientX, e.clientY);
+        if (toId && toId !== connDrag.fromId) {
+          const newId = addConnection(connDrag.fromId, toId);
+          if (newId) {
+            selectConn(newId);
+            toast("Connection added");
+          } else {
+            toast("Connection already exists");
+          }
+        } else {
+          toast("Connection canceled");
+        }
+
+        state.connecting = null;
+      };
+
+      const renderConnections = () => {
+        ensureSvgSetup();
+
+        // Remove missing
+        for (const [id, path] of connEls.entries()) {
+          if (!state.conns.some(c => c.id === id)) {
+            path.remove();
+            connEls.delete(id);
+          }
+        }
+
+        // Create/update
+        for (const c of state.conns) {
+          let path = connEls.get(c.id);
+          if (!path) {
+            path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("class", "wire");
+            path.setAttribute("data-conn-id", c.id);
+            path.setAttribute("marker-end", "url(#arrow)");
+            path.style.pointerEvents = "stroke";
+            wiresSvg.appendChild(path);
+            connEls.set(c.id, path);
+
+            path.addEventListener("click", (e) => {
+              e.stopPropagation();
+              selectConn(c.id);
+            });
+          }
+
+          const fromPt = nodeAnchor(c.from, "out");
+          const toPt = nodeAnchor(c.to, "in");
+          path.setAttribute("d", connectionPathD(fromPt, toPt));
+
+          path.classList.toggle("selected", state.selectedConnId === c.id);
+          path.style.setProperty("color", state.selectedConnId === c.id
+            ? (getComputedStyle(document.documentElement).getPropertyValue("--blue") || "#2563eb")
+            : (getComputedStyle(document.documentElement).getPropertyValue("--wire") || "#94a3b8")
+          );
+        }
+      };
+
+      let connUpdateRAF = null;
+      const requestConnectionsUpdate = () => {
+        if (connUpdateRAF) return;
+        connUpdateRAF = requestAnimationFrame(() => {
+          connUpdateRAF = null;
+          // Update existing paths without rebuilding
+          for (const c of state.conns) {
+            const path = connEls.get(c.id);
+            if (!path) continue;
+            const fromPt = nodeAnchor(c.from, "out");
+            const toPt = nodeAnchor(c.to, "in");
+            path.setAttribute("d", connectionPathD(fromPt, toPt));
+          }
+        });
+      };
+
+      const renderSelection = () => {
+        const node = state.selectedNodeId ? getNodeById(state.selectedNodeId) : null;
+        const conn = state.selectedConnId ? getConnById(state.selectedConnId) : null;
+
+        if (!node && !conn) {
+          selectionMeta.textContent = "None";
+          noSelection.style.display = "";
+          stageEditor.style.display = "none";
+          connEditor.style.display = "none";
+          stageTitle.value = "";
+          stageDesc.value = "";
+          connectionsMeta.textContent = state.conns.length + " total";
+          return;
+        }
+
+        noSelection.style.display = "none";
+
+        if (node) {
+          selectionMeta.textContent = "Stage";
+          stageEditor.style.display = "";
+          connEditor.style.display = "none";
+          stageTitle.value = node.title ?? "";
+          stageDesc.value = node.desc ?? "";
+          connectionsMeta.textContent = state.conns.length + " total";
+          return;
+        }
+
+        if (conn) {
+          selectionMeta.textContent = "Connection";
+          stageEditor.style.display = "none";
+          connEditor.style.display = "";
+          const from = getNodeById(conn.from);
+          const to = getNodeById(conn.to);
+          connSummary.textContent = `From “${from?.title ?? "?"}” → To “${to?.title ?? "?"}”.`;
+          connectionsMeta.textContent = state.conns.length + " total";
+        }
+      };
+
+      const renderConnectionsList = () => {
+        connectionsList.innerHTML = "";
+        connectionsMeta.textContent = state.conns.length + " total";
+
+        if (state.conns.length === 0) {
+          const li = document.createElement("li");
+          li.innerHTML = `<div><strong>No connections</strong><div class="meta">Drag from a stage’s right dot to connect.</div></div>`;
+          connectionsList.appendChild(li);
+          return;
+        }
+
+        // Sort by from title then to title for a stable list
+        const list = state.conns
+          .map(c => ({ c, from: getNodeById(c.from), to: getNodeById(c.to) }))
+          .sort((a,b) => (a.from?.title || "").localeCompare(b.from?.title || "") || (a.to?.title || "").localeCompare(b.to?.title || ""));
+
+        for (const item of list) {
+          const { c, from, to } = item;
+          const li = document.createElement("li");
+          li.style.borderColor = (state.selectedConnId === c.id) ? "rgba(37,99,235,.35)" : "";
+          li.style.boxShadow = (state.selectedConnId === c.id) ? "0 0 0 4px rgba(37,99,235,.10)" : "";
+
+          const left = document.createElement("div");
+          left.innerHTML = `<div style="font-weight:800">${escapeHtml(from?.title ?? "?")} → ${escapeHtml(to?.title ?? "?")}</div>
+                            <div class="meta">${escapeHtml(shortId(c.id))}</div>`;
+          const right = document.createElement("div");
+          right.style.display = "flex";
+          right.style.gap = "8px";
+
+          const goBtn = document.createElement("button");
+          goBtn.className = "btn";
+          goBtn.type = "button";
+          goBtn.textContent = "Select";
+          goBtn.style.padding = "7px 9px";
+          goBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            selectConn(c.id);
+          });
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "btn danger";
+          delBtn.type = "button";
+          delBtn.textContent = "Delete";
+          delBtn.style.padding = "7px 9px";
+          delBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteConnection(c.id);
+          });
+
+          right.appendChild(goBtn);
+          right.appendChild(delBtn);
+
+          li.addEventListener("click", () => selectConn(c.id));
+          li.appendChild(left);
+          li.appendChild(right);
+          connectionsList.appendChild(li);
+        }
+      };
+
+      const escapeHtml = (s) => String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+      const shortId = (id) => {
+        const s = String(id || "");
+        if (s.length <= 10) return s;
+        return s.slice(0, 6) + "…" + s.slice(-4);
+      };
+
+      const deleteConnection = (connId) => {
+        const idx = state.conns.findIndex(c => c.id === connId);
+        if (idx === -1) return;
+        state.conns.splice(idx, 1);
+        if (state.selectedConnId === connId) state.selectedConnId = null;
+        scheduleSave();
+        renderConnections();
+        renderNodes();
+        renderSelection();
+        renderConnectionsList();
+        toast("Connection deleted");
+      };
+
+      const deleteNode = (nodeId) => {
+        const idx = state.nodes.findIndex(n => n.id === nodeId);
+        if (idx === -1) return;
+
+        // Remove connections touching the node
+        state.conns = state.conns.filter(c => c.from !== nodeId && c.to !== nodeId);
+
+        state.nodes.splice(idx, 1);
+        if (state.selectedNodeId === nodeId) state.selectedNodeId = null;
+        scheduleSave();
+        renderNodes();
+        renderConnections();
+        renderSelection();
+        renderConnectionsList();
+        toast("Stage deleted");
+      };
+
+      const duplicateNode = (nodeId) => {
+        const n = getNodeById(nodeId);
+        if (!n) return;
+        const copy = {
+          id: uid(),
+          x: clamp(n.x + 30, 10, world.clientWidth - 240),
+          y: clamp(n.y + 30, 10, world.clientHeight - 140),
+          title: (n.title || "Stage") + " (copy)",
+          desc: n.desc || ""
+        };
+        state.nodes.push(copy);
+        scheduleSave();
+        renderNodes();
+        renderConnections();
+        selectNode(copy.id);
+        toast("Stage duplicated");
+      };
+
+      const addStage = () => {
+        const id = uid();
+        // Place near current viewport center
+        const centerX = canvasWrap.scrollLeft + canvasWrap.clientWidth / 2;
+        const centerY = canvasWrap.scrollTop + canvasWrap.clientHeight / 2;
+
+        const n = {
+          id,
+          x: clamp(centerX - 110, 10, world.clientWidth - 240),
+          y: clamp(centerY - 70, 10, world.clientHeight - 140),
+          title: "New stage",
+          desc: "Describe what the customer does here."
+        };
+        state.nodes.push(n);
+        scheduleSave();
+        renderNodes();
+        renderConnections();
+        selectNode(id);
+        toast("Stage added");
+      };
+
+      const autoLayout = () => {
+        // Simple layout: arrange nodes by current left-to-right order.
+        const sorted = [...state.nodes].sort((a,b) => a.x - b.x || a.y - b.y);
+        const startX = 120;
+        const startY = 180;
+        const gapX = 280;
+        const maxPerRow = Math.max(3, Math.floor((world.clientWidth - 240) / gapX));
+
+        sorted.forEach((n, i) => {
+          const col = i % maxPerRow;
+          const row = Math.floor(i / maxPerRow);
+          n.x = startX + col * gapX;
+          n.y = startY + row * 220;
+        });
+
+        scheduleSave();
+        renderNodes();
+        renderConnections();
+        toast("Auto layout applied");
+      };
+
+      const centerView = () => {
+        if (state.nodes.length === 0) {
+          canvasWrap.scrollLeft = 0;
+          canvasWrap.scrollTop = 0;
+          return;
+        }
+        // Center to bounding box of nodes
+        const minX = Math.min(...state.nodes.map(n => n.x));
+        const minY = Math.min(...state.nodes.map(n => n.y));
+        const maxX = Math.max(...state.nodes.map(n => n.x + 220));
+        const maxY = Math.max(...state.nodes.map(n => n.y + 140));
+
+        const boxCenterX = (minX + maxX) / 2;
+        const boxCenterY = (minY + maxY) / 2;
+
+        canvasWrap.scrollLeft = clamp(boxCenterX - canvasWrap.clientWidth/2, 0, world.clientWidth);
+        canvasWrap.scrollTop = clamp(boxCenterY - canvasWrap.clientHeight/2, 0, world.clientHeight);
+      };
+
+      const exportJSON = async () => {
+        const payload = JSON.stringify({ nodes: state.nodes, conns: state.conns }, null, 2);
+        try {
+          await navigator.clipboard.writeText(payload);
+          toast("Copied JSON to clipboard");
+        } catch {
+          // Fallback: download
+          const blob = new Blob([payload], { type: "application/json" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "customer-journey-flow.json";
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 500);
+          toast("Downloaded JSON");
+        }
+      };
+
+      const importJSON = async (text) => {
+        try {
+          const model = sanitizeModel(JSON.parse(text));
+          if (!model) throw new Error("Invalid");
+          state.nodes = model.nodes;
+          state.conns = model.conns;
+          state.selectedNodeId = null;
+          state.selectedConnId = null;
+          scheduleSave();
+          renderNodes();
+          renderConnections();
+          renderSelection();
+          renderConnectionsList();
+          centerView();
+          toast("Imported");
+        } catch {
+          toast("Import failed");
+        }
+      };
+
+      // Global interactions
+      const attachGlobalEvents = () => {
+        world.addEventListener("pointerdown", (e) => {
+          // Click empty space clears selection
+          const onNode = e.target.closest?.(".node");
+          const onWire = e.target.closest?.("path.wire");
+          if (!onNode && !onWire) clearSelection();
+        });
+
+        // If user scrolls/resizes, wires should remain accurate
+        canvasWrap.addEventListener("scroll", () => requestConnectionsUpdate(), { passive: true });
+        window.addEventListener("resize", () => {
+          renderConnections();
+        });
+
+        // Keyboard shortcuts
+        window.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            clearSelection();
+            return;
+          }
+          if ((e.key === "Delete" || e.key === "Backspace") && !isTypingInField()) {
+            if (state.selectedConnId) {
+              deleteConnection(state.selectedConnId);
+              return;
+            }
+            if (state.selectedNodeId) {
+              deleteNode(state.selectedNodeId);
+              return;
+            }
+          }
+        });
+
+        // Sidebar editors
+        stageTitle.addEventListener("input", () => {
+          const n = getNodeById(state.selectedNodeId);
+          if (!n) return;
+          n.title = stageTitle.value;
+          const el = nodeEls.get(n.id);
+          if (el) el.querySelector('[data-role="title"]').textContent = n.title || "Stage";
+          renderConnectionsList();
+          scheduleSave();
+        });
+
+        stageDesc.addEventListener("input", () => {
+          const n = getNodeById(state.selectedNodeId);
+          if (!n) return;
+          n.desc = stageDesc.value;
+          const el = nodeEls.get(n.id);
+          if (el) el.querySelector('[data-role="desc"]').textContent = n.desc || "";
+          scheduleSave();
+        });
+
+        deleteStageBtn.addEventListener("click", () => {
+          if (state.selectedNodeId) deleteNode(state.selectedNodeId);
+        });
+
+        duplicateStageBtn.addEventListener("click", () => {
+          if (state.selectedNodeId) duplicateNode(state.selectedNodeId);
+        });
+
+        deleteConnBtn.addEventListener("click", () => {
+          if (state.selectedConnId) deleteConnection(state.selectedConnId);
+        });
+
+        // Toolbar
+        addStageBtn.addEventListener("click", addStage);
+        autoLayoutBtn.addEventListener("click", autoLayout);
+        centerBtn.addEventListener("click", centerView);
+        exportBtn.addEventListener("click", exportJSON);
+
+        importBtn.addEventListener("click", () => importFile.click());
+        importFile.addEventListener("change", async () => {
+          const f = importFile.files && importFile.files[0];
+          importFile.value = "";
+          if (!f) return;
+          const text = await f.text();
+          importJSON(text);
+        });
+      };
+
+      const init = () => {
+        const ok = load();
+        if (!ok) {
+          const model = defaultModel();
+          state.nodes = model.nodes;
+          state.conns = model.conns;
+          scheduleSave();
+        }
+        attachGlobalEvents();
+        renderNodes();
+        renderConnections();
+        renderSelection();
+        renderConnectionsList();
+        centerView();
+      };
+
+      init();
+    })();
+  </script>
+</body>
+</html>

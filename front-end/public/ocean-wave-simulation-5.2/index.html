@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ocean Wave Simulation</title>
+  <style>
+    :root{
+      --ui-bg: rgba(8, 14, 22, 0.42);
+      --ui-border: rgba(255, 255, 255, 0.10);
+      --ui-text: rgba(236, 247, 255, 0.92);
+      --ui-muted: rgba(236, 247, 255, 0.70);
+      --ui-dimmer: rgba(236, 247, 255, 0.55);
+      --accent: rgba(110, 225, 255, 0.85);
+      --accent2: rgba(94, 150, 255, 0.65);
+      --shadow: rgba(0, 0, 0, 0.45);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #05070b;
+      overflow: hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--ui-text);
+    }
+
+    #glcanvas{
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      background: radial-gradient(1400px 900px at 50% 30%, #0b1320 0%, #04060a 70%);
+    }
+
+    /* Subtle top/bottom fades to keep UI calming */
+    .fades{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,0.32), rgba(0,0,0,0.00) 22%),
+        linear-gradient(to top, rgba(0,0,0,0.42), rgba(0,0,0,0.00) 30%);
+      mix-blend-mode: multiply;
+    }
+
+    #ui{
+      position: fixed;
+      left: max(16px, env(safe-area-inset-left));
+      top: max(16px, env(safe-area-inset-top));
+      width: min(360px, calc(100vw - 32px));
+      padding: 14px 14px 12px;
+      border-radius: 16px;
+      background: var(--ui-bg);
+      border: 1px solid var(--ui-border);
+      box-shadow: 0 18px 55px var(--shadow);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      user-select: none;
+    }
+
+    .header{
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .title{
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: 0.2px;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+    .badge{
+      font-size: 12px;
+      color: var(--ui-muted);
+      letter-spacing: 0.25px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .sub{
+      font-size: 12px;
+      color: var(--ui-muted);
+      line-height: 1.35;
+      margin: 0 0 12px;
+    }
+
+    .control{
+      margin: 10px 0 12px;
+    }
+    .control label{
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--ui-muted);
+      letter-spacing: 0.2px;
+      margin-bottom: 8px;
+    }
+    .value{
+      font-variant-numeric: tabular-nums;
+      color: rgba(236,247,255,0.86);
+    }
+
+    input[type="range"]{
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      margin: 0;
+      touch-action: none;
+    }
+
+    /* Track */
+    input[type="range"]::-webkit-slider-runnable-track{
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(110,225,255,0.70), rgba(94,150,255,0.52));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+    }
+    input[type="range"]::-moz-range-track{
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(110,225,255,0.70), rgba(94,150,255,0.52));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+    }
+
+    /* Thumb */
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      margin-top: -5px;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.98), rgba(220,240,255,0.92));
+      border: 1px solid rgba(0,0,0,0.28);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.98), rgba(220,240,255,0.92));
+      border: 1px solid rgba(0,0,0,0.28);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+    }
+
+    .row{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    button{
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: var(--ui-text);
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 12px;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 0;
+      transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+    button:hover{
+      background: rgba(255,255,255,0.075);
+      border-color: rgba(255,255,255,0.16);
+    }
+    button:active{
+      transform: translateY(1px);
+    }
+    button.secondary{
+      flex: 0.85;
+      color: rgba(236,247,255,0.86);
+    }
+
+    .hint{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ui-dimmer);
+      line-height: 1.35;
+    }
+
+    #status{
+      position: fixed;
+      right: max(12px, env(safe-area-inset-right));
+      bottom: max(12px, env(safe-area-inset-bottom));
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(8, 14, 22, 0.35);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.4);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: rgba(236,247,255,0.75);
+      font-size: 12px;
+      max-width: min(520px, calc(100vw - 24px));
+      display: none;
+    }
+
+    #status strong{ color: rgba(236,247,255,0.90); font-weight: 650; }
+
+    /* Mobile: move controls a bit lower to avoid the notch status bar overlays */
+    @media (max-width: 520px){
+      #ui{
+        top: max(12px, env(safe-area-inset-top));
+        left: max(12px, env(safe-area-inset-left));
+        width: min(420px, calc(100vw - 24px));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .hint .motion-note{ display: inline; }
+    }
+    .hint .motion-note{ display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="glcanvas" aria-label="Ocean Wave Simulation canvas"></canvas>
+  <div class="fades" aria-hidden="true"></div>
+
+  <section id="ui" role="region" aria-label="Ocean Wave Simulation controls">
+    <div class="header">
+      <div class="title">Ocean Wave Simulation</div>
+      <div class="badge" id="perfBadge">Live</div>
+    </div>
+    <p class="sub">Procedural ocean surface with real-time lighting. Adjust the elements below for a calmer or stormier sea.</p>
+
+    <div class="control">
+      <label for="wind"><span>Wind speed</span><span class="value" id="windVal"></span></label>
+      <input id="wind" type="range" min="0.00" max="3.00" step="0.01" value="1.20" />
+    </div>
+
+    <div class="control">
+      <label for="height"><span>Wave height</span><span class="value" id="heightVal"></span></label>
+      <input id="height" type="range" min="0.35" max="2.25" step="0.01" value="1.00" />
+    </div>
+
+    <div class="control">
+      <label for="light"><span>Lighting</span><span class="value" id="lightVal"></span></label>
+      <input id="light" type="range" min="0.00" max="1.00" step="0.01" value="0.62" />
+    </div>
+
+    <div class="row">
+      <button id="reset" class="secondary" type="button">Reset</button>
+      <button id="pause" type="button">Pause</button>
+      <button id="fs" type="button">Fullscreen</button>
+    </div>
+
+    <div class="hint">
+      Drag to look around. Press <strong>F</strong> for fullscreen, <strong>Space</strong> to pause.
+      <span class="motion-note"> Reduced motion is enabled by your system settings.</span>
+    </div>
+  </section>
+
+  <div id="status" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('glcanvas');
+      const statusEl = document.getElementById('status');
+      const perfBadge = document.getElementById('perfBadge');
+
+      const windEl = document.getElementById('wind');
+      const heightEl = document.getElementById('height');
+      const lightEl = document.getElementById('light');
+
+      const windValEl = document.getElementById('windVal');
+      const heightValEl = document.getElementById('heightVal');
+      const lightValEl = document.getElementById('lightVal');
+
+      const resetBtn = document.getElementById('reset');
+      const pauseBtn = document.getElementById('pause');
+      const fsBtn = document.getElementById('fs');
+
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const defaults = {
+        wind: 1.20,
+        height: 1.00,
+        light: 0.62
+      };
+
+      function fmtX(v) { return `${(+v).toFixed(2)}×`; }
+      function fmtPct(v) { return `${Math.round((+v) * 100)}%`; }
+
+      function syncLabels() {
+        windValEl.textContent = fmtX(windEl.value);
+        heightValEl.textContent = fmtX(heightEl.value);
+        lightValEl.textContent = fmtPct(lightEl.value);
+      }
+
+      syncLabels();
+      windEl.addEventListener('input', syncLabels);
+      heightEl.addEventListener('input', syncLabels);
+      lightEl.addEventListener('input', syncLabels);
+
+      // WebGL setup
+      const gl = canvas.getContext('webgl', {
+        alpha: false,
+        depth: false,
+        stencil: false,
+        antialias: false,
+        premultipliedAlpha: false,
+        preserveDrawingBuffer: false,
+        powerPreference: 'high-performance'
+      });
+
+      if (!gl) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<strong>WebGL unavailable.</strong> Your browser or device does not support WebGL. Try a different browser or enable hardware acceleration.';
+        perfBadge.textContent = 'Unavailable';
+        return;
+      }
+
+      gl.getExtension('OES_standard_derivatives');
+
+      const vertSrc = `
+        attribute vec2 a_pos;
+        void main() {
+          gl_Position = vec4(a_pos, 0.0, 1.0);
+        }
+      `;
+
+      const fragSrc = `
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform float u_wind;
+        uniform float u_height;
+        uniform float u_light;
+        uniform vec2 u_angles;
+
+        #define NUM_STEPS 8
+        #define ITER_GEOMETRY 3
+        #define ITER_FRAGMENT 5
+        #define PI 3.14159265359
+        #define EPSILON 1e-3
+        #define SEA_FREQ 0.16
+        #define OCTAVE_M mat2(1.6, 1.2, -1.2, 1.6)
+
+        float hash(vec2 p){
+          float h = dot(p, vec2(127.1, 311.7));
+          return fract(sin(h) * 43758.5453123);
+        }
+
+        float noise(in vec2 p){
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          vec2 u = f*f*(3.0-2.0*f);
+          return mix(
+            mix(hash(i + vec2(0.0,0.0)), hash(i + vec2(1.0,0.0)), u.x),
+            mix(hash(i + vec2(0.0,1.0)), hash(i + vec2(1.0,1.0)), u.x),
+            u.y
+          );
+        }
+
+        float sea_octave(vec2 uv, float choppy){
+          uv += noise(uv);
+          vec2 wv = 1.0 - abs(sin(uv));
+          vec2 swv = abs(cos(uv));
+          wv = mix(wv, swv, wv);
+          return pow(1.0 - pow(wv.x * wv.y, 0.65), choppy);
+        }
+
+        float getSeaHeight(vec3 p, float time, float seaHeight, float seaChoppy){
+          float freq = SEA_FREQ;
+          float amp = seaHeight;
+          float choppy = seaChoppy;
+          vec2 uv = p.xz;
+          uv.x *= 0.75;
+
+          float d = 0.0;
+          vec2 windDir = normalize(vec2(1.0, 0.8));
+
+          for(int i = 0; i < ITER_GEOMETRY; i++){
+            vec2 u = (uv + windDir * time) * freq;
+            vec2 v = (uv - windDir * time) * freq;
+            d += (sea_octave(u, choppy) + sea_octave(v, choppy)) * amp;
+
+            uv = OCTAVE_M * uv;
+            freq *= 1.9;
+            amp *= 0.22;
+            choppy = mix(choppy, 1.0, 0.2);
+          }
+          return d;
+        }
+
+        float map(vec3 p, float time, float seaHeight, float seaChoppy){
+          return p.y - getSeaHeight(p, time, seaHeight, seaChoppy);
+        }
+
+        float map_detailed(vec3 p, float time, float seaHeight, float seaChoppy){
+          float freq = SEA_FREQ;
+          float amp = seaHeight;
+          float choppy = seaChoppy;
+          vec2 uv = p.xz;
+          uv.x *= 0.75;
+
+          float d = 0.0;
+          vec2 windDir = normalize(vec2(1.0, 0.8));
+
+          for(int i = 0; i < ITER_FRAGMENT; i++){
+            vec2 u = (uv + windDir * time) * freq;
+            vec2 v = (uv - windDir * time) * freq;
+            d += (sea_octave(u, choppy) + sea_octave(v, choppy)) * amp;
+
+            uv = OCTAVE_M * uv;
+            freq *= 1.9;
+            amp *= 0.22;
+            choppy = mix(choppy, 1.0, 0.2);
+          }
+          return p.y - d;
+        }
+
+        vec3 getNormal(vec3 p, float eps, float time, float seaHeight, float seaChoppy){
+          float h  = map_detailed(p, time, seaHeight, seaChoppy);
+          float hx = map_detailed(p + vec3(eps, 0.0, 0.0), time, seaHeight, seaChoppy);
+          float hz = map_detailed(p + vec3(0.0, 0.0, eps), time, seaHeight, seaChoppy);
+          vec3 n = vec3(hx - h, eps, hz - h);
+          return normalize(n);
+        }
+
+        float diffuse(vec3 n, vec3 l, float p){
+          return pow(dot(n, l) * 0.4 + 0.6, p);
+        }
+
+        float specular(vec3 n, vec3 l, vec3 e, float s){
+          float nrm = (s + 8.0) / (PI * 8.0);
+          return pow(max(dot(reflect(-l, n), e), 0.0), s) * nrm;
+        }
+
+        vec3 getSkyColor(vec3 e, vec3 sunDir, vec3 sunColor){
+          e.y = max(e.y, 0.0);
+
+          // Base gradient (deep -> pale)
+          vec3 deep = vec3(0.03, 0.07, 0.12);
+          vec3 pale = vec3(0.58, 0.75, 0.98);
+          vec3 sky = mix(pale, deep, smoothstep(0.0, 0.95, e.y));
+          sky = mix(deep, sky, smoothstep(0.0, 0.55, e.y));
+
+          // Sun bloom
+          float sunAmt = pow(max(dot(e, sunDir), 0.0), 700.0);
+          sky += sunColor * sunAmt;
+
+          // Horizon haze
+          float haze = pow(1.0 - e.y, 6.0);
+          sky = mix(sky, vec3(0.14, 0.19, 0.24), haze * 0.40);
+
+          return sky;
+        }
+
+        vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 e, vec3 sunDir, vec3 sunColor, float dist, float seaHeight){
+          float fresnel = clamp(1.0 - dot(n, e), 0.0, 1.0);
+          fresnel = pow(fresnel, 3.0) * 0.65;
+
+          vec3 reflected = getSkyColor(reflect(-e, n), sunDir, sunColor);
+
+          vec3 base = vec3(0.00, 0.09, 0.18);
+          vec3 waterTint = vec3(0.80, 0.90, 0.60);
+
+          float atten = max(1.0 - dist*dist * 0.0015, 0.0);
+          vec3 refracted = base;
+          refracted += (sunColor * diffuse(n, l, 80.0)) * 0.12;
+          refracted = mix(refracted, vec3(0.00, 0.15, 0.20), 0.20);
+
+          vec3 color = mix(refracted, reflected, fresnel);
+
+          // Depth/height modulation
+          color += waterTint * (p.y + seaHeight) * 0.08 * atten;
+
+          // Specular highlights
+          float s = specular(n, l, e, 60.0);
+          color += sunColor * s * 3.0;
+
+          return color;
+        }
+
+        float trace(vec3 ori, vec3 dir, float time, float seaHeight, float seaChoppy, out vec3 p){
+          float tm = 0.0;
+          float tx = 1000.0;
+          float hx = map(ori + dir * tx, time, seaHeight, seaChoppy);
+
+          if (hx > 0.0) {
+            p = ori + dir * tx;
+            return tx;
+          }
+
+          float hm = map(ori + dir * tm, time, seaHeight, seaChoppy);
+          float tmid = 0.0;
+
+          for (int i = 0; i < NUM_STEPS; i++){
+            tmid = mix(tm, tx, hm / (hm - hx));
+            p = ori + dir * tmid;
+            float hmid = map(p, time, seaHeight, seaChoppy);
+
+            if (hmid < 0.0) {
+              tx = tmid;
+              hx = hmid;
+            } else {
+              tm = tmid;
+              hm = hmid;
+            }
+          }
+          return tmid;
+        }
+
+        mat3 cameraFromAngles(float yaw, float pitch){
+          vec3 forward = normalize(vec3(sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch)));
+          vec3 worldUp = vec3(0.0, 1.0, 0.0);
+          vec3 right = normalize(cross(forward, worldUp));
+          vec3 up = cross(right, forward);
+          return mat3(right, up, forward);
+        }
+
+        void main(){
+          vec2 fragCoord = gl_FragCoord.xy;
+          vec2 uv = (fragCoord / u_resolution.xy) * 2.0 - 1.0;
+          uv.x *= u_resolution.x / u_resolution.y;
+
+          float wind01 = clamp(u_wind / 3.0, 0.0, 1.0);
+          float seaSpeed = mix(0.35, 1.30, wind01);
+          float seaChoppy = mix(2.00, 6.00, wind01);
+          float seaHeight = 0.60 * clamp(u_height, 0.20, 2.50);
+
+          float t = u_time * seaSpeed;
+
+          float sunElev = mix(0.08, 0.90, clamp(u_light, 0.0, 1.0));
+          vec3 sunDir = normalize(vec3(0.80, sunElev, 0.60));
+          vec3 sunColor = mix(vec3(1.00, 0.65, 0.35), vec3(1.00, 0.96, 0.90), smoothstep(0.05, 0.70, sunElev));
+          sunColor *= mix(0.90, 1.35, clamp(u_light, 0.0, 1.0));
+
+          // Camera
+          mat3 cam = cameraFromAngles(u_angles.x, u_angles.y);
+
+          vec3 ori = vec3(0.0, 3.2, 4.0);
+          ori.x += sin(u_time * 0.15) * 0.20;
+          ori.y += sin(u_time * 0.60) * 0.05;
+
+          vec3 dir = normalize(cam * vec3(uv.x * 1.25, uv.y * 0.85, -1.7));
+
+          vec3 p;
+          float dist = trace(ori, dir, t, seaHeight, seaChoppy, p);
+
+          vec3 color;
+          if (dist > 999.0) {
+            color = getSkyColor(dir, sunDir, sunColor);
+          } else {
+            vec3 e = normalize(ori - p);
+            vec3 n = getNormal(p, max(EPSILON * dist, 0.02), t, seaHeight, seaChoppy);
+            vec3 l = sunDir;
+
+            color = getSeaColor(p, n, l, e, sunDir, sunColor, dist, seaHeight);
+
+            // Atmosphere / fog
+            float fog = clamp(dist / 60.0, 0.0, 1.0);
+            vec3 sky = getSkyColor(dir, sunDir, sunColor);
+            color = mix(color, sky, fog);
+          }
+
+          // Subtle vignette
+          float vign = smoothstep(1.35, 0.30, length(uv));
+          color *= vign;
+
+          // Very light grain to reduce banding
+          float g = hash(fragCoord + vec2(u_time * 12.0, u_time * 7.0));
+          color += (g - 0.5) * 0.010;
+
+          // Tonemap + gamma
+          color = color / (color + vec3(1.0));
+          color = pow(color, vec3(0.4545));
+
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
+
+      function compileShader(type, src) {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+          const log = gl.getShaderInfoLog(sh) || 'Unknown shader error';
+          gl.deleteShader(sh);
+          throw new Error(log);
+        }
+        return sh;
+      }
+
+      function createProgram(vsSrc, fsSrc) {
+        const vs = compileShader(gl.VERTEX_SHADER, vsSrc);
+        const fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
+        const prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.linkProgram(prog);
+        gl.deleteShader(vs);
+        gl.deleteShader(fs);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+          const log = gl.getProgramInfoLog(prog) || 'Unknown program link error';
+          gl.deleteProgram(prog);
+          throw new Error(log);
+        }
+        return prog;
+      }
+
+      let program;
+      try {
+        program = createProgram(vertSrc, fragSrc);
+      } catch (err) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = `<strong>Shader failed to compile.</strong><br><span style="opacity:.9">Your device may not support the required GPU features.</span>`;
+        console.error(err);
+        perfBadge.textContent = 'Error';
+        return;
+      }
+
+      const posLoc = gl.getAttribLocation(program, 'a_pos');
+      const u_resolution = gl.getUniformLocation(program, 'u_resolution');
+      const u_time = gl.getUniformLocation(program, 'u_time');
+      const u_wind = gl.getUniformLocation(program, 'u_wind');
+      const u_height = gl.getUniformLocation(program, 'u_height');
+      const u_light = gl.getUniformLocation(program, 'u_light');
+      const u_angles = gl.getUniformLocation(program, 'u_angles');
+
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,
+         3, -1,
+        -1,  3
+      ]), gl.STATIC_DRAW);
+
+      gl.disable(gl.DEPTH_TEST);
+      gl.disable(gl.CULL_FACE);
+      gl.clearColor(0, 0, 0, 1);
+
+      let dprCap = 2.0;
+      let lastW = 0, lastH = 0;
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+        const w = Math.max(1, Math.floor(rect.width * dpr));
+        const h = Math.max(1, Math.floor(rect.height * dpr));
+        if (w !== lastW || h !== lastH) {
+          lastW = w; lastH = h;
+          canvas.width = w;
+          canvas.height = h;
+          gl.viewport(0, 0, w, h);
+        }
+      }
+
+      window.addEventListener('resize', resize, { passive: true });
+
+      // Camera interaction
+      let yaw = 0.0, pitch = -0.08;
+      let targetYaw = yaw, targetPitch = pitch;
+      let dragging = false;
+      let lastX = 0, lastY = 0;
+      let userOverrideUntil = 0;
+
+      function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+      canvas.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        userOverrideUntil = performance.now() + 8000;
+        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        targetYaw += dx * 0.005;
+        targetPitch += dy * 0.004;
+        targetPitch = clamp(targetPitch, -0.35, 0.25);
+        userOverrideUntil = performance.now() + 8000;
+      }, { passive: true });
+
+      function endDrag() { dragging = false; }
+      canvas.addEventListener('pointerup', endDrag, { passive: true });
+      canvas.addEventListener('pointercancel', endDrag, { passive: true });
+      canvas.addEventListener('dblclick', () => {
+        targetYaw = 0.0;
+        targetPitch = -0.08;
+        userOverrideUntil = performance.now() + 1500;
+      }, { passive: true });
+
+      // Controls
+      function setControls(vals) {
+        windEl.value = vals.wind;
+        heightEl.value = vals.height;
+        lightEl.value = vals.light;
+        syncLabels();
+      }
+
+      resetBtn.addEventListener('click', () => setControls(defaults));
+
+      // Fullscreen
+      async function toggleFullscreen() {
+        try {
+          if (!document.fullscreenElement) {
+            await (document.documentElement.requestFullscreen ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : canvas.requestFullscreen());
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (e) {
+          // Ignore
+        }
+      }
+
+      fsBtn.addEventListener('click', toggleFullscreen);
+
+      // Pause
+      let paused = !!prefersReducedMotion;
+      let pageHiddenPause = false;
+
+      function updatePauseUI() {
+        pauseBtn.textContent = paused ? 'Play' : 'Pause';
+        perfBadge.textContent = paused ? 'Paused' : 'Live';
+      }
+      updatePauseUI();
+
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        updatePauseUI();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        pageHiddenPause = document.hidden;
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          paused = !paused;
+          updatePauseUI();
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          toggleFullscreen();
+        } else if (e.key === 'r' || e.key === 'R') {
+          setControls(defaults);
+        }
+      });
+
+      // Render loop
+      let lastNow = performance.now();
+      let simTime = 0;
+
+      // Lightweight adaptive quality (if frame time stays high, drop DPR cap)
+      let slowFrames = 0;
+      let fastFrames = 0;
+      let lastPerfCheck = performance.now();
+
+      function draw(now) {
+        const rawDt = (now - lastNow) * 0.001;
+        lastNow = now;
+        const dt = Math.min(0.05, Math.max(0.0, rawDt));
+
+        const effectivePaused = paused || pageHiddenPause;
+        if (!effectivePaused) simTime += dt;
+
+        // Gentle drift if the user hasn't interacted recently
+        if (now > userOverrideUntil && !dragging) {
+          targetYaw = Math.sin(simTime * 0.08) * 0.18;
+          targetPitch = -0.08 + Math.sin(simTime * 0.11) * 0.03;
+        }
+
+        // Smooth camera motion
+        yaw += (targetYaw - yaw) * 0.06;
+        pitch += (targetPitch - pitch) * 0.06;
+
+        resize();
+
+        gl.useProgram(program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.enableVertexAttribArray(posLoc);
+        gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+        gl.uniform2f(u_resolution, canvas.width, canvas.height);
+        gl.uniform1f(u_time, simTime);
+        gl.uniform1f(u_wind, parseFloat(windEl.value));
+        gl.uniform1f(u_height, parseFloat(heightEl.value));
+        gl.uniform1f(u_light, parseFloat(lightEl.value));
+        gl.uniform2f(u_angles, yaw, pitch);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+        // Adaptive quality monitor (very gentle)
+        const ms = rawDt * 1000;
+        if (!effectivePaused) {
+          if (ms > 22) { slowFrames++; fastFrames = Math.max(0, fastFrames - 1); }
+          else if (ms < 14) { fastFrames++; slowFrames = Math.max(0, slowFrames - 1); }
+        }
+
+        const pcNow = performance.now();
+        if (pcNow - lastPerfCheck > 1200) {
+          lastPerfCheck = pcNow;
+          if (slowFrames > 18 && dprCap > 1.25) {
+            dprCap = Math.max(1.25, dprCap - 0.25);
+            slowFrames = 0;
+          } else if (fastFrames > 35 && dprCap < 2.0) {
+            dprCap = Math.min(2.0, dprCap + 0.25);
+            fastFrames = 0;
+          }
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      // Start
+      setControls(defaults);
+      requestAnimationFrame((now) => {
+        lastNow = now;
+        requestAnimationFrame(draw);
+      });
+
+      // Context loss handling
+      canvas.addEventListener('webglcontextlost', (e) => {
+        e.preventDefault();
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<strong>Rendering paused.</strong> WebGL context was lost. Reload the page to resume.';
+        perfBadge.textContent = 'Stopped';
+      }, false);
+
+      canvas.addEventListener('webglcontextrestored', () => {
+        location.reload();
+      }, false);
+    })();
+  </script>
+</body>
+</html>

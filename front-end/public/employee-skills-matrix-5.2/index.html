@@ -1,0 +1,2051 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1f4aa8" />
+  <title>Employee Skills Matrix</title>
+  <style>
+    :root{
+      --bg:#f6f8fc;
+      --panel:#ffffff;
+      --panel-2:#f1f5fb;
+      --border:#d8e1ef;
+      --text:#0f172a;
+      --muted:#52627a;
+      --muted-2:#6b7a92;
+
+      --primary:#1f4aa8;
+      --primary-2:#2f6bf2;
+
+      --danger:#b42318;
+      --warn:#b54708;
+      --success:#067647;
+
+      --shadow: 0 10px 30px rgba(15, 23, 42, .08);
+      --shadow-soft: 0 6px 18px rgba(15, 23, 42, .06);
+
+      --focus: 0 0 0 3px rgba(47, 107, 242, .28);
+
+      --lvl0-bg:#f3f4f6; --lvl0-bd:#d1d5db; --lvl0-tx:#374151;
+      --lvl1-bg:#e0f2fe; --lvl1-bd:#7dd3fc; --lvl1-tx:#075985;
+      --lvl2-bg:#dcfce7; --lvl2-bd:#86efac; --lvl2-tx:#166534;
+      --lvl3-bg:#dbeafe; --lvl3-bd:#93c5fd; --lvl3-tx:#1e40af;
+      --lvl4-bg:#f5d0fe; --lvl4-bd:#f0abfc; --lvl4-tx:#701a75;
+
+      --radius: 14px;
+      --radius-sm: 10px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root{
+        --bg:#0b1220;
+        --panel:#0f172a;
+        --panel-2:#0c1426;
+        --border:#21314f;
+        --text:#e5e7eb;
+        --muted:#a7b1c2;
+        --muted-2:#9aa6bd;
+
+        --primary:#7aa2ff;
+        --primary-2:#5e8bff;
+
+        --shadow: 0 10px 30px rgba(0,0,0,.35);
+        --shadow-soft: 0 6px 18px rgba(0,0,0,.28);
+
+        --lvl0-bg:#111827; --lvl0-bd:#334155; --lvl0-tx:#cbd5e1;
+        --lvl1-bg:#0b2a3d; --lvl1-bd:#1f7aa6; --lvl1-tx:#bfe9ff;
+        --lvl2-bg:#082c1f; --lvl2-bd:#1c8a63; --lvl2-tx:#bbf7d0;
+        --lvl3-bg:#0b1f46; --lvl3-bd:#2f6bf2; --lvl3-tx:#dbeafe;
+        --lvl4-bg:#2a1630; --lvl4-bd:#b45cff; --lvl4-tx:#f5d0fe;
+      }
+    }
+
+    *{ box-sizing:border-box; }
+    html, body { height:100%; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.35;
+    }
+
+    .skip-link{
+      position:absolute;
+      left:-999px;
+      top:8px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px 12px;
+      box-shadow:var(--shadow-soft);
+      z-index:999;
+    }
+    .skip-link:focus{ left:8px; outline:none; box-shadow:var(--focus), var(--shadow-soft); }
+
+    #app{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .topbar{
+      background:linear-gradient(135deg, rgba(47,107,242,.12), rgba(31,74,168,.08));
+      border-bottom:1px solid var(--border);
+      padding:16px 18px;
+    }
+
+    .topbar-inner{
+      max-width:1400px;
+      margin:0 auto;
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      min-width:280px;
+      flex:1 1 540px;
+    }
+
+    .brand .title{
+      font-size:18px;
+      font-weight:750;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .brand .subtitle{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      max-width:70ch;
+    }
+
+    .status-line{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:rgba(255,255,255,.6);
+      color:var(--muted);
+      backdrop-filter:saturate(130%) blur(6px);
+    }
+    @media (prefers-color-scheme: dark){
+      .status-pill{ background:rgba(15,23,42,.6); }
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+      flex:0 0 auto;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background:var(--panel);
+      color:var(--text);
+      padding:9px 11px;
+      border-radius:12px;
+      font-weight:650;
+      font-size:13px;
+      cursor:pointer;
+      box-shadow:var(--shadow-soft);
+      transition:transform .06s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ transform:translateY(-1px); border-color:rgba(47,107,242,.45); }
+    .btn:active{ transform:translateY(0px); box-shadow:none; }
+    .btn:focus{ outline:none; box-shadow:var(--focus), var(--shadow-soft); }
+
+    .btn.primary{
+      background:linear-gradient(135deg, var(--primary-2), var(--primary));
+      border-color:rgba(47,107,242,.65);
+      color:white;
+    }
+    .btn.primary:hover{ border-color:rgba(255,255,255,.25); }
+    .btn.danger{
+      color:var(--danger);
+      border-color:rgba(180, 35, 24, .35);
+    }
+    .btn.danger:hover{ border-color:rgba(180, 35, 24, .6); }
+    .btn.small{
+      font-size:12px;
+      padding:7px 9px;
+      border-radius:10px;
+      box-shadow:none;
+      background:transparent;
+    }
+    .btn.small:hover{ background:rgba(47,107,242,.08); }
+
+    .layout{
+      max-width:1400px;
+      width:100%;
+      margin:0 auto;
+      padding:16px 18px;
+      display:grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap:16px;
+      flex:1 1 auto;
+      align-items:start;
+    }
+
+    @media (max-width: 1050px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+
+    .sidebar{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .content{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow-soft);
+      padding:12px;
+    }
+
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:13px;
+      color:var(--muted);
+      letter-spacing:.25px;
+      text-transform:uppercase;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom:10px;
+    }
+
+    label .label-row{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:650;
+    }
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+      padding-top:8px;
+      border-top:1px dashed var(--border);
+    }
+
+    input[type="text"], input[type="number"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      background:var(--panel-2);
+      color:var(--text);
+      padding:10px 10px;
+      border-radius:12px;
+      font-size:13px;
+      outline:none;
+    }
+    textarea{ min-height:120px; resize:vertical; }
+    input:focus, textarea:focus, select:focus{
+      box-shadow:var(--focus);
+      border-color:rgba(47,107,242,.55);
+    }
+
+    .checkbox{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--panel-2);
+      font-size:13px;
+      color:var(--text);
+      user-select:none;
+    }
+    .checkbox input{ width:16px; height:16px; }
+
+    .legend{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .legend-row{
+      display:grid;
+      grid-template-columns: 40px 1fr;
+      gap:10px;
+      align-items:start;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:28px;
+      width:40px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      font-weight:800;
+      font-size:12px;
+    }
+    .legend-title{
+      font-weight:750;
+      font-size:13px;
+    }
+    .legend-desc{
+      margin-top:2px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .metrics{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .metric{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--panel-2);
+      padding:10px 10px;
+    }
+    .metric .value{
+      font-size:18px;
+      font-weight:850;
+      letter-spacing:.2px;
+    }
+    .metric .label{
+      margin-top:3px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .gap-list{
+      margin-top:10px;
+      border-top:1px dashed var(--border);
+      padding-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .gap-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:var(--panel-2);
+    }
+    .gap-item .name{
+      font-weight:750;
+      font-size:13px;
+    }
+    .gap-item .meta{
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      font-size:11px;
+      font-weight:800;
+      color:var(--muted);
+      background:rgba(255,255,255,.55);
+    }
+    @media (prefers-color-scheme: dark){
+      .pill{ background:rgba(15,23,42,.45); }
+    }
+
+    .pill.critical{
+      color:var(--warn);
+      border-color:rgba(181,71,8,.35);
+    }
+
+    details.card{
+      padding:0;
+      overflow:hidden;
+    }
+    details.card > summary{
+      list-style:none;
+      cursor:pointer;
+      padding:12px;
+      user-select:none;
+      font-weight:850;
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    details.card > summary::-webkit-details-marker{ display:none; }
+    details.card > summary .summary-sub{
+      font-weight:650;
+      color:var(--muted);
+      font-size:12px;
+    }
+    details.card[open] > summary{
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(135deg, rgba(47,107,242,.09), rgba(31,74,168,.06));
+    }
+    details.card .details-body{
+      padding:10px 12px 12px 12px;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .list-item{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--panel-2);
+      padding:10px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .list-item .title{
+      font-weight:850;
+      font-size:13px;
+      margin-bottom:3px;
+    }
+    .list-item .sub{
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+    .list-item .actions{
+      gap:6px;
+      box-shadow:none;
+    }
+
+    .content-header{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow-soft);
+      padding:12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .content-header h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+    .content-sub{
+      margin-top:5px;
+      color:var(--muted);
+      font-size:13px;
+      max-width:85ch;
+    }
+    .mini-actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    .print-summary{
+      display:none;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background:var(--panel);
+      box-shadow:var(--shadow-soft);
+      padding:12px;
+    }
+    .print-summary h2{
+      margin:0 0 10px 0;
+      font-size:14px;
+    }
+
+    .matrix-container{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow-soft);
+      overflow:auto;
+      min-height:340px;
+      max-height: calc(100vh - 220px);
+    }
+
+    .matrix-container.size-s .cell-btn{ width:38px; height:28px; font-size:11px; border-radius:10px; }
+    .matrix-container.size-m .cell-btn{ width:46px; height:34px; font-size:12px; border-radius:11px; }
+    .matrix-container.size-l .cell-btn{ width:56px; height:40px; font-size:13px; border-radius:12px; }
+    .matrix-container.size-s th.emp-col{ min-width:140px; }
+    .matrix-container.size-m th.emp-col{ min-width:160px; }
+    .matrix-container.size-l th.emp-col{ min-width:190px; }
+
+    table{
+      border-collapse:separate;
+      border-spacing:0;
+      width:max-content;
+      min-width:100%;
+      font-size:13px;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:7;
+      background:var(--panel);
+      border-bottom:1px solid var(--border);
+    }
+
+    th, td{
+      padding:8px 8px;
+      border-right:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+      vertical-align:middle;
+    }
+    tr:last-child td, tr:last-child th { border-bottom:none; }
+    th:last-child, td:last-child { border-right:none; }
+
+    th.skill-col{
+      position:sticky;
+      left:0;
+      z-index:8;
+      background:var(--panel);
+      min-width:260px;
+      text-align:left;
+    }
+    td.skill-col{ position:sticky; left:0; z-index:6; background:var(--panel); }
+
+    th.coverage-col, td.coverage-col{
+      position:sticky;
+      right:0;
+      z-index:6;
+      background:var(--panel);
+      min-width:220px;
+    }
+    thead th.coverage-col{ z-index:9; }
+
+    .skill-hdr{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .skill-name{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:850;
+    }
+    .skill-meta{
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    th.emp-col{
+      text-align:left;
+      background:var(--panel);
+      vertical-align:bottom;
+    }
+    .emp-hdr{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+    .emp-name{
+      font-weight:850;
+      letter-spacing:.1px;
+    }
+    .emp-meta{
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--panel-2);
+      font-size:11px;
+      font-weight:850;
+      color:var(--muted);
+      width:max-content;
+    }
+
+    td.cell{
+      text-align:center;
+      background:var(--panel);
+    }
+    .cell-btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background:var(--panel-2);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+      transition: transform .06s ease, box-shadow .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .cell-btn:hover{ transform:translateY(-1px); }
+    .cell-btn:active{ transform:translateY(0px); }
+    .cell-btn:focus{ outline:none; box-shadow:var(--focus); }
+
+    .lvl-0{ background:var(--lvl0-bg); border-color:var(--lvl0-bd); color:var(--lvl0-tx); }
+    .lvl-1{ background:var(--lvl1-bg); border-color:var(--lvl1-bd); color:var(--lvl1-tx); }
+    .lvl-2{ background:var(--lvl2-bg); border-color:var(--lvl2-bd); color:var(--lvl2-tx); }
+    .lvl-3{ background:var(--lvl3-bg); border-color:var(--lvl3-bd); color:var(--lvl3-tx); }
+    .lvl-4{ background:var(--lvl4-bg); border-color:var(--lvl4-bd); color:var(--lvl4-tx); }
+
+    .coverage{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+    }
+    .coverage-top{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .coverage-top .muted{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .bar{
+      height:10px;
+      border-radius:999px;
+      background:var(--panel-2);
+      border:1px solid var(--border);
+      overflow:hidden;
+    }
+    .bar .fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, rgba(47,107,242,.85), rgba(31,74,168,.95));
+    }
+    .coverage-col.gap .bar .fill{
+      background:linear-gradient(90deg, rgba(180,35,24,.9), rgba(180,35,24,.75));
+    }
+    .coverage-col.critical:not(.gap) .bar .fill{
+      background:linear-gradient(90deg, rgba(181,71,8,.9), rgba(181,71,8,.65));
+    }
+    .coverage-col.gap{
+      background:rgba(180,35,24,.06);
+    }
+
+    .empty-state{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow-soft);
+      padding:18px;
+    }
+    .empty-state h3{
+      margin:0 0 6px 0;
+      font-size:15px;
+    }
+    .empty-state p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      max-width:80ch;
+    }
+    .empty-state .row{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .footer{
+      border-top:1px solid var(--border);
+      padding:12px 18px;
+      color:var(--muted);
+      font-size:12px;
+      background:rgba(255,255,255,.35);
+    }
+    @media (prefers-color-scheme: dark){
+      .footer{ background:rgba(15,23,42,.35); }
+    }
+
+    dialog{
+      width:min(720px, calc(100vw - 22px));
+      border:none;
+      border-radius:18px;
+      padding:0;
+      background:var(--panel);
+      color:var(--text);
+      box-shadow:var(--shadow);
+    }
+    dialog::backdrop{
+      background:rgba(15,23,42,.55);
+      backdrop-filter: blur(4px);
+    }
+    .dialog-inner{
+      padding:14px 14px 12px 14px;
+    }
+    .dialog-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 14px 0 14px;
+    }
+    .dialog-title{
+      margin:0;
+      font-size:15px;
+      font-weight:900;
+    }
+    .dialog-sub{
+      margin-top:5px;
+      color:var(--muted);
+      font-size:12px;
+      max-width:80ch;
+    }
+    .dialog-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      padding:0 14px 14px 14px;
+      border-top:1px solid var(--border);
+      margin-top:12px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 700px){
+      .grid-2{ grid-template-columns:1fr; }
+    }
+
+    .file-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .toast-region{
+      position:fixed;
+      right:14px;
+      bottom:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:9999;
+      pointer-events:none;
+    }
+    .toast{
+      pointer-events:auto;
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-left:5px solid rgba(47,107,242,.85);
+      border-radius:14px;
+      box-shadow:var(--shadow-soft);
+      padding:10px 12px;
+      min-width: 260px;
+      max-width: 420px;
+    }
+    .toast .t-title{
+      font-weight:900;
+      font-size:13px;
+      margin:0;
+    }
+    .toast .t-msg{
+      margin:4px 0 0 0;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .toast.info{ border-left-color: rgba(47,107,242,.85); }
+    .toast.success{ border-left-color: rgba(6,118,71,.9); }
+    .toast.warn{ border-left-color: rgba(181,71,8,.9); }
+    .toast.danger{ border-left-color: rgba(180,35,24,.9); }
+
+    @media print{
+      body{ background:white; }
+      .topbar, .sidebar, .footer, .mini-actions, .toast-region, .skip-link{ display:none !important; }
+      .layout{ display:block; padding:0; max-width:none; }
+      .content-header{ box-shadow:none; border-radius:0; border-left:none; border-right:none; }
+      .matrix-container{ box-shadow:none; border-radius:0; border-left:none; border-right:none; max-height:none; overflow:visible; }
+      table{ width:100%; }
+      .print-summary{ display:block; }
+      th.skill-col, th.coverage-col, td.coverage-col{ position:static !important; }
+      thead th{ position:static !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#matrixTitle">Skip to matrix</a>
+
+  <div id="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand" role="banner" aria-label="Employee Skills Matrix">
+          <div class="title">Employee Skills Matrix</div>
+          <div class="subtitle">
+            Track team skills coverage with a simple proficiency grid. Designed for HR planning: workforce readiness, learning &amp; development, and critical skill risk visibility.
+          </div>
+          <div class="status-line" id="statusLine" aria-live="polite"></div>
+        </div>
+
+        <div class="actions" aria-label="Primary actions">
+          <button class="btn primary" id="addEmployeeBtn" type="button">Add employee</button>
+          <button class="btn primary" id="addSkillBtn" type="button">Add skill</button>
+          <button class="btn" id="exportBtn" type="button">Export</button>
+          <button class="btn" id="importBtn" type="button">Import</button>
+          <button class="btn danger" id="resetBtn" type="button" title="Clear saved data and restore the sample dataset">Reset</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar" aria-label="HR controls and summaries">
+        <section class="card" aria-label="Filters">
+          <h2>Filters</h2>
+
+          <div class="field">
+            <label>
+              <div class="label-row"><span class="label">Employee search</span></div>
+              <input id="empQuery" type="text" inputmode="search" placeholder="Name, role, team, location…" autocomplete="off" />
+            </label>
+          </div>
+
+          <div class="field">
+            <label>
+              <div class="label-row"><span class="label">Department / Team</span></div>
+              <select id="deptFilter"></select>
+            </label>
+          </div>
+
+          <div class="field">
+            <label>
+              <div class="label-row"><span class="label">Skill search</span></div>
+              <input id="skillQuery" type="text" inputmode="search" placeholder="Skill or category…" autocomplete="off" />
+            </label>
+          </div>
+
+          <div class="field">
+            <label>
+              <div class="label-row"><span class="label">Skill category</span></div>
+              <select id="catFilter"></select>
+            </label>
+          </div>
+
+          <label class="checkbox" for="onlyGaps">
+            <input id="onlyGaps" type="checkbox" />
+            Show only flagged gaps (based on the gap rule)
+          </label>
+
+          <div class="hint">
+            Interaction tips: Click a cell to increase proficiency. Shift+Click decreases. Use keys 0–4 to set a level. Arrow keys move between cells.
+          </div>
+        </section>
+
+        <section class="card" aria-label="Coverage settings">
+          <h2>Coverage settings</h2>
+
+          <div class="field">
+            <label>
+              <div class="label-row"><span class="label">Count as “covered” at minimum level</span></div>
+              <select id="thresholdSelect"></select>
+            </label>
+          </div>
+
+          <div class="field">
+            <label>
+              <div class="label-row"><span class="label">Flag a gap when coverage is below</span><span class="label" id="gapCutoffLabel"></span></div>
+              <input id="gapCutoff" type="number" min="0" max="100" step="5" />
+            </label>
+          </div>
+
+          <div class="hint">
+            HR note: Mark a skill as <strong>Critical</strong> to highlight risk when coverage is low. Use filters to focus on a team or role group.
+          </div>
+        </section>
+
+        <section class="card" aria-label="Proficiency scale">
+          <h2>Proficiency scale</h2>
+          <div class="legend" id="legend"></div>
+        </section>
+
+        <section class="card" aria-label="Snapshot">
+          <h2>Snapshot (current view)</h2>
+          <div class="metrics" id="snapshotMetrics"></div>
+          <div class="gap-list" id="topGaps"></div>
+        </section>
+
+        <details class="card" open>
+          <summary>
+            <span>People directory</span>
+            <span class="summary-sub" id="peopleSummary"></span>
+          </summary>
+          <div class="details-body">
+            <div class="list" id="peopleList"></div>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>
+            <span>Skills catalog</span>
+            <span class="summary-sub" id="skillsSummary"></span>
+          </summary>
+          <div class="details-body">
+            <div class="list" id="skillsList"></div>
+          </div>
+        </details>
+      </aside>
+
+      <section class="content" aria-label="Skills matrix content">
+        <div class="content-header">
+          <div>
+            <h1 id="matrixTitle">Matrix</h1>
+            <div class="content-sub">
+              Skills (rows) vs employees (columns). Coverage is computed from the current filters. Use this for training planning, hiring justification, and coverage risk checks.
+            </div>
+          </div>
+          <div class="mini-actions">
+            <button class="btn" id="cellSizeBtn" type="button">Cell size: Medium</button>
+            <button class="btn" id="printBtn" type="button">Print</button>
+          </div>
+        </div>
+
+        <div class="print-summary" id="printSummary" aria-hidden="true"></div>
+
+        <div class="matrix-container size-m" id="matrixContainer" aria-label="Skills matrix scroll area">
+          <table id="matrixTable" aria-label="Employee skills matrix table"></table>
+        </div>
+
+        <div class="empty-state" id="emptyState" hidden>
+          <h3>No rows to display</h3>
+          <p>
+            Adjust filters, or add employees and skills to begin tracking coverage.
+          </p>
+          <div class="row">
+            <button class="btn primary" id="emptyAddEmployeeBtn" type="button">Add employee</button>
+            <button class="btn primary" id="emptyAddSkillBtn" type="button">Add skill</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      Data is stored locally in your browser (localStorage). Export before switching devices. Use in line with your organization’s HR policies and privacy guidelines.
+    </footer>
+  </div>
+
+  <dialog id="employeeDialog" aria-labelledby="employeeDialogTitle">
+    <div class="dialog-head">
+      <div>
+        <h3 class="dialog-title" id="employeeDialogTitle">Add employee</h3>
+        <div class="dialog-sub">Maintain the roster used as matrix columns. Add role/team details to support HR reporting and filtering.</div>
+      </div>
+      <button class="btn small" type="button" data-dialog-close="employeeDialog" aria-label="Close dialog">Close</button>
+    </div>
+    <form id="employeeForm" class="dialog-inner" novalidate>
+      <input type="hidden" name="id" />
+      <div class="grid-2">
+        <div class="field">
+          <label>
+            <div class="label-row"><span class="label">Full name</span></div>
+            <input name="name" type="text" placeholder="e.g., Avery Kim" required />
+          </label>
+        </div>
+        <div class="field">
+          <label>
+            <div class="label-row"><span class="label">Role / Title</span></div>
+            <input name="role" type="text" placeholder="e.g., HRBP" />
+          </label>
+        </div>
+        <div class="field">
+          <label>
+            <div class="label-row"><span class="label">Department / Team</span></div>
+            <input name="department" type="text" placeholder="e.g., People Analytics" />
+          </label>
+        </div>
+        <div class="field">
+          <label>
+            <div class="label-row"><span class="label">Location</span></div>
+            <input name="location" type="text" placeholder="e.g., Remote / NYC" />
+          </label>
+        </div>
+      </div>
+      <div class="hint">Tip: Use consistent team names (e.g., “Total Rewards”, “L&amp;D”) to make filtering accurate.</div>
+      <div class="dialog-actions">
+        <button class="btn" type="button" data-dialog-close="employeeDialog">Cancel</button>
+        <button class="btn primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="skillDialog" aria-labelledby="skillDialogTitle">
+    <div class="dialog-head">
+      <div>
+        <h3 class="dialog-title" id="skillDialogTitle">Add skill</h3>
+        <div class="dialog-sub">Skills appear as matrix rows. Mark critical skills to highlight risk when coverage is low.</div>
+      </div>
+      <button class="btn small" type="button" data-dialog-close="skillDialog" aria-label="Close dialog">Close</button>
+    </div>
+    <form id="skillForm" class="dialog-inner" novalidate>
+      <input type="hidden" name="id" />
+      <div class="grid-2">
+        <div class="field">
+          <label>
+            <div class="label-row"><span class="label">Skill name</span></div>
+            <input name="name" type="text" placeholder="e.g., Policy & Compliance" required />
+          </label>
+        </div>
+        <div class="field">
+          <label>
+            <div class="label-row"><span class="label">Category</span></div>
+            <input name="category" type="text" placeholder="e.g., HR Core" />
+          </label>
+        </div>
+      </div>
+
+      <label class="checkbox" for="skillCritical">
+        <input id="skillCritical" name="critical" type="checkbox" />
+        Critical skill (flag as higher risk if coverage is low)
+      </label>
+
+      <div class="hint">HR practice: Keep a stable catalog; use categories to support reporting and compliance audits.</div>
+
+      <div class="dialog-actions">
+        <button class="btn" type="button" data-dialog-close="skillDialog">Cancel</button>
+        <button class="btn primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="importDialog" aria-labelledby="importDialogTitle">
+    <div class="dialog-head">
+      <div>
+        <h3 class="dialog-title" id="importDialogTitle">Import data</h3>
+        <div class="dialog-sub">Paste a previously exported JSON file contents, or select a file. Import replaces the current dataset.</div>
+      </div>
+      <button class="btn small" type="button" data-dialog-close="importDialog" aria-label="Close dialog">Close</button>
+    </div>
+    <form id="importForm" class="dialog-inner" novalidate>
+      <div class="field">
+        <div class="file-row">
+          <input id="importFile" type="file" accept="application/json,.json" />
+          <button class="btn" type="button" id="clearImportBtn">Clear</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>
+          <div class="label-row"><span class="label">JSON</span></div>
+          <textarea id="importText" placeholder='Paste exported JSON here…'></textarea>
+        </label>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn" type="button" data-dialog-close="importDialog">Cancel</button>
+        <button class="btn primary" type="submit">Import</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-relevant="additions"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEY = "employee_skills_matrix_v1";
+
+      const PROF = [
+        { value: 0, label: "None",       short: "—", desc: "No demonstrated experience." },
+        { value: 1, label: "Awareness",  short: "A", desc: "Basic familiarity; needs guidance." },
+        { value: 2, label: "Working",    short: "W", desc: "Can complete common tasks independently." },
+        { value: 3, label: "Proficient", short: "P", desc: "Consistently strong; can support others." },
+        { value: 4, label: "Expert",     short: "E", desc: "Recognized subject-matter expert; sets best practice." }
+      ];
+
+      const $ = (sel, root = document) => root.querySelector(sel);
+
+      const escMap = { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" };
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => escMap[c]);
+
+      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+      const uuid = () => {
+        if (crypto && crypto.randomUUID) return crypto.randomUUID();
+        return "id-" + Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+      };
+
+      const seedState = () => {
+        const employees = [
+          { id: "emp-ava",    name: "Ava Chen",     role: "HR Business Partner",     department: "HR Business Partnering", location: "NYC" },
+          { id: "emp-mateo",  name: "Mateo Rivera", role: "Talent Acquisition Lead", department: "Talent Acquisition",      location: "Remote" },
+          { id: "emp-priya",  name: "Priya Singh",  role: "HRIS Analyst",            department: "People Analytics",        location: "Austin" },
+          { id: "emp-jordan", name: "Jordan Lee",   role: "L&D Specialist",          department: "Learning & Development",  location: "Chicago" },
+          { id: "emp-sam",    name: "Sam Patel",    role: "Compensation Analyst",    department: "Total Rewards",           location: "Remote" }
+        ];
+
+        const skills = [
+          { id: "skill-employee-relations", name: "Employee Relations",         category: "HR Core",               critical: true  },
+          { id: "skill-recruiting",         name: "Recruiting & Interviewing",  category: "Talent Acquisition",    critical: true  },
+          { id: "skill-compensation",       name: "Compensation & Benefits",    category: "Total Rewards",         critical: true  },
+          { id: "skill-hris",               name: "HRIS / Systems",             category: "People Analytics",      critical: false },
+          { id: "skill-analytics",          name: "People Analytics",           category: "People Analytics",      critical: false },
+          { id: "skill-facilitation",       name: "Facilitation & Training",    category: "Learning & Development",critical: false },
+          { id: "skill-compliance",         name: "Policy & Compliance",        category: "HR Core",               critical: true  },
+          { id: "skill-change",             name: "Change Management",          category: "Leadership",            critical: false }
+        ];
+
+        const matrix = {
+          "skill-employee-relations": { "emp-ava": 3, "emp-mateo": 2, "emp-priya": 1, "emp-jordan": 2, "emp-sam": 2 },
+          "skill-recruiting":         { "emp-ava": 2, "emp-mateo": 4, "emp-priya": 1, "emp-jordan": 2, "emp-sam": 1 },
+          "skill-compensation":       { "emp-ava": 1, "emp-mateo": 1, "emp-priya": 2, "emp-jordan": 1, "emp-sam": 4 },
+          "skill-hris":               { "emp-ava": 1, "emp-mateo": 1, "emp-priya": 4, "emp-jordan": 1, "emp-sam": 2 },
+          "skill-analytics":          { "emp-ava": 1, "emp-mateo": 1, "emp-priya": 3, "emp-jordan": 2, "emp-sam": 2 },
+          "skill-facilitation":       { "emp-ava": 2, "emp-mateo": 2, "emp-priya": 1, "emp-jordan": 4, "emp-sam": 1 },
+          "skill-compliance":         { "emp-ava": 3, "emp-mateo": 2, "emp-priya": 2, "emp-jordan": 2, "emp-sam": 2 },
+          "skill-change":             { "emp-ava": 3, "emp-mateo": 2, "emp-priya": 2, "emp-jordan": 3, "emp-sam": 2 }
+        };
+
+        return {
+          version: 1,
+          updatedAt: new Date().toISOString(),
+          threshold: 2,
+          gapCutoff: 50,
+          ui: { cellSize: "m" },
+          filters: { empQuery: "", dept: "All", skillQuery: "", category: "All", showOnlyGaps: false },
+          employees,
+          skills,
+          matrix
+        };
+      };
+
+      const loadState = () => {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== "object") return null;
+          return sanitizeImported(parsed);
+        } catch {
+          return null;
+        }
+      };
+
+      const saveState = () => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch {
+          toast("Could not save to local storage (storage may be blocked).", "warn");
+        }
+      };
+
+      const sanitizeEmployee = (e) => ({
+        id: String(e?.id ?? uuid()),
+        name: String(e?.name ?? "").trim(),
+        role: String(e?.role ?? "").trim(),
+        department: String(e?.department ?? "").trim(),
+        location: String(e?.location ?? "").trim()
+      });
+
+      const sanitizeSkill = (s) => ({
+        id: String(s?.id ?? uuid()),
+        name: String(s?.name ?? "").trim(),
+        category: String(s?.category ?? "").trim(),
+        critical: !!s?.critical
+      });
+
+      const sanitizeImported = (obj) => {
+        const base = seedState();
+        base.version = 1;
+
+        base.threshold = Number.isFinite(+obj.threshold) ? clamp(+obj.threshold, 0, 4) : base.threshold;
+        base.gapCutoff = Number.isFinite(+obj.gapCutoff) ? clamp(+obj.gapCutoff, 0, 100) : base.gapCutoff;
+
+        base.ui = { ...base.ui, ...(obj.ui && typeof obj.ui === "object" ? obj.ui : {}) };
+        if (!["s","m","l"].includes(base.ui.cellSize)) base.ui.cellSize = "m";
+
+        base.filters = { ...base.filters, ...(obj.filters && typeof obj.filters === "object" ? obj.filters : {}) };
+        base.filters.dept = String(base.filters.dept ?? "All");
+        base.filters.category = String(base.filters.category ?? "All");
+        base.filters.empQuery = String(base.filters.empQuery ?? "");
+        base.filters.skillQuery = String(base.filters.skillQuery ?? "");
+        base.filters.showOnlyGaps = !!base.filters.showOnlyGaps;
+
+        base.employees = Array.isArray(obj.employees) ? obj.employees.map(sanitizeEmployee).filter(e => e.name) : base.employees;
+        base.skills = Array.isArray(obj.skills) ? obj.skills.map(sanitizeSkill).filter(s => s.name) : base.skills;
+
+        base.matrix = (obj.matrix && typeof obj.matrix === "object") ? obj.matrix : {};
+        base.updatedAt = new Date().toISOString();
+
+        return base;
+      };
+
+      const levelName = (lvl) => (PROF[lvl] ? PROF[lvl].label : "Unknown");
+      const levelShort = (lvl) => (PROF[lvl] ? PROF[lvl].short : "?");
+
+      const getLevel = (skillId, empId) => {
+        const row = state.matrix?.[skillId];
+        const v = row?.[empId];
+        const n = Number.isFinite(+v) ? clamp(+v, 0, 4) : 0;
+        return n;
+      };
+
+      const setLevel = (skillId, empId, lvl) => {
+        const n = clamp(+lvl, 0, 4);
+        if (!state.matrix[skillId]) state.matrix[skillId] = {};
+        if (n === 0) {
+          delete state.matrix[skillId][empId];
+          if (Object.keys(state.matrix[skillId]).length === 0) delete state.matrix[skillId];
+        } else {
+          state.matrix[skillId][empId] = n;
+        }
+      };
+
+      const removeEmployee = (empId) => {
+        state.employees = state.employees.filter(e => e.id !== empId);
+        for (const sId of Object.keys(state.matrix)) {
+          delete state.matrix[sId]?.[empId];
+          if (state.matrix[sId] && Object.keys(state.matrix[sId]).length === 0) delete state.matrix[sId];
+        }
+      };
+
+      const removeSkill = (skillId) => {
+        state.skills = state.skills.filter(s => s.id !== skillId);
+        delete state.matrix[skillId];
+      };
+
+      const uniqSorted = (arr) => Array.from(new Set(arr.filter(Boolean).map(s => String(s).trim()).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+
+      let state = loadState() || seedState();
+      let derived = null;
+
+      const focusKey = () => {
+        const el = document.activeElement;
+        if (el && el.classList && el.classList.contains("cell-btn") && el.dataset.skill && el.dataset.emp) {
+          return { skill: el.dataset.skill, emp: el.dataset.emp };
+        }
+        return null;
+      };
+
+      const restoreFocus = (key) => {
+        if (!key) return;
+        const el = document.getElementById(`cell-${key.skill}-${key.emp}`);
+        if (el) el.focus({ preventScroll: true });
+      };
+
+      const commit = () => {
+        const key = focusKey();
+        state.updatedAt = new Date().toISOString();
+        saveState();
+        renderAll();
+        restoreFocus(key);
+      };
+
+      const toast = (message, type = "info", title = "Employee Skills Matrix") => {
+        const region = $("#toastRegion");
+        const el = document.createElement("div");
+        el.className = `toast ${type}`;
+        el.innerHTML = `<p class="t-title">${esc(title)}</p><p class="t-msg">${esc(message)}</p>`;
+        region.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(6px)";
+          el.style.transition = "opacity .2s ease, transform .2s ease";
+        }, 3300);
+        setTimeout(() => el.remove(), 3800);
+      };
+
+      const openDialog = (dlg) => {
+        if (typeof dlg.showModal === "function") dlg.showModal();
+        else dlg.setAttribute("open", "");
+      };
+
+      const closeDialog = (dlg) => {
+        if (typeof dlg.close === "function") dlg.close();
+        else dlg.removeAttribute("open");
+      };
+
+      const derive = () => {
+        const empQ = state.filters.empQuery.trim().toLowerCase();
+        const skillQ = state.filters.skillQuery.trim().toLowerCase();
+
+        const employeesAll = state.employees.slice();
+        const skillsAll = state.skills.slice();
+
+        const employeesFiltered = employeesAll.filter(e => {
+          const deptOk = state.filters.dept === "All" || (e.department || "") === state.filters.dept;
+          if (!deptOk) return false;
+          if (!empQ) return true;
+          const hay = `${e.name} ${e.role || ""} ${e.department || ""} ${e.location || ""}`.toLowerCase();
+          return hay.includes(empQ);
+        });
+
+        const skillsFilteredBase = skillsAll.filter(s => {
+          const catOk = state.filters.category === "All" || (s.category || "") === state.filters.category;
+          if (!catOk) return false;
+          if (!skillQ) return true;
+          const hay = `${s.name} ${s.category || ""}`.toLowerCase();
+          return hay.includes(skillQ);
+        });
+
+        const coverageBySkill = {};
+        const threshold = state.threshold;
+
+        for (const sk of skillsFilteredBase) {
+          const total = employeesFiltered.length;
+          let covered = 0;
+          let sum = 0;
+          for (const emp of employeesFiltered) {
+            const lvl = getLevel(sk.id, emp.id);
+            sum += lvl;
+            if (lvl >= threshold) covered++;
+          }
+          const percent = total ? Math.round((covered / total) * 100) : 0;
+          const avg = total ? (sum / total) : 0;
+          coverageBySkill[sk.id] = { total, covered, percent, avg };
+        }
+
+        const skillsFiltered = state.filters.showOnlyGaps
+          ? skillsFilteredBase.filter(sk => (coverageBySkill[sk.id]?.percent ?? 0) < state.gapCutoff)
+          : skillsFilteredBase;
+
+        const avgByEmployee = {};
+        for (const emp of employeesFiltered) {
+          const total = skillsFiltered.length;
+          let sum = 0;
+          for (const sk of skillsFiltered) sum += getLevel(sk.id, emp.id);
+          avgByEmployee[emp.id] = total ? (sum / total) : 0;
+        }
+
+        let cellsTotal = employeesFiltered.length * skillsFiltered.length;
+        let cellsCovered = 0;
+        let sumAll = 0;
+        for (const sk of skillsFiltered) {
+          for (const emp of employeesFiltered) {
+            const lvl = getLevel(sk.id, emp.id);
+            sumAll += lvl;
+            if (lvl >= threshold) cellsCovered++;
+          }
+        }
+
+        const skillsWithGap = skillsFiltered.filter(sk => (coverageBySkill[sk.id]?.percent ?? 0) < state.gapCutoff);
+        const criticalSkillsAtRisk = skillsWithGap.filter(sk => !!sk.critical);
+        const overallCoveragePct = cellsTotal ? Math.round((cellsCovered / cellsTotal) * 100) : 0;
+        const overallAvg = cellsTotal ? (sumAll / cellsTotal) : 0;
+
+        const gapList = skillsFiltered
+          .map(sk => ({ skill: sk, ...(coverageBySkill[sk.id] || { total: employeesFiltered.length, covered: 0, percent: 0, avg: 0 }) }))
+          .sort((a,b) => a.percent - b.percent);
+
+        return {
+          employeesVisible: employeesFiltered,
+          skillsVisible: skillsFiltered,
+          coverageBySkill,
+          avgByEmployee,
+          metrics: {
+            employees: employeesFiltered.length,
+            skills: skillsFiltered.length,
+            cellsTotal,
+            cellsCovered,
+            overallCoveragePct,
+            overallAvg,
+            gapsCount: skillsWithGap.length,
+            criticalGapsCount: criticalSkillsAtRisk.length
+          },
+          gapList
+        };
+      };
+
+      const renderStatus = () => {
+        const line = $("#statusLine");
+        const updated = new Date(state.updatedAt);
+        const updatedTxt = isFinite(updated.getTime())
+          ? updated.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+          : "Unknown";
+
+        const parts = [
+          `<span class="status-pill">Saved locally</span>`,
+          `<span class="status-pill">Last updated: ${esc(updatedTxt)}</span>`,
+          `<span class="status-pill">Employees: ${derived?.metrics.employees ?? state.employees.length}</span>`,
+          `<span class="status-pill">Skills: ${derived?.metrics.skills ?? state.skills.length}</span>`
+        ];
+        line.innerHTML = parts.join("");
+      };
+
+      const renderLegend = () => {
+        const el = $("#legend");
+        el.innerHTML = PROF.map(p => `
+          <div class="legend-row">
+            <div class="chip lvl-${p.value}" aria-hidden="true">${esc(p.short)}</div>
+            <div>
+              <div class="legend-title">${esc(p.label)}</div>
+              <div class="legend-desc">${esc(p.desc)}</div>
+            </div>
+          </div>
+        `).join("");
+      };
+
+      const renderFilters = () => {
+        const deptSel = $("#deptFilter");
+        const catSel = $("#catFilter");
+
+        const depts = uniqSorted(state.employees.map(e => e.department));
+        const cats = uniqSorted(state.skills.map(s => s.category));
+
+        const deptOptions = ["All", ...depts];
+        const catOptions = ["All", ...cats];
+
+        const setOptions = (select, options, selected, allLabel) => {
+          const prev = select.value;
+          select.innerHTML = options.map(v => {
+            const label = (v === "All") ? allLabel : v;
+            const sel = (v === selected) ? " selected" : "";
+            return `<option value="${esc(v)}"${sel}>${esc(label)}</option>`;
+          }).join("");
+          if (options.includes(prev) && prev !== selected) {
+            // no-op; controlled by selected
+          }
+        };
+
+        setOptions(deptSel, deptOptions, state.filters.dept, "All departments / teams");
+        setOptions(catSel, catOptions, state.filters.category, "All categories");
+
+        $("#empQuery").value = state.filters.empQuery;
+        $("#skillQuery").value = state.filters.skillQuery;
+        $("#onlyGaps").checked = !!state.filters.showOnlyGaps;
+
+        $("#gapCutoff").value = String(state.gapCutoff);
+        $("#gapCutoffLabel").textContent = `${state.gapCutoff}%`;
+
+        const thresholdSel = $("#thresholdSelect");
+        thresholdSel.innerHTML = PROF.map(p => `<option value="${p.value}" ${p.value === state.threshold ? "selected" : ""}>${esc(p.label)} (${esc(p.short)})</option>`).join("");
+      };
+
+      const renderSnapshot = () => {
+        const m = derived.metrics;
+
+        $("#snapshotMetrics").innerHTML = `
+          <div class="metric">
+            <div class="value">${esc(m.overallCoveragePct)}%</div>
+            <div class="label">Overall coverage (cells at/above “${esc(levelName(state.threshold))}”)</div>
+          </div>
+          <div class="metric">
+            <div class="value">${esc(m.overallAvg.toFixed(1))}</div>
+            <div class="label">Average proficiency (0–4)</div>
+          </div>
+          <div class="metric">
+            <div class="value">${esc(m.gapsCount)}</div>
+            <div class="label">Skills flagged as gaps (&lt; ${esc(state.gapCutoff)}% coverage)</div>
+          </div>
+          <div class="metric">
+            <div class="value">${esc(m.criticalGapsCount)}</div>
+            <div class="label">Critical skills at risk</div>
+          </div>
+        `;
+
+        const top = derived.gapList.slice(0, 5);
+        if (top.length === 0) {
+          $("#topGaps").innerHTML = `<div class="hint">No skills in view. Add skills, add employees, or adjust filters.</div>`;
+          return;
+        }
+
+        const items = top.map(item => {
+          const sk = item.skill;
+          const crit = sk.critical ? `<span class="pill critical">Critical</span>` : "";
+          const pct = item.total ? item.percent : 0;
+          const meta = `${item.covered}/${item.total} (${pct}%) • Avg ${item.avg.toFixed(1)}`;
+          return `
+            <div class="gap-item">
+              <div>
+                <div class="name">${esc(sk.name)} ${crit}</div>
+                <div class="meta">${esc(meta)}</div>
+              </div>
+              <div class="pill">${pct < state.gapCutoff ? "Gap" : "OK"}</div>
+            </div>
+          `;
+        }).join("");
+
+        $("#topGaps").innerHTML = `
+          <div class="label" style="margin-bottom:6px;">Lowest coverage (top 5)</div>
+          ${items}
+        `;
+      };
+
+      const renderLists = () => {
+        $("#peopleSummary").textContent = `${state.employees.length} total`;
+        $("#skillsSummary").textContent = `${state.skills.length} total`;
+
+        const people = state.employees.slice()
+          .sort((a,b) => a.name.localeCompare(b.name))
+          .map(e => {
+            const parts = [
+              e.role ? esc(e.role) : "",
+              e.department ? esc(e.department) : "",
+              e.location ? esc(e.location) : ""
+            ].filter(Boolean);
+            return `
+              <div class="list-item">
+                <div>
+                  <div class="title">${esc(e.name)}</div>
+                  <div class="sub">${parts.join(" • ") || `<span class="pill">No details</span>`}</div>
+                </div>
+                <div class="actions">
+                  <button class="btn small" type="button" data-action="edit-emp" data-emp="${esc(e.id)}">Edit</button>
+                  <button class="btn small danger" type="button" data-action="remove-emp" data-emp="${esc(e.id)}">Remove</button>
+                </div>
+              </div>
+            `;
+          }).join("");
+
+        $("#peopleList").innerHTML = people || `<div class="hint">No employees yet. Add employees to build the matrix columns.</div>`;
+
+        const skills = state.skills.slice()
+          .sort((a,b) => a.name.localeCompare(b.name))
+          .map(s => {
+            const cat = s.category ? `<span class="pill">${esc(s.category)}</span>` : `<span class="pill">Uncategorized</span>`;
+            const crit = s.critical ? `<span class="pill critical">Critical</span>` : "";
+            return `
+              <div class="list-item">
+                <div>
+                  <div class="title">${esc(s.name)}</div>
+                  <div class="sub">${cat} ${crit}</div>
+                </div>
+                <div class="actions">
+                  <button class="btn small" type="button" data-action="edit-skill" data-skill="${esc(s.id)}">Edit</button>
+                  <button class="btn small danger" type="button" data-action="remove-skill" data-skill="${esc(s.id)}">Remove</button>
+                </div>
+              </div>
+            `;
+          }).join("");
+
+        $("#skillsList").innerHTML = skills || `<div class="hint">No skills yet. Add skills to build the matrix rows.</div>`;
+      };
+
+      const renderMatrix = () => {
+        const table = $("#matrixTable");
+        const empty = $("#emptyState");
+        const container = $("#matrixContainer");
+
+        container.classList.remove("size-s", "size-m", "size-l");
+        container.classList.add(`size-${state.ui.cellSize}`);
+
+        const emps = derived.employeesVisible;
+        const skills = derived.skillsVisible;
+
+        if (emps.length === 0 || skills.length === 0) {
+          table.innerHTML = "";
+          empty.hidden = false;
+          return;
+        }
+        empty.hidden = true;
+
+        const thresholdLabel = levelName(state.threshold);
+
+        let thead = `<thead><tr>`;
+        thead += `<th class="skill-col" scope="col">Skill</th>`;
+
+        for (const emp of emps) {
+          const avg = derived.avgByEmployee[emp.id] ?? 0;
+          const meta = [emp.role, emp.department, emp.location].filter(Boolean).map(esc).join(" • ");
+          thead += `
+            <th class="emp-col" scope="col">
+              <div class="emp-hdr">
+                <div class="emp-name">${esc(emp.name)}</div>
+                <div class="emp-meta">${meta || `<span class="pill">No details</span>`}</div>
+                <div class="badge" title="Average proficiency across skills shown">Avg ${esc(avg.toFixed(1))}</div>
+              </div>
+            </th>
+          `;
+        }
+
+        thead += `<th class="coverage-col" scope="col">Coverage (≥ ${esc(thresholdLabel)})</th>`;
+        thead += `</tr></thead>`;
+
+        let tbody = `<tbody>`;
+
+        for (const sk of skills) {
+          const cov = derived.coverageBySkill[sk.id] || { total: emps.length, covered: 0, percent: 0, avg: 0 };
+          const isGap = cov.percent < state.gapCutoff;
+          const covClass = `${isGap ? "gap" : ""} ${sk.critical ? "critical" : ""}`.trim();
+
+          const skillMetaParts = [];
+          if (sk.category) skillMetaParts.push(`<span class="pill">${esc(sk.category)}</span>`);
+          if (sk.critical) skillMetaParts.push(`<span class="pill critical">Critical</span>`);
+
+          tbody += `<tr data-skill-row="${esc(sk.id)}">`;
+          tbody += `
+            <th class="skill-col" scope="row">
+              <div class="skill-hdr">
+                <div class="skill-name">${esc(sk.name)}</div>
+                <div class="skill-meta">${skillMetaParts.join(" ") || `<span class="pill">Uncategorized</span>`}</div>
+              </div>
+            </th>
+          `;
+
+          for (const emp of emps) {
+            const lvl = getLevel(sk.id, emp.id);
+            const aria = `${sk.name} — ${emp.name}: ${levelName(lvl)}`;
+            tbody += `
+              <td class="cell">
+                <button
+                  type="button"
+                  class="cell-btn lvl-${lvl}"
+                  data-skill="${esc(sk.id)}"
+                  data-emp="${esc(emp.id)}"
+                  id="cell-${esc(sk.id)}-${esc(emp.id)}"
+                  title="${esc(levelName(lvl))}"
+                  aria-label="${esc(aria)}"
+                >${esc(levelShort(lvl))}</button>
+              </td>
+            `;
+          }
+
+          tbody += `
+            <td class="coverage-col ${esc(covClass)}">
+              <div class="coverage">
+                <div class="coverage-top">
+                  <span><strong>${esc(cov.covered)}</strong>/<strong>${esc(cov.total)}</strong> (${esc(cov.percent)}%)</span>
+                  <span class="muted">Avg ${esc(cov.avg.toFixed(1))}</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <div class="fill" style="width:${esc(cov.percent)}%"></div>
+                </div>
+              </div>
+            </td>
+          `;
+          tbody += `</tr>`;
+        }
+
+        tbody += `</tbody>`;
+
+        table.innerHTML = thead + tbody;
+      };
+
+      const renderPrintSummary = () => {
+        const el = $("#printSummary");
+        const m = derived.metrics;
+        const scope = [
+          `Threshold: ≥ ${levelName(state.threshold)}`,
+          `Gap rule: < ${state.gapCutoff}% coverage`,
+          `Employees in view: ${m.employees}`,
+          `Skills in view: ${m.skills}`
+        ].join(" • ");
+
+        el.innerHTML = `
+          <h2>Employee Skills Matrix — Summary</h2>
+          <div class="content-sub" style="margin:0 0 10px 0;">${esc(scope)}</div>
+          <div class="metrics">
+            <div class="metric"><div class="value">${esc(m.overallCoveragePct)}%</div><div class="label">Overall coverage</div></div>
+            <div class="metric"><div class="value">${esc(m.overallAvg.toFixed(1))}</div><div class="label">Average proficiency</div></div>
+            <div class="metric"><div class="value">${esc(m.gapsCount)}</div><div class="label">Skills flagged as gaps</div></div>
+            <div class="metric"><div class="value">${esc(m.criticalGapsCount)}</div><div class="label">Critical skills at risk</div></div>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Generated: ${esc(new Date().toLocaleString())}. This summary reflects the current filters.
+          </div>
+        `;
+      };
+
+      const renderAll = () => {
+        derived = derive();
+        renderStatus();
+        renderFilters();
+        renderLegend();
+        renderSnapshot();
+        renderLists();
+        renderMatrix();
+        renderPrintSummary();
+        renderCellSizeButton();
+      };
+
+      const renderCellSizeButton = () => {
+        const btn = $("#cellSizeBtn");
+        const label = state.ui.cellSize === "s" ? "Small" : state.ui.cellSize === "l" ? "Large" : "Medium";
+        btn.textContent = `Cell size: ${label}`;
+      };
+
+      const downloadFile = (filename, content, mime) => {
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          a.remove();
+        }, 0);
+      };
+
+      const exportData = () => {
+        const fname = `employee-skills-matrix_${new Date().toISOString().slice(0,10)}.json`;
+        const payload = JSON.stringify(state, null, 2);
+        downloadFile(fname, payload, "application/json");
+        toast("Exported JSON file (download started).", "success");
+      };
+
+      const openEmployeeEditor = (empId = null) => {
+        const dlg = $("#employeeDialog");
+        const form = $("#employeeForm");
+        form.reset();
+
+        const emp = empId ? state.employees.find(e => e.id === empId) : null;
+        $("#employeeDialogTitle").textContent = emp ? "Edit employee" : "Add employee";
+
+        form.elements.id.value = emp?.id || "";
+        form.elements.name.value = emp?.name || "";
+        form.elements.role.value = emp?.role || "";
+        form.elements.department.value = emp?.department || "";
+        form.elements.location.value = emp?.location || "";
+
+        openDialog(dlg);
+        setTimeout(() => form.elements.name.focus(), 0);
+      };
+
+      const openSkillEditor = (skillId = null) => {
+        const dlg = $("#skillDialog");
+        const form = $("#skillForm");
+        form.reset();
+
+        const sk = skillId ? state.skills.find(s => s.id === skillId) : null;
+        $("#skillDialogTitle").textContent = sk ? "Edit skill" : "Add skill";
+
+        form.elements.id.value = sk?.id || "";
+        form.elements.name.value = sk?.name || "";
+        form.elements.category.value = sk?.category || "";
+        $("#skillCritical").checked = !!sk?.critical;
+
+        openDialog(dlg);
+        setTimeout(() => form.elements.name.focus(), 0);
+      };
+
+      const openImport = () => {
+        $("#importText").value = "";
+        $("#importFile").value = "";
+        openDialog($("#importDialog"));
+        setTimeout(() => $("#importText").focus(), 0);
+      };
+
+      // Event wiring
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+
+        const action = btn.dataset.action;
+
+        if (btn.id === "addEmployeeBtn" || btn.id === "emptyAddEmployeeBtn") openEmployeeEditor(null);
+        if (btn.id === "addSkillBtn" || btn.id === "emptyAddSkillBtn") openSkillEditor(null);
+
+        if (btn.id === "exportBtn") exportData();
+        if (btn.id === "importBtn") openImport();
+
+        if (btn.id === "resetBtn") {
+          const ok = confirm("Reset the app? This clears locally saved data and restores the sample dataset.");
+          if (!ok) return;
+          try { localStorage.removeItem(STORAGE_KEY); } catch {}
+          state = seedState();
+          toast("Reset complete. Sample dataset restored.", "success");
+          renderAll();
+          return;
+        }
+
+        if (btn.id === "printBtn") {
+          window.print();
+          return;
+        }
+
+        if (btn.id === "cellSizeBtn") {
+          state.ui.cellSize = state.ui.cellSize === "s" ? "m" : state.ui.cellSize === "m" ? "l" : "s";
+          commit();
+          return;
+        }
+
+        if (btn.id === "clearImportBtn") {
+          $("#importText").value = "";
+          $("#importFile").value = "";
+          toast("Import input cleared.", "info");
+          return;
+        }
+
+        if (btn.dataset.dialogClose) {
+          const dlg = document.getElementById(btn.dataset.dialogClose);
+          if (dlg) closeDialog(dlg);
+          return;
+        }
+
+        if (action === "edit-emp") openEmployeeEditor(btn.dataset.emp);
+        if (action === "remove-emp") {
+          const emp = state.employees.find(x => x.id === btn.dataset.emp);
+          if (!emp) return;
+          const ok = confirm(`Remove employee “${emp.name}”? This also removes their matrix ratings.`);
+          if (!ok) return;
+          removeEmployee(emp.id);
+          toast(`Removed employee: ${emp.name}`, "success");
+          commit();
+          return;
+        }
+
+        if (action === "edit-skill") openSkillEditor(btn.dataset.skill);
+        if (action === "remove-skill") {
+          const sk = state.skills.find(x => x.id === btn.dataset.skill);
+          if (!sk) return;
+          const ok = confirm(`Remove skill “${sk.name}”? This also removes its matrix row data.`);
+          if (!ok) return;
+          removeSkill(sk.id);
+          toast(`Removed skill: ${sk.name}`, "success");
+          commit();
+          return;
+        }
+
+        // Matrix cell click
+        if (btn.classList.contains("cell-btn") && btn.dataset.skill && btn.dataset.emp) {
+          const skillId = btn.dataset.skill;
+          const empId = btn.dataset.emp;
+          const current = getLevel(skillId, empId);
+
+          let next;
+          if (e.shiftKey) next = (current + PROF.length - 1) % PROF.length;
+          else next = (current + 1) % PROF.length;
+
+          setLevel(skillId, empId, next);
+          commit();
+          return;
+        }
+      });
+
+      // Inputs
+      const wireInput = (id, handler, eventName = "input") => {
+        const el = $(id);
+        el.addEventListener(eventName, () => handler(el));
+      };
+
+      wireInput("#empQuery", (el) => { state.filters.empQuery = el.value; renderAll(); });
+      wireInput("#skillQuery", (el) => { state.filters.skillQuery = el.value; renderAll(); });
+
+      $("#deptFilter").addEventListener("change", (e) => { state.filters.dept = e.target.value; renderAll(); });
+      $("#catFilter").addEventListener("change", (e) => { state.filters.category = e.target.value; renderAll(); });
+
+      $("#onlyGaps").addEventListener("change", (e) => {
+        state.filters.showOnlyGaps = !!e.target.checked;
+        renderAll();
+      });
+
+      $("#thresholdSelect").addEventListener("change", (e) => {
+        state.threshold = clamp(parseInt(e.target.value, 10), 0, 4);
+        commit();
+      });
+
+      $("#gapCutoff").addEventListener("change", (e) => {
+        const n = clamp(parseInt(e.target.value, 10), 0, 100);
+        state.gapCutoff = Number.isFinite(n) ? n : state.gapCutoff;
+        commit();
+      });
+
+      // Keyboard controls for matrix cells
+      document.addEventListener("keydown", (e) => {
+        const active = document.activeElement;
+        if (!active || !active.classList || !active.classList.contains("cell-btn")) return;
+        const skillId = active.dataset.skill;
+        const empId = active.dataset.emp;
+        if (!skillId || !empId) return;
+
+        const isDigit = e.key.length === 1 && e.key >= "0" && e.key <= "4";
+        if (isDigit) {
+          setLevel(skillId, empId, parseInt(e.key, 10));
+          commit();
+          e.preventDefault();
+          return;
+        }
+
+        const move = (dRow, dCol) => {
+          const skills = derived.skillsVisible;
+          const emps = derived.employeesVisible;
+          const r = skills.findIndex(s => s.id === skillId);
+          const c = emps.findIndex(p => p.id === empId);
+          if (r < 0 || c < 0) return;
+
+          const r2 = clamp(r + dRow, 0, skills.length - 1);
+          const c2 = clamp(c + dCol, 0, emps.length - 1);
+
+          const next = document.getElementById(`cell-${skills[r2].id}-${emps[c2].id}`);
+          if (next) next.focus({ preventScroll: true });
+        };
+
+        switch (e.key) {
+          case "ArrowUp": move(-1, 0); e.preventDefault(); break;
+          case "ArrowDown": move(1, 0); e.preventDefault(); break;
+          case "ArrowLeft": move(0, -1); e.preventDefault(); break;
+          case "ArrowRight": move(0, 1); e.preventDefault(); break;
+          case "Home": move(0, -9999); e.preventDefault(); break;
+          case "End": move(0, 9999); e.preventDefault(); break;
+          case "PageUp": move(-5, 0); e.preventDefault(); break;
+          case "PageDown": move(5, 0); e.preventDefault(); break;
+        }
+      });
+
+      // Forms
+      $("#employeeForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const fd = new FormData(form);
+
+        const id = String(fd.get("id") || "").trim();
+        const name = String(fd.get("name") || "").trim();
+        const role = String(fd.get("role") || "").trim();
+        const department = String(fd.get("department") || "").trim();
+        const location = String(fd.get("location") || "").trim();
+
+        if (!name) {
+          toast("Please provide a full name.", "warn", "Employee");
+          form.elements.name.focus();
+          return;
+        }
+
+        if (id) {
+          const idx = state.employees.findIndex(x => x.id === id);
+          if (idx >= 0) state.employees[idx] = { ...state.employees[idx], name, role, department, location };
+          toast("Employee updated.", "success", "Employee");
+        } else {
+          state.employees.push({ id: uuid(), name, role, department, location });
+          toast("Employee added.", "success", "Employee");
+        }
+
+        closeDialog($("#employeeDialog"));
+        commit();
+      });
+
+      $("#skillForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const fd = new FormData(form);
+
+        const id = String(fd.get("id") || "").trim();
+        const name = String(fd.get("name") || "").trim();
+        const category = String(fd.get("category") || "").trim();
+        const critical = $("#skillCritical").checked;
+
+        if (!name) {
+          toast("Please provide a skill name.", "warn", "Skill");
+          form.elements.name.focus();
+          return;
+        }
+
+        if (id) {
+          const idx = state.skills.findIndex(x => x.id === id);
+          if (idx >= 0) state.skills[idx] = { ...state.skills[idx], name, category, critical };
+          toast("Skill updated.", "success", "Skill");
+        } else {
+          state.skills.push({ id: uuid(), name, category, critical });
+          toast("Skill added.", "success", "Skill");
+        }
+
+        closeDialog($("#skillDialog"));
+        commit();
+      });
+
+      const readFileAsText = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(reader.error || new Error("File read error"));
+        reader.readAsText(file);
+      });
+
+      $("#importFile").addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await readFileAsText(file);
+          $("#importText").value = text;
+          toast("File loaded. Review then click Import.", "info", "Import");
+        } catch {
+          toast("Could not read the selected file.", "danger", "Import");
+        }
+      });
+
+      $("#importForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = $("#importText").value.trim();
+        if (!text) {
+          toast("Paste JSON or select a file first.", "warn", "Import");
+          return;
+        }
+        try {
+          const parsed = JSON.parse(text);
+          const next = sanitizeImported(parsed);
+          state = next;
+          saveState();
+          closeDialog($("#importDialog"));
+          toast("Import completed (dataset replaced).", "success", "Import");
+          renderAll();
+        } catch {
+          toast("Invalid JSON. Please check the content and try again.", "danger", "Import");
+        }
+      });
+
+      // Initial render
+      renderAll();
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tea Dunkability Lab</title>
+  <style>
+    :root{
+      --bg0: #0b1220;
+      --bg1: #0b1b2a;
+      --fg: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --muted2: rgba(255,255,255,.56);
+      --card: rgba(255,255,255,.10);
+      --card2: rgba(255,255,255,.08);
+      --border: rgba(255,255,255,.16);
+      --shadow: 0 24px 80px rgba(0,0,0,.42);
+      --accent: #7dd3fc;
+      --accent2:#c4b5fd;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --ring: rgba(125,211,252,.55);
+      --gridGap: 18px;
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    body.light{
+      --bg0: #f5f8ff;
+      --bg1: #e9f3ff;
+      --fg: rgba(10,16,26,.92);
+      --muted: rgba(10,16,26,.72);
+      --muted2: rgba(10,16,26,.58);
+      --card: rgba(255,255,255,.62);
+      --card2: rgba(255,255,255,.48);
+      --border: rgba(10,16,26,.12);
+      --shadow: 0 24px 80px rgba(10,16,26,.18);
+      --ring: rgba(14,165,233,.28);
+    }
+
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--fg);
+      background:
+        radial-gradient(1200px 600px at 15% 10%, rgba(196,181,253,.18), transparent 55%),
+        radial-gradient(900px 500px at 85% 20%, rgba(125,211,252,.16), transparent 52%),
+        radial-gradient(700px 550px at 60% 95%, rgba(34,197,94,.10), transparent 58%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x: hidden;
+    }
+
+    .noise{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .06;
+      mix-blend-mode: overlay;
+      background-image:
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/></filter><rect width="180" height="180" filter="url(%23n)" opacity=".55"/></svg>');
+      background-size: 240px 240px;
+      filter: contrast(120%) brightness(110%);
+    }
+
+    .app{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 22px 18px 28px;
+    }
+
+    .glass{
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: var(--radius);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 16px;
+      position: sticky;
+      top: 14px;
+      z-index: 5;
+    }
+
+    .title h1{
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: .2px;
+      font-weight: 720;
+    }
+    .title p{
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      appearance: none;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+      color: var(--fg);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 13px;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      user-select: none;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+    }
+    body.light .btn{
+      background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.58));
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(125,211,252,.42); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn:focus-visible{
+      outline: none;
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+
+    .kbd{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-bottom-color: rgba(0,0,0,.25);
+      border-radius: 8px;
+      background: rgba(0,0,0,.12);
+      color: var(--fg);
+    }
+    body.light .kbd{
+      background: rgba(10,16,26,.06);
+      border-bottom-color: rgba(10,16,26,.12);
+    }
+
+    main.grid{
+      margin-top: var(--gridGap);
+      display: grid;
+      grid-template-columns: 1.05fr 1.35fr 1.05fr;
+      gap: var(--gridGap);
+      align-items: start;
+    }
+
+    @media (max-width: 980px){
+      main.grid{ grid-template-columns: 1fr; }
+      .topbar{ position: relative; top: 0; }
+    }
+
+    .card{
+      padding: 16px 16px 16px;
+    }
+
+    .card h2{
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: .2px;
+      font-weight: 750;
+    }
+    .sub{
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .controls{
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    body.light .field{
+      border: 1px solid rgba(10,16,26,.08);
+    }
+
+    .fieldTop{
+      display:flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .label{
+      font-size: 12px;
+      color: var(--muted);
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      letter-spacing: .15px;
+    }
+    .value{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--fg);
+      opacity: .92;
+    }
+
+    input[type="range"]{
+      width: 100%;
+      accent-color: var(--accent);
+      height: 28px;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .chip{
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.10);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      user-select: none;
+    }
+    body.light .chip{ background: rgba(10,16,26,.05); }
+
+    .chip strong{ color: var(--fg); font-weight: 700; }
+
+    .scene{
+      padding: 16px;
+    }
+    .sceneHeader{
+      display:flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .statusLine{
+      display:flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.10);
+      color: var(--muted);
+    }
+    body.light .pill{ background: rgba(10,16,26,.05); }
+
+    .dot{
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(125,211,252,.16);
+    }
+
+    .cupStage{
+      position: relative;
+      height: 360px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(120% 80% at 50% 10%, rgba(255,255,255,.10), transparent 52%),
+        radial-gradient(90% 60% at 50% 85%, rgba(0,0,0,.26), transparent 62%);
+    }
+    body.light .cupStage{
+      border: 1px solid rgba(10,16,26,.08);
+      background:
+        radial-gradient(120% 80% at 50% 10%, rgba(255,255,255,.62), transparent 52%),
+        radial-gradient(90% 60% at 50% 85%, rgba(10,16,26,.10), transparent 62%);
+    }
+
+    .cupWrap{
+      position:absolute;
+      inset: 0;
+      display:flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cupSvg{
+      width: min(92%, 520px);
+      height: auto;
+      z-index: 2;
+      filter: drop-shadow(0 24px 50px rgba(0,0,0,.35));
+    }
+
+    .cupBob{
+      transform-origin: 50% 60%;
+      animation: cupBob 4.2s ease-in-out infinite;
+    }
+    @keyframes cupBob{
+      0%,100%{ transform: translateY(0px); }
+      50%{ transform: translateY(6px); }
+    }
+
+    .steam{
+      position:absolute;
+      width: 14px;
+      height: 80px;
+      bottom: 56%;
+      left: 50%;
+      border-radius: 999px;
+      background: linear-gradient(to top, rgba(255,255,255,0), rgba(255,255,255,.36), rgba(255,255,255,0));
+      opacity: .75;
+      filter: blur(.2px);
+      z-index: 4;
+      animation: steamRise 2.8s ease-in-out infinite;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    body.light .steam{
+      background: linear-gradient(to top, rgba(10,16,26,0), rgba(10,16,26,.22), rgba(10,16,26,0));
+      opacity: .38;
+    }
+    .steam.s1{ margin-left: -38px; animation-delay: 0s; height: 76px; }
+    .steam.s2{ margin-left: 0px; animation-delay: .55s; height: 90px; }
+    .steam.s3{ margin-left: 38px; animation-delay: 1.05s; height: 74px; }
+    @keyframes steamRise{
+      0%{ transform: translateX(-50%) translateY(10px) scale(.92); opacity: 0; }
+      20%{ opacity: .75; }
+      100%{ transform: translateX(-50%) translateY(-46px) scale(1.12); opacity: 0; }
+    }
+
+    .biscuit{
+      position:absolute;
+      left: 50%;
+      top: 14%;
+      width: 128px;
+      height: 54px;
+      border-radius: 14px;
+      background:
+        radial-gradient(16px 10px at 20% 40%, rgba(255,255,255,.14), transparent 60%),
+        radial-gradient(14px 10px at 60% 64%, rgba(0,0,0,.20), transparent 65%),
+        linear-gradient(180deg, rgba(255,255,255,.14), rgba(0,0,0,.18)),
+        var(--biscuitColor, #c09a6b);
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 18px 48px rgba(0,0,0,.25);
+      transform: translate(-50%, -12px) rotate(-8deg);
+      z-index: 6;
+      transition: filter .25s ease, box-shadow .25s ease;
+    }
+    body.light .biscuit{
+      border: 1px solid rgba(10,16,26,.10);
+      box-shadow: 0 18px 40px rgba(10,16,26,.12);
+    }
+
+    .biscuit:before{
+      content:"";
+      position:absolute;
+      inset: 10px;
+      border-radius: 10px;
+      border: 1px dashed rgba(0,0,0,.22);
+      opacity: .55;
+      mix-blend-mode: overlay;
+    }
+
+    .biscuit.stressed{
+      filter: saturate(1.06) contrast(1.04);
+      box-shadow: 0 18px 60px rgba(239,68,68,.18), 0 18px 48px rgba(0,0,0,.32);
+    }
+
+    .biscuit.auto{
+      animation-name: dunkLoop;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      will-change: transform;
+    }
+
+    .crumbLayer{
+      position:absolute;
+      inset:0;
+      z-index: 7;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .crumb{
+      position:absolute;
+      display:block;
+      border-radius: 4px;
+      background: rgba(245, 213, 160, .92);
+      box-shadow: 0 14px 26px rgba(0,0,0,.20);
+      animation-name: crumbFall;
+      animation-timing-function: cubic-bezier(.18,.78,.14,1);
+      animation-fill-mode: both;
+      will-change: transform, opacity;
+    }
+
+    @keyframes crumbFall{
+      0%{
+        transform: translate(0px, 0px) rotate(0deg);
+        opacity: 0;
+        filter: blur(.2px);
+      }
+      10%{ opacity: 1; }
+      100%{
+        transform: translate(var(--dx, 40px), 360px) rotate(var(--rot, 220deg));
+        opacity: 0;
+        filter: blur(.4px);
+      }
+    }
+
+    .graph{
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .graphBox{
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    body.light .graphBox{ border: 1px solid rgba(10,16,26,.08); }
+
+    .metricGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .metric{
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    body.light .metric{ border: 1px solid rgba(10,16,26,.08); }
+
+    .metric .k{
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+    .metric .v{
+      margin: 6px 0 0;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--fg);
+      letter-spacing: .2px;
+    }
+    .metric .hint{
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--muted2);
+      line-height: 1.35;
+    }
+
+    .bar{
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+      margin-top: 10px;
+    }
+    body.light .bar{
+      background: rgba(10,16,26,.06);
+      border: 1px solid rgba(10,16,26,.10);
+    }
+    .bar > i{
+      display:block;
+      height:100%;
+      width: 50%;
+      background: linear-gradient(90deg, var(--good), var(--warn), var(--bad));
+    }
+
+    .footer{
+      margin-top: var(--gridGap);
+      padding: 12px 16px;
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .modalBackdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.52);
+      display:flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 50;
+    }
+    body.light .modalBackdrop{ background: rgba(10,16,26,.32); }
+
+    .modal{
+      width: min(720px, 100%);
+      padding: 16px;
+    }
+    .modalHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .modalHeader h3{
+      margin: 0;
+      font-size: 14px;
+      font-weight: 780;
+    }
+    .list{
+      margin: 8px 0 0;
+      padding: 0;
+      list-style: none;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 680px){
+      .list{ grid-template-columns: 1fr; }
+    }
+    .li{
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,.10);
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items:center;
+    }
+    body.light .li{ border: 1px solid rgba(10,16,26,.08); }
+    .li span{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+
+    .srOnly{
+      position:absolute;
+      width:1px;height:1px;
+      padding:0;margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;border:0;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <script type="text/babel">
+    const {useEffect, useMemo, useRef, useState, useCallback} = React;
+
+    const MAX_TIME = 12;
+
+    const BISCUITS = [
+      { name: "Rich Tea", strength: 0.35, porosity: 0.86, thickness: 0.55, optimal: 2.6, color: "#c9a26e" },
+      { name: "Digestive", strength: 0.66, porosity: 0.56, thickness: 0.78, optimal: 4.2, color: "#b88a55" },
+      { name: "Hobnob", strength: 0.76, porosity: 0.52, thickness: 0.86, optimal: 5.1, color: "#b1804a" },
+      { name: "Ginger Nut", strength: 0.82, porosity: 0.44, thickness: 0.84, optimal: 6.2, color: "#ad6f32" },
+      { name: "Shortbread", strength: 0.58, porosity: 0.42, thickness: 0.74, optimal: 3.6, color: "#d7bf86" },
+      { name: "Bourbon", strength: 0.62, porosity: 0.62, thickness: 0.82, optimal: 4.7, color: "#8b5a3c" },
+      { name: "Custard Cream", strength: 0.52, porosity: 0.70, thickness: 0.80, optimal: 3.8, color: "#d8c07f" }
+    ];
+
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+    function clamp01(n){ return clamp(n, 0, 1); }
+    function logistic(x){ return 1 / (1 + Math.exp(-x)); }
+
+    function computeMetrics({temp, dunkTime, biscuit, integrity}){
+      const tempNorm = clamp01((temp - 50) / 50);
+      const integrityNorm = clamp01(integrity / 100);
+
+      const strength = biscuit.strength;
+      const porosity = biscuit.porosity;
+      const thickness = biscuit.thickness;
+
+      // Recommended dunk aims for taste (saturation) without flirting with disaster.
+      const recommended = clamp(
+        biscuit.optimal *
+          (1.03 - 0.18 * tempNorm) *
+          (0.88 + 0.26 * integrityNorm) *
+          (0.96 + 0.10 * strength),
+        0.5, MAX_TIME
+      );
+
+      // Safe time is how long you can reasonably get away with before structural failure accelerates.
+      const safeTime = clamp(
+        recommended *
+          (1.18 + 0.55 * strength) *
+          (0.86 + 0.20 * (1 - porosity)),
+        0.6, MAX_TIME
+      );
+
+      const spread = 0.75 + (1 - strength) * 1.9 + porosity * 0.95 + thickness * 0.35;
+      const k = 2.55 + tempNorm * 1.35 + (1 - strength) * 0.65;
+
+      const risk = clamp01(logistic(((dunkTime - safeTime) / spread) * k));
+
+      const soakRate = (0.60 + 0.95 * tempNorm) * (0.70 + porosity) / (0.95 + thickness);
+      const saturation = clamp01(1 - Math.exp(-dunkTime * soakRate / 4.2));
+
+      let score = (1 - risk) * 72 + saturation * 28;
+      const under = clamp01((recommended * 0.45 - dunkTime) / (recommended * 0.45));
+      score = clamp(score - under * 12, 0, 100);
+
+      let verdict;
+      if (risk > 0.82) verdict = "Catastrophic crumble imminent";
+      else if (risk > 0.62) verdict = "High crumble risk";
+      else if (risk > 0.38) verdict = "Proceed with caution";
+      else verdict = "Solid dunk window";
+
+      return { tempNorm, integrityNorm, risk, saturation, score, recommended, safeTime, verdict };
+    }
+
+    function fmt(n, digits=1){ return Number.isFinite(n) ? n.toFixed(digits) : "—"; }
+
+    function hueForRisk(r){
+      if (r < 0.38) return "var(--good)";
+      if (r < 0.62) return "var(--warn)";
+      return "var(--bad)";
+    }
+
+    function CupSVG({teaTint="#a16207"}){
+      return (
+        <svg className="cupSvg" viewBox="0 0 360 260" aria-hidden="true">
+          <defs>
+            <linearGradient id="cupG" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor="rgba(255,255,255,.30)"/>
+              <stop offset="1" stopColor="rgba(255,255,255,.08)"/>
+            </linearGradient>
+            <linearGradient id="teaG" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor="rgba(245, 158, 11, .62)"/>
+              <stop offset="1" stopColor="rgba(120, 53, 15, .68)"/>
+            </linearGradient>
+            <clipPath id="cupClip">
+              <path d="M86 82c0 60 20 120 94 120s94-60 94-120c0-10-8-18-18-18H104c-10 0-18 8-18 18z" />
+            </clipPath>
+          </defs>
+
+          <g className="cupBob">
+            {/* saucer */}
+            <ellipse cx="180" cy="220" rx="128" ry="20" fill="rgba(0,0,0,.22)"/>
+            <ellipse cx="180" cy="218" rx="110" ry="14" fill="rgba(255,255,255,.08)"/>
+
+            {/* cup body */}
+            <path d="M86 82c0 60 20 120 94 120s94-60 94-120c0-10-8-18-18-18H104c-10 0-18 8-18 18z"
+              fill="url(#cupG)" stroke="rgba(255,255,255,.22)" strokeWidth="2"/>
+
+            {/* tea */}
+            <g clipPath="url(#cupClip)">
+              <rect x="86" y="104" width="188" height="98" fill="url(#teaG)" opacity=".90"/>
+              <path d="M86 110c18 10 40 8 58 0s40-10 68 0 50 10 62 0v16H86z" fill="rgba(0,0,0,.12)" opacity=".55"/>
+              <path d="M86 104h188v10c-24 10-48 6-72 0-26-6-44-6-68 0s-36 8-48 0z" fill="rgba(255,255,255,.10)" opacity=".55"/>
+            </g>
+
+            {/* rim */}
+            <path d="M104 64h152c10 0 18 8 18 18v0c0 10-8 18-18 18H104c-10 0-18-8-18-18v0c0-10 8-18 18-18z"
+              fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.18)" strokeWidth="2"/>
+
+            {/* handle */}
+            <path d="M274 96c22 0 44 14 44 40s-22 40-44 40" fill="none" stroke="rgba(255,255,255,.22)" strokeWidth="12" strokeLinecap="round"/>
+            <path d="M274 110c15 0 30 10 30 26s-15 26-30 26" fill="none" stroke="rgba(0,0,0,.12)" strokeWidth="8" strokeLinecap="round"/>
+
+            {/* highlight */}
+            <path d="M118 84c0 46 14 102 62 110" fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="6" strokeLinecap="round" opacity=".55"/>
+          </g>
+        </svg>
+      );
+    }
+
+    function CrumbleGraph({temp, dunkTime, biscuit, integrity, metrics}){
+      const width = 360, height = 170;
+      const pad = 16;
+      const innerW = width - pad*2;
+      const innerH = height - pad*2;
+
+      const points = useMemo(() => {
+        const arr = [];
+        const samples = 72;
+        for(let i=0;i<=samples;i++){
+          const t = (i/samples) * MAX_TIME;
+          const m = computeMetrics({temp, dunkTime: t, biscuit, integrity});
+          arr.push({t, r: m.risk});
+        }
+        return arr;
+      }, [temp, biscuit, integrity]);
+
+      const path = useMemo(() => {
+        const toX = t => pad + (t / MAX_TIME) * innerW;
+        const toY = r => pad + (1 - r) * innerH;
+
+        let d = "";
+        for(let i=0;i<points.length;i++){
+          const p = points[i];
+          const x = toX(p.t), y = toY(p.r);
+          d += (i===0 ? `M ${x.toFixed(2)} ${y.toFixed(2)}` : ` L ${x.toFixed(2)} ${y.toFixed(2)}`);
+        }
+        return d;
+      }, [points]);
+
+      const area = useMemo(() => {
+        const toX = t => pad + (t / MAX_TIME) * innerW;
+        const toY = r => pad + (1 - r) * innerH;
+
+        let d = "";
+        for(let i=0;i<points.length;i++){
+          const p = points[i];
+          const x = toX(p.t), y = toY(p.r);
+          d += (i===0 ? `M ${x.toFixed(2)} ${y.toFixed(2)}` : ` L ${x.toFixed(2)} ${y.toFixed(2)}`);
+        }
+        d += ` L ${(pad+innerW).toFixed(2)} ${(pad+innerH).toFixed(2)}`;
+        d += ` L ${pad.toFixed(2)} ${(pad+innerH).toFixed(2)} Z`;
+        return d;
+      }, [points]);
+
+      const xSafe = pad + (metrics.safeTime / MAX_TIME) * innerW;
+      const xNow  = pad + (dunkTime / MAX_TIME) * innerW;
+      const yNow  = pad + (1 - metrics.risk) * innerH;
+
+      return (
+        <div className="graphBox">
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"baseline", gap: 10}}>
+            <div>
+              <div style={{fontSize: 12, color: "var(--muted)", letterSpacing: ".15px"}}>Crumble‑o‑meter</div>
+              <div style={{marginTop: 4, display:"flex", alignItems:"center", gap: 10, flexWrap:"wrap"}}>
+                <span className="pill">
+                  <span className="dot" style={{background: hueForRisk(metrics.risk), boxShadow: `0 0 0 4px rgba(255,255,255,.10)`}}></span>
+                  <span><strong style={{color:"var(--fg)", fontWeight: 750}}>{Math.round(metrics.risk*100)}%</strong> crumble risk</span>
+                </span>
+                <span className="pill">
+                  <span style={{color:"var(--muted)"}}>safe‑ish</span>
+                  <span style={{fontFamily:"var(--mono)", color:"var(--fg)"}}>{fmt(metrics.safeTime,1)}s</span>
+                </span>
+              </div>
+            </div>
+            <div className="pill" title="Verdict">
+              <span style={{color:"var(--muted)"}}>verdict</span>
+              <span style={{color:"var(--fg)", fontWeight: 700}}>{metrics.verdict}</span>
+            </div>
+          </div>
+
+          <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="190" style={{marginTop: 10, display:"block"}}>
+            <defs>
+              <linearGradient id="riskFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stopColor="rgba(239,68,68,.22)"/>
+                <stop offset=".55" stopColor="rgba(245,158,11,.16)"/>
+                <stop offset="1" stopColor="rgba(34,197,94,.06)"/>
+              </linearGradient>
+              <linearGradient id="riskLine" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stopColor="rgba(34,197,94,.95)"/>
+                <stop offset=".55" stopColor="rgba(245,158,11,.95)"/>
+                <stop offset="1" stopColor="rgba(239,68,68,.95)"/>
+              </linearGradient>
+            </defs>
+
+            {/* grid */}
+            {[0,.25,.5,.75,1].map((f, idx) => {
+              const y = pad + (1 - f) * innerH;
+              return <line key={idx} x1={pad} y1={y} x2={pad+innerW} y2={y} stroke="rgba(255,255,255,.10)" strokeWidth="1" />;
+            })}
+            {[0,3,6,9,12].map((t, idx) => {
+              const x = pad + (t / MAX_TIME) * innerW;
+              return <line key={idx} x1={x} y1={pad} x2={x} y2={pad+innerH} stroke="rgba(255,255,255,.06)" strokeWidth="1" />;
+            })}
+
+            <path d={area} fill="url(#riskFill)" opacity=".85"/>
+            <path d={path} fill="none" stroke="url(#riskLine)" strokeWidth="3" strokeLinecap="round"/>
+
+            {/* safe marker */}
+            <line x1={xSafe} y1={pad} x2={xSafe} y2={pad+innerH} stroke="rgba(125,211,252,.55)" strokeWidth="2" strokeDasharray="4 6"/>
+            <text x={xSafe + 6} y={pad + 12} fill="rgba(125,211,252,.85)" fontSize="11" fontFamily="var(--mono)">safe</text>
+
+            {/* now marker */}
+            <line x1={xNow} y1={pad} x2={xNow} y2={pad+innerH} stroke="rgba(255,255,255,.34)" strokeWidth="1.5" strokeDasharray="2 6"/>
+            <circle cx={xNow} cy={yNow} r="6" fill={hueForRisk(metrics.risk)} stroke="rgba(255,255,255,.35)" strokeWidth="2"/>
+            <text x={xNow + 8} y={yNow - 8} fill="rgba(255,255,255,.80)" fontSize="11" fontFamily="var(--mono)">{fmt(dunkTime,1)}s</text>
+
+            {/* axes labels */}
+            <text x={pad} y={height-6} fill="rgba(255,255,255,.55)" fontSize="11" fontFamily="var(--mono)">0s</text>
+            <text x={pad+innerW-20} y={height-6} fill="rgba(255,255,255,.55)" fontSize="11" fontFamily="var(--mono)">12s</text>
+          </svg>
+
+          <div className="bar" aria-hidden="true" title="Risk gradient">
+            <i style={{width: `${Math.round(metrics.risk*100)}%`}}></i>
+          </div>
+        </div>
+      );
+    }
+
+    function HelpModal({onClose, biscuitCount}){
+      useEffect(() => {
+        const onKey = (e) => {
+          if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+      }, [onClose]);
+
+      return (
+        <div className="modalBackdrop" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+          <div className="modal glass">
+            <div className="modalHeader">
+              <div>
+                <h3>Keyboard shortcuts</h3>
+                <div className="sub">Tip: don’t dunk with <span className="kbd">?</span> held down.</div>
+              </div>
+              <button className="btn" onClick={onClose} aria-label="Close shortcuts">
+                Close <span className="kbd">Esc</span>
+              </button>
+            </div>
+
+            <ul className="list">
+              <li className="li"><span>Toggle dark mode</span><span className="kbd">D</span></li>
+              <li className="li"><span>Show / hide shortcuts</span><span className="kbd">?</span></li>
+              <li className="li"><span>Toggle auto‑dunk loop</span><span className="kbd">Space</span></li>
+              <li className="li"><span>Randomize settings</span><span className="kbd">R</span></li>
+              <li className="li"><span>Tea temp ±</span><span><span className="kbd">↑</span> <span className="kbd">↓</span></span></li>
+              <li className="li"><span>Dunk time ±</span><span><span className="kbd">→</span> <span className="kbd">←</span></span></li>
+              <li className="li"><span>Structural integrity ±</span><span><span className="kbd">]</span> <span className="kbd">[</span></span></li>
+              <li className="li"><span>Cycle biscuit</span><span className="kbd">B</span></li>
+              <li className="li"><span>Pick biscuit</span><span className="kbd">1…{Math.min(9, biscuitCount)}</span></li>
+            </ul>
+
+            <div className="sub" style={{marginTop: 12}}>
+              Range inputs still work normally when focused. Shortcuts are ignored while typing into a control.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App(){
+      const getInitialDark = () => {
+        try{
+          const saved = localStorage.getItem("teaDunk.theme");
+          if (saved === "dark") return true;
+          if (saved === "light") return false;
+        }catch(e){}
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      };
+
+      const [dark, setDark] = useState(getInitialDark);
+      const [autoDunk, setAutoDunk] = useState(true);
+
+      const [temp, setTemp] = useState(84);
+      const [dunkTime, setDunkTime] = useState(4.0);
+      const [biscuitIndex, setBiscuitIndex] = useState(1);
+      const [integrity, setIntegrity] = useState(86);
+
+      const [showHelp, setShowHelp] = useState(false);
+      const [crumbs, setCrumbs] = useState([]);
+      const crumbIdRef = useRef(0);
+
+      const biscuit = BISCUITS[biscuitIndex];
+
+      const metrics = useMemo(() => computeMetrics({temp, dunkTime, biscuit, integrity}), [temp, dunkTime, biscuit, integrity]);
+
+      useEffect(() => {
+        const body = document.body;
+        body.classList.toggle("light", !dark);
+        try{
+          localStorage.setItem("teaDunk.theme", dark ? "dark" : "light");
+        }catch(e){}
+      }, [dark]);
+
+      const removeCrumb = useCallback((id) => {
+        setCrumbs(prev => prev.filter(c => c.id !== id));
+      }, []);
+
+      const spawnCrumbs = useCallback((count, burst=false) => {
+        const base = biscuit.color;
+        // create a slightly varied crumb color by mixing with a light tone
+        const crumbColor = dark ? "rgba(245, 213, 160, .92)" : "rgba(198, 140, 78, .78)";
+        const next = [];
+        for(let i=0;i<count;i++){
+          const id = ++crumbIdRef.current;
+          const size = 3.5 + Math.random()*7.5;
+          const x = 50 + (Math.random()*34 - 17);
+          const y = 18 + Math.random()*16;
+          const dx = (Math.random()*2 - 1) * (burst ? 120 : 70);
+          const dur = (burst ? 1.0 : 1.2) + Math.random()*(burst ? 1.2 : 1.5);
+          const delay = Math.random()*(burst ? .10 : .35);
+          const rot = (Math.random()*2 - 1) * (burst ? 520 : 240);
+          next.push({id, x, y, size, dx, dur, delay, rot, color: crumbColor, base});
+        }
+        setCrumbs(prev => [...prev, ...next].slice(-200));
+      }, [biscuit.color, dark]);
+
+      // Sprinkle crumbs when over-dunking
+      useEffect(() => {
+        const intensity = Math.max(0, (metrics.risk - 0.62) / 0.38);
+        if (!autoDunk || intensity <= 0) return;
+
+        const intervalMs = Math.round(420 - intensity * 270); // 420..150
+        const n = 1 + Math.floor(intensity * 3); // 1..4
+
+        const h = setInterval(() => spawnCrumbs(n, false), intervalMs);
+        return () => clearInterval(h);
+      }, [autoDunk, metrics.risk, spawnCrumbs]);
+
+      // Burst crumbs on threshold crossings
+      const prevRisk = useRef(metrics.risk);
+      useEffect(() => {
+        const pr = prevRisk.current;
+        const nr = metrics.risk;
+        if (nr > 0.78 && pr <= 0.78) spawnCrumbs(14, true);
+        if (nr > 0.92 && pr <= 0.92) spawnCrumbs(26, true);
+        prevRisk.current = nr;
+      }, [metrics.risk, spawnCrumbs]);
+
+      // Keyboard shortcuts
+      useEffect(() => {
+        const ignoreIfTyping = (target) => {
+          if (!target) return false;
+          const tag = (target.tagName || "").toLowerCase();
+          return tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable;
+        };
+
+        const onKey = (e) => {
+          if (ignoreIfTyping(e.target) && e.key !== "Escape") return;
+
+          const k = e.key;
+          if (k === "?" || (k === "/" && e.shiftKey)){
+            e.preventDefault();
+            setShowHelp(v => !v);
+            return;
+          }
+          if (k === "Escape"){
+            setShowHelp(false);
+            return;
+          }
+          if (k === "d" || k === "D"){
+            e.preventDefault();
+            setDark(v => !v);
+            return;
+          }
+          if (k === " "){
+            e.preventDefault();
+            setAutoDunk(v => !v);
+            return;
+          }
+          if (k === "b" || k === "B"){
+            e.preventDefault();
+            setBiscuitIndex(i => (i + 1) % BISCUITS.length);
+            return;
+          }
+          if (k === "r" || k === "R"){
+            e.preventDefault();
+            setTemp(60 + Math.round(Math.random()*40));
+            setDunkTime(Math.round((Math.random()*MAX_TIME) * 10)/10);
+            setIntegrity(40 + Math.round(Math.random()*60));
+            setBiscuitIndex(Math.floor(Math.random()*BISCUITS.length));
+            return;
+          }
+
+          if (k >= "1" && k <= "9"){
+            const idx = Number(k) - 1;
+            if (idx < BISCUITS.length){
+              e.preventDefault();
+              setBiscuitIndex(idx);
+            }
+            return;
+          }
+
+          const big = e.shiftKey ? 5 : 1;
+          if (k === "ArrowUp"){
+            e.preventDefault();
+            setTemp(t => clamp(t + big, 50, 100));
+            return;
+          }
+          if (k === "ArrowDown"){
+            e.preventDefault();
+            setTemp(t => clamp(t - big, 50, 100));
+            return;
+          }
+          if (k === "ArrowRight"){
+            e.preventDefault();
+            setDunkTime(s => clamp(Math.round((s + (e.shiftKey ? 1 : 0.2))*10)/10, 0, MAX_TIME));
+            return;
+          }
+          if (k === "ArrowLeft"){
+            e.preventDefault();
+            setDunkTime(s => clamp(Math.round((s - (e.shiftKey ? 1 : 0.2))*10)/10, 0, MAX_TIME));
+            return;
+          }
+          if (k === "]"){
+            e.preventDefault();
+            setIntegrity(v => clamp(v + (e.shiftKey ? 8 : 2), 10, 100));
+            return;
+          }
+          if (k === "["){
+            e.preventDefault();
+            setIntegrity(v => clamp(v - (e.shiftKey ? 8 : 2), 10, 100));
+            return;
+          }
+        };
+
+        window.addEventListener("keydown", onKey, {passive:false});
+        return () => window.removeEventListener("keydown", onKey);
+      }, []);
+
+      // Dynamic dunk-loop keyframes based on dunk time
+      const dunkCSS = useMemo(() => {
+        const drop = 0.85;
+        const rise = 0.85;
+        const hold = Math.max(0, dunkTime);
+        const cycle = Math.max(2.2, drop + hold + rise);
+        const p1 = (drop / cycle) * 100;
+        const p2 = ((drop + hold) / cycle) * 100;
+        const depth = 98 + Math.min(42, dunkTime * 4.2);
+
+        return {
+          cycle,
+          css: `
+            @keyframes dunkLoop{
+              0%{ transform: translate(-50%, -12px) rotate(-8deg); }
+              ${p1.toFixed(3)}%{ transform: translate(-50%, ${depth.toFixed(1)}px) rotate(-3deg); }
+              ${p2.toFixed(3)}%{ transform: translate(-50%, ${depth.toFixed(1)}px) rotate(-3deg); }
+              100%{ transform: translate(-50%, -12px) rotate(-8deg); }
+            }
+          `
+        };
+      }, [dunkTime]);
+
+      const riskColor = hueForRisk(metrics.risk);
+
+      return (
+        <div className="app">
+          <header className="topbar glass">
+            <div className="title">
+              <h1>Tea Dunkability Lab</h1>
+              <p>Simulate dunkability for classic biscuits: heat, time, type, and structural integrity.</p>
+            </div>
+            <div className="actions">
+              <button className="btn" onClick={() => setAutoDunk(v => !v)} aria-pressed={autoDunk} title="Toggle auto-dunk (Space)">
+                {autoDunk ? "Auto‑dunk: On" : "Auto‑dunk: Off"} <span className="kbd">Space</span>
+              </button>
+              <button className="btn" onClick={() => setDark(v => !v)} aria-pressed={dark} title="Toggle dark mode (D)">
+                {dark ? "Dark" : "Light"} <span className="kbd">D</span>
+              </button>
+              <button className="btn" onClick={() => setShowHelp(true)} title="Keyboard shortcuts (?)">
+                Shortcuts <span className="kbd">?</span>
+              </button>
+            </div>
+          </header>
+
+          <main className="grid">
+            <section className="card glass controls" aria-label="Controls">
+              <div>
+                <h2>Controls</h2>
+                <p className="sub">Adjust settings to see how close you are to The Great Biscuit Collapse.</p>
+              </div>
+
+              <div className="field">
+                <div className="fieldTop">
+                  <div className="label">Tea temperature</div>
+                  <div className="value">{temp}°C</div>
+                </div>
+                <input
+                  type="range"
+                  min="50" max="100" step="1"
+                  value={temp}
+                  onChange={(e) => setTemp(Number(e.target.value))}
+                  aria-label="Tea temperature"
+                />
+                <div className="chips">
+                  <span className="chip"><strong>↑/↓</strong> adjusts temp</span>
+                  <span className="chip">Hotter tea softens faster</span>
+                </div>
+              </div>
+
+              <div className="field">
+                <div className="fieldTop">
+                  <div className="label">Dunk time</div>
+                  <div className="value">{fmt(dunkTime,1)}s</div>
+                </div>
+                <input
+                  type="range"
+                  min="0" max={MAX_TIME} step="0.1"
+                  value={dunkTime}
+                  onChange={(e) => setDunkTime(Number(e.target.value))}
+                  aria-label="Dunk time"
+                />
+                <div className="chips">
+                  <span className="chip"><strong>←/→</strong> adjusts time</span>
+                  <span className="chip">Over‑dunks sprinkle crumbs</span>
+                </div>
+              </div>
+
+              <div className="field">
+                <div className="fieldTop">
+                  <div className="label">Biscuit type</div>
+                  <div className="value">{biscuit.name}</div>
+                </div>
+                <input
+                  type="range"
+                  min="0" max={BISCUITS.length - 1} step="1"
+                  value={biscuitIndex}
+                  onChange={(e) => setBiscuitIndex(Number(e.target.value))}
+                  aria-label="Biscuit type"
+                />
+                <div className="chips">
+                  <span className="chip"><strong>B</strong> cycles</span>
+                  <span className="chip"><strong>1…{Math.min(9, BISCUITS.length)}</strong> picks</span>
+                </div>
+              </div>
+
+              <div className="field">
+                <div className="fieldTop">
+                  <div className="label">Structural integrity</div>
+                  <div className="value">{integrity}%</div>
+                </div>
+                <input
+                  type="range"
+                  min="10" max="100" step="1"
+                  value={integrity}
+                  onChange={(e) => setIntegrity(Number(e.target.value))}
+                  aria-label="Structural integrity"
+                />
+                <div className="chips">
+                  <span className="chip"><strong>[</strong>/<strong>]</strong> adjusts integrity</span>
+                  <span className="chip">Lower = pre‑cracked peril</span>
+                </div>
+              </div>
+
+              <div className="field" style={{display:"flex", flexDirection:"row", alignItems:"center", justifyContent:"space-between", gap: 10}}>
+                <div>
+                  <div className="label">Quick actions</div>
+                  <div className="sub" style={{margin: "4px 0 0"}}>Try extremes (at your own risk).</div>
+                </div>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setTemp(60 + Math.round(Math.random()*40));
+                    setDunkTime(Math.round((Math.random()*MAX_TIME) * 10)/10);
+                    setIntegrity(40 + Math.round(Math.random()*60));
+                    setBiscuitIndex(Math.floor(Math.random()*BISCUITS.length));
+                  }}
+                  title="Randomize (R)"
+                >
+                  Randomize <span className="kbd">R</span>
+                </button>
+              </div>
+            </section>
+
+            <section className="card glass scene" aria-label="Teacup animation">
+              <div className="sceneHeader">
+                <div>
+                  <h2>Teacup loop</h2>
+                  <p className="sub">Steam rises. Biscuit descends. Physics judges.</p>
+                </div>
+
+                <div className="statusLine">
+                  <span className="pill" title="Dunkability score (higher is better)">
+                    <span className="dot" style={{background: "var(--accent)"}}></span>
+                    <span><strong style={{color:"var(--fg)", fontWeight: 760}}>{Math.round(metrics.score)}</strong>/100 dunkability</span>
+                  </span>
+                  <span className="pill" title="Current crumble risk">
+                    <span className="dot" style={{background: riskColor}}></span>
+                    <span><strong style={{color:"var(--fg)", fontWeight: 760}}>{Math.round(metrics.risk*100)}%</strong> risk</span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="cupStage">
+                <style>{dunkCSS.css}</style>
+
+                <div className="cupWrap">
+                  <span className="steam s1"></span>
+                  <span className="steam s2"></span>
+                  <span className="steam s3"></span>
+
+                  <CupSVG />
+
+                  <div
+                    className={"biscuit" + (autoDunk ? " auto" : "") + (metrics.risk > 0.70 ? " stressed" : "")}
+                    style={{
+                      "--biscuitColor": biscuit.color,
+                      animationDuration: `${dunkCSS.cycle}s`,
+                      borderColor: dark ? "rgba(255,255,255,.16)" : "rgba(10,16,26,.10)"
+                    }}
+                    aria-hidden="true"
+                    title={biscuit.name}
+                  ></div>
+
+                  <div className="crumbLayer" aria-hidden="true">
+                    {crumbs.map(c => (
+                      <span
+                        key={c.id}
+                        className="crumb"
+                        style={{
+                          left: `${c.x}%`,
+                          top: `${c.y}%`,
+                          width: `${c.size}px`,
+                          height: `${Math.max(2.5, c.size*0.7)}px`,
+                          "--dx": `${c.dx}px`,
+                          "--rot": `${c.rot}deg`,
+                          background: c.color,
+                          animationDuration: `${c.dur}s`,
+                          animationDelay: `${c.delay}s`
+                        }}
+                        onAnimationEnd={() => removeCrumb(c.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="chips" style={{marginTop: 12}}>
+                <span className="chip">Recommended: <strong>{fmt(metrics.recommended,1)}s</strong></span>
+                <span className="chip">Safe‑ish: <strong>{fmt(metrics.safeTime,1)}s</strong></span>
+                <span className="chip">Saturation: <strong>{Math.round(metrics.saturation*100)}%</strong></span>
+              </div>
+            </section>
+
+            <section className="card glass graph" aria-label="Crumble graph and stats">
+              <div>
+                <h2>Readout</h2>
+                <p className="sub">Risk curve shifts with heat, biscuit type, and integrity.</p>
+              </div>
+
+              <CrumbleGraph
+                temp={temp}
+                dunkTime={dunkTime}
+                biscuit={biscuit}
+                integrity={integrity}
+                metrics={metrics}
+              />
+
+              <div className="metricGrid" role="list">
+                <div className="metric" role="listitem">
+                  <p className="k">Biscuit</p>
+                  <p className="v">{biscuit.name}</p>
+                  <p className="hint">Strength: {Math.round(biscuit.strength*100)} · Porosity: {Math.round(biscuit.porosity*100)}</p>
+                </div>
+
+                <div className="metric" role="listitem">
+                  <p className="k">Dunk window</p>
+                  <p className="v">{fmt(metrics.recommended,1)}s → {fmt(metrics.safeTime,1)}s</p>
+                  <p className="hint">Aim for recommended; exceed safe‑ish and crumbs start voting.</p>
+                </div>
+
+                <div className="metric" role="listitem">
+                  <p className="k">Crumble risk</p>
+                  <p className="v" style={{color: riskColor}}>{Math.round(metrics.risk*100)}%</p>
+                  <p className="hint">Higher tea temp and longer dunk time push this up.</p>
+                </div>
+
+                <div className="metric" role="listitem">
+                  <p className="k">Dunkability score</p>
+                  <p className="v">{Math.round(metrics.score)}/100</p>
+                  <p className="hint">Balance of saturation vs structural survival.</p>
+                </div>
+              </div>
+            </section>
+          </main>
+
+          <footer className="footer glass">
+            <div>Shortcuts: <span className="kbd">?</span> help, <span className="kbd">D</span> dark mode, <span className="kbd">Space</span> auto‑dunk, <span className="kbd">B</span> biscuit.</div>
+            <div>Model is a playful approximation, not a guarantee against tea tragedies.</div>
+          </footer>
+
+          {showHelp && <HelpModal onClose={() => setShowHelp(false)} biscuitCount={BISCUITS.length} />}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1692 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>GRIDFORGE — Brutalist Dev Platform</title>
+  <meta name="description" content="A brutalist, monochrome developer platform landing page: terminal-first API, code snippets, pricing, and signup." />
+  <style>
+    :root{
+      --bg: #f7f7f7;
+      --fg: #0b0b0b;
+      --muted: rgba(11,11,11,.72);
+      --faint: rgba(11,11,11,.12);
+      --line: #0b0b0b;
+      --shadow: none;
+
+      --gap: 16px;
+      --pad: 24px;
+      --row: 32px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    html[data-theme="dark"]{
+      --bg: #0b0b0b;
+      --fg: #f7f7f7;
+      --muted: rgba(247,247,247,.72);
+      --faint: rgba(247,247,247,.12);
+      --line: #f7f7f7;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--fg);
+      background: var(--bg);
+      font-family: var(--sans);
+      line-height: 1.1;
+
+      background-image:
+        linear-gradient(to right, var(--faint) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--faint) 1px, transparent 1px);
+      background-size: calc(100%/12) 100%, 100% var(--row);
+      background-position: 0 0, 0 0;
+      background-repeat: repeat;
+      text-rendering: geometricPrecision;
+    }
+
+    a{ color:inherit; text-decoration:none; border-bottom: 2px solid var(--fg); }
+    a:hover, a:focus-visible{ background: var(--fg); color: var(--bg); outline: none; }
+    :focus-visible{ outline: 3px solid var(--fg); outline-offset: 2px; }
+
+    .skip{
+      position:absolute;
+      left:-9999px;
+      top:8px;
+      padding:10px 12px;
+      border:2px solid var(--line);
+      background: var(--bg);
+      z-index: 1000;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 12px;
+    }
+    .skip:focus{ left: 8px; }
+
+    .topbar{
+      position: sticky;
+      top:0;
+      z-index: 50;
+      background: color-mix(in oklab, var(--bg), transparent 10%);
+      backdrop-filter: blur(6px);
+      border-bottom: 2px solid var(--line);
+    }
+    .container{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--pad);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--gap);
+      align-items: start;
+    }
+
+    .nav{
+      padding: 14px 0;
+      display:flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      border-bottom:0;
+    }
+    .brandMark{
+      width: 44px;
+      height: 44px;
+      border:2px solid var(--line);
+      display:grid;
+      place-items:center;
+    }
+    .brandWord{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .brandWord strong{
+      font-family: var(--mono);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+    .brandWord span{
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .navLinks{
+      display:flex;
+      gap: 16px;
+      align-items:center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .navLinks a{
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      border-bottom: 2px solid transparent;
+      padding: 8px 6px;
+    }
+    .navLinks a:hover, .navLinks a:focus-visible{
+      border-bottom-color: var(--fg);
+      background: transparent;
+      color: inherit;
+    }
+
+    .section{
+      border-bottom: 2px solid var(--line);
+    }
+    .sectionInner{
+      padding: 44px 0;
+    }
+
+    .kicker{
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 12px 0;
+    }
+    h1, h2, h3{ margin:0; font-weight: 800; }
+    h2{
+      font-size: clamp(28px, 3.2vw, 44px);
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+    }
+
+    .hero{
+      position: relative;
+      overflow: clip;
+      border-bottom: 2px solid var(--line);
+    }
+    .hero .sectionInner{ padding: 56px 0 52px; }
+    .heroContent{ position: relative; z-index: 2; }
+    .heroTitle{
+      font-size: clamp(44px, 6.2vw, 96px);
+      letter-spacing: -0.06em;
+      text-transform: uppercase;
+      line-height: .92;
+    }
+    .heroSub{
+      margin-top: 16px;
+      font-size: clamp(16px, 1.8vw, 20px);
+      color: var(--muted);
+      max-width: 52ch;
+      line-height: 1.25;
+    }
+    .heroMeta{
+      margin-top: 18px;
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+    .heroCTAs{
+      margin-top: 22px;
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn{
+      appearance:none;
+      border:2px solid var(--line);
+      background: transparent;
+      color: var(--fg);
+      padding: 12px 14px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-weight: 800;
+      font-size: 12px;
+      border-radius: 0;
+      cursor: pointer;
+      line-height: 1;
+      display:inline-flex;
+      gap: 10px;
+      align-items:center;
+      user-select: none;
+    }
+    .btn:hover, .btn:focus-visible{
+      background: var(--fg);
+      color: var(--bg);
+      outline: none;
+    }
+    .btn.primary{
+      background: var(--fg);
+      color: var(--bg);
+    }
+    .btn.primary:hover, .btn.primary:focus-visible{
+      background: transparent;
+      color: var(--fg);
+    }
+    .btn .btnIcon{
+      width: 14px;
+      height: 14px;
+      display:inline-block;
+    }
+
+    .terminalBg{
+      position:absolute;
+      inset: 16px;
+      z-index: 1;
+      pointer-events:none;
+      opacity: .17;
+      border: 2px solid var(--line);
+      background: transparent;
+      display:flex;
+      flex-direction: column;
+    }
+    .terminalBar{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 2px solid var(--line);
+      padding: 10px 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      color: var(--muted);
+    }
+    .terminalDots{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+    }
+    .dot{
+      width: 10px;
+      height: 10px;
+      border: 2px solid var(--line);
+      background: transparent;
+    }
+    .terminalBody{
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow:hidden;
+      flex: 1;
+      min-height: 260px;
+    }
+    .termCursor{
+      display:inline-block;
+      width: 10px;
+      height: 14px;
+      border: 2px solid var(--line);
+      vertical-align: -2px;
+      margin-left: 2px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .heroAside{
+      border: 2px solid var(--line);
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.4;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      background: color-mix(in oklab, var(--bg), transparent 0%);
+    }
+    .heroAside b{
+      color: var(--fg);
+      font-weight: 900;
+    }
+    .heroAside ul{
+      margin: 12px 0 0 0;
+      padding-left: 18px;
+    }
+    .heroAside li{ margin: 8px 0; }
+
+    .proofHeader{
+      display:flex;
+      align-items:flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      border: 2px solid var(--line);
+      padding: 10px 12px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      font-size: 12px;
+      user-select: none;
+    }
+    .toggle input{
+      width: 18px;
+      height: 18px;
+      accent-color: var(--fg);
+    }
+
+    .logoWall{
+      border: 2px solid var(--line);
+      padding: 14px;
+    }
+    .logos{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 12px;
+      align-items: center;
+    }
+    .logo{
+      grid-column: span 3;
+      border: 2px solid var(--line);
+      padding: 10px;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-height: 56px;
+    }
+    .logo svg{
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+    }
+    .logo .name{
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .featuresGrid{
+      margin-top: 18px;
+    }
+    .card{
+      border: 2px solid var(--line);
+      padding: 14px;
+      background: transparent;
+      display:flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 360px;
+    }
+    .cardHeader h3{
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+    .cardHeader p{
+      margin: 8px 0 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.3;
+      max-width: 50ch;
+    }
+
+    .tabs{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-top: 2px solid var(--line);
+      padding-top: 12px;
+    }
+    .tab{
+      border: 2px solid var(--line);
+      background: transparent;
+      color: var(--fg);
+      padding: 8px 10px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .tab[aria-selected="true"]{
+      background: var(--fg);
+      color: var(--bg);
+    }
+
+    .codeBlock{
+      position: relative;
+      border: 2px solid var(--line);
+      padding: 12px;
+      background: transparent;
+      flex: 1;
+      min-height: 190px;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    pre{
+      margin:0;
+      overflow:auto;
+      padding: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre;
+    }
+    code{ font-family: inherit; }
+    .codeTop{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--line);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+    }
+    .copyBtn{
+      position: relative;
+      border: 2px solid var(--line);
+      background: transparent;
+      color: var(--fg);
+      padding: 8px 10px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .copyBtn:hover, .copyBtn:focus-visible{
+      background: var(--fg);
+      color: var(--bg);
+      outline: none;
+    }
+    .tip{
+      position: absolute;
+      right: 10px;
+      top: -34px;
+      border: 2px solid var(--line);
+      background: var(--bg);
+      color: var(--fg);
+      padding: 6px 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity .16s linear, transform .16s linear;
+      pointer-events:none;
+      white-space: nowrap;
+    }
+    .tip.show{ opacity: 1; transform: translateY(0); }
+
+    .pricingWrap{
+      border: 2px solid var(--line);
+      overflow: auto;
+      max-height: 520px;
+      background: transparent;
+    }
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 860px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .02em;
+    }
+    thead th{
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--bg);
+      border-bottom: 2px solid var(--line);
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      font-size: 11px;
+    }
+    th, td{
+      border-right: 2px solid var(--line);
+      border-bottom: 2px solid var(--line);
+      padding: 12px 10px;
+      vertical-align: top;
+    }
+    tr > *:last-child{ border-right: 0; }
+    tbody th{
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      font-size: 11px;
+      width: 30%;
+    }
+    .planHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .planName{
+      font-weight: 900;
+      color: var(--fg);
+      font-size: 12px;
+    }
+    .planPrice{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+    .cellCta .btn{
+      padding: 10px 12px;
+      font-size: 11px;
+    }
+    .muted{ color: var(--muted); }
+
+    .footer{
+      border-top: 0;
+    }
+    .footerGrid{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0,1fr));
+      gap: var(--gap);
+      padding: 36px 0;
+    }
+    .footCol{
+      border: 2px solid var(--line);
+      padding: 14px;
+    }
+    .footTitle{
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 12px;
+      margin: 0 0 12px 0;
+    }
+    .footLinks{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .footLinks a{
+      border-bottom: 2px solid transparent;
+      padding: 6px 6px;
+      display:inline-block;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 12px;
+    }
+    .footLinks a:hover, .footLinks a:focus-visible{
+      border-bottom-color: var(--fg);
+      background: transparent;
+      color: inherit;
+      outline: none;
+    }
+    .socialRow{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items:center;
+    }
+    .iconBtn{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      border: 2px solid var(--line);
+      padding: 10px 12px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      font-size: 11px;
+    }
+    .iconBtn svg{ width: 18px; height: 18px; }
+    .iconBtn:hover, .iconBtn:focus-visible{
+      background: var(--fg);
+      color: var(--bg);
+      outline: none;
+    }
+    .fineprint{
+      margin-top: 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .04em;
+      line-height: 1.35;
+    }
+
+    /* Cursor grid readout */
+    #cursorOverlay{
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 999;
+      pointer-events:none;
+      transform: translate(-9999px, -9999px);
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      mix-blend-mode: difference;
+    }
+    #cursorDot{
+      width: 10px;
+      height: 10px;
+      border: 2px solid #fff;
+      background: transparent;
+    }
+    #cursorLabel{
+      border: 2px solid #fff;
+      padding: 6px 8px;
+      background: transparent;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    #cornerHUD{
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      z-index: 998;
+      border: 2px solid var(--line);
+      padding: 8px 10px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11px;
+      background: color-mix(in oklab, var(--bg), transparent 0%);
+    }
+
+    /* Modal */
+    .modal{
+      position: fixed;
+      inset: 0;
+      background: color-mix(in oklab, var(--bg), transparent 20%);
+      display:none;
+      z-index: 200;
+    }
+    .modal[data-open="true"]{ display:block; }
+    .dialog{
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(720px, calc(100vw - 24px));
+      border: 2px solid var(--line);
+      background: var(--bg);
+    }
+    .dialogHead{
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--line);
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .dialogHead h3{
+      margin:0;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 14px;
+    }
+    .dialogBody{
+      padding: 14px;
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0,1fr));
+      gap: 12px;
+    }
+    .field{
+      grid-column: span 6;
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field.full{ grid-column: span 12; }
+    label{
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    input, select, textarea{
+      border: 2px solid var(--line);
+      padding: 12px 12px;
+      background: transparent;
+      color: var(--fg);
+      border-radius: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+    }
+    input:focus-visible, select:focus-visible, textarea:focus-visible{
+      outline: 3px solid var(--fg);
+      outline-offset: 2px;
+    }
+    .dialogActions{
+      grid-column: span 12;
+      display:flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items:center;
+      flex-wrap: wrap;
+      border-top: 2px solid var(--line);
+      padding-top: 12px;
+      margin-top: 4px;
+    }
+    .closeBtn{
+      border: 2px solid var(--line);
+      background: transparent;
+      color: var(--fg);
+      padding: 8px 10px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11px;
+      cursor:pointer;
+    }
+    .closeBtn:hover, .closeBtn:focus-visible{
+      background: var(--fg);
+      color: var(--bg);
+      outline: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .logo{ grid-column: span 4; }
+    }
+    @media (max-width: 820px){
+      .heroAside{ display:none; }
+      .logo{ grid-column: span 6; }
+      .card{ min-height: 340px; }
+      .field{ grid-column: span 12; }
+    }
+    @media (max-width: 560px){
+      .container{ padding: 0 16px; }
+      .hero .sectionInner{ padding: 44px 0; }
+      #cornerHUD{ display:none; }
+      #cursorOverlay{ display:none; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{ scroll-behavior: auto !important; }
+      .termCursor{ animation: none; opacity: 1; }
+      .tip{ transition: none; }
+      .terminalBg{ opacity: .12; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div id="cursorOverlay" aria-hidden="true">
+    <div id="cursorDot"></div>
+    <div id="cursorLabel">C01 R01</div>
+  </div>
+  <div id="cornerHUD" role="status" aria-live="polite">GRID: C01 R01</div>
+
+  <header class="topbar">
+    <div class="container">
+      <div class="nav" aria-label="Primary">
+        <a class="brand" href="#top" aria-label="GridForge home">
+          <span class="brandMark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+              <path d="M4 4h16v16H4z"></path>
+              <path d="M4 9h16M9 4v16"></path>
+              <path d="M9 9h11v11H9z"></path>
+            </svg>
+          </span>
+          <span class="brandWord">
+            <strong>GRIDFORGE</strong>
+            <span>API / queues / edge</span>
+          </span>
+        </a>
+
+        <nav class="navLinks" aria-label="Sections">
+          <a href="#proof">Proof</a>
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#footer">Footer</a>
+          <button class="btn" type="button" data-open-modal="true" data-plan="Free" aria-label="Open signup modal (Start free)">
+            Start free
+            <svg class="btnIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
+              <path d="M5 12h12"></path>
+              <path d="M13 6l6 6-6 6"></path>
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="section hero">
+      <div class="terminalBg" aria-hidden="true">
+        <div class="terminalBar">
+          <div class="terminalDots" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </div>
+          <div>LIVE TERMINAL · api.gridforge.dev</div>
+        </div>
+        <div class="terminalBody">
+          <span id="terminalContent"></span><span class="termCursor" id="terminalCursor" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="container sectionInner">
+        <div class="grid heroContent">
+          <div style="grid-column: span 8;">
+            <p class="kicker">Monochrome • grid-native • no fluff</p>
+            <h1 class="heroTitle">Ship an API that feels like a terminal.</h1>
+            <p class="heroSub">
+              GridForge gives you auth, events, and edge storage with a predictable schema, hard limits, and instant docs.
+            </p>
+
+            <div class="heroCTAs" aria-label="Hero calls to action">
+              <button class="btn primary" type="button" data-open-modal="true" data-plan="Free">
+                Start free
+                <svg class="btnIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
+                  <path d="M5 12h12"></path>
+                  <path d="M13 6l6 6-6 6"></path>
+                </svg>
+              </button>
+              <a class="btn" href="#features" aria-label="Jump to docs (features section)">
+                Docs
+                <svg class="btnIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges">
+                  <path d="M7 4h10v16H7z"></path>
+                  <path d="M9 8h6M9 12h6M9 16h4"></path>
+                </svg>
+              </a>
+            </div>
+
+            <div class="heroMeta" aria-label="Quick facts">
+              <span>Latency: &lt; 50ms p95</span>
+              <span>SDKs: JS · Python · cURL</span>
+              <span>Deploy: edge regions</span>
+              <span>Obs: logs · traces · audit</span>
+            </div>
+          </div>
+
+          <aside class="heroAside" style="grid-column: span 4;">
+            <b>BRUTALIST CONTRACT</b><br />
+            • explicit limits<br />
+            • explicit schemas<br />
+            • explicit pricing<br />
+            <ul>
+              <li>12-column layout</li>
+              <li>visible outlines</li>
+              <li>sharp corners</li>
+              <li>keyboard-first UI</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="proof" class="section">
+      <div class="container sectionInner">
+        <div class="proofHeader">
+          <div>
+            <p class="kicker">Proof</p>
+            <h2>Used in places that hate surprises.</h2>
+          </div>
+          <label class="toggle" for="themeToggle">
+            <input id="themeToggle" type="checkbox" />
+            <span>Invert (Light / Dark)</span>
+          </label>
+        </div>
+
+        <div class="logoWall" aria-label="Logo wall">
+          <div class="logos">
+            <div class="logo" aria-label="KERN Labs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M4 4v16"></path>
+                <path d="M4 12l8-8"></path>
+                <path d="M4 12l8 8"></path>
+                <path d="M12 12h8"></path>
+              </svg>
+              <div class="name">KERN LABS</div>
+            </div>
+
+            <div class="logo" aria-label="VOID Systems">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M12 4l8 8-8 8-8-8z"></path>
+                <path d="M12 8l4 4-4 4-4-4z"></path>
+              </svg>
+              <div class="name">VOID</div>
+            </div>
+
+            <div class="logo" aria-label="STACKR">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M6 8l6-4 6 4-6 4z"></path>
+                <path d="M6 12l6-4 6 4-6 4z"></path>
+                <path d="M6 16l6-4 6 4-6 4z"></path>
+              </svg>
+              <div class="name">STACKR</div>
+            </div>
+
+            <div class="logo" aria-label="MONO Bank">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M4 8h16"></path>
+                <path d="M6 8v12"></path>
+                <path d="M12 8v12"></path>
+                <path d="M18 8v12"></path>
+                <path d="M4 20h16"></path>
+                <path d="M12 4l10 4H2z"></path>
+              </svg>
+              <div class="name">MONO</div>
+            </div>
+
+            <div class="logo" aria-label="EDGEWORKS">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M4 7h16v10H4z"></path>
+                <path d="M8 7V5h8v2"></path>
+                <path d="M7 12h10"></path>
+              </svg>
+              <div class="name">EDGEWORKS</div>
+            </div>
+
+            <div class="logo" aria-label="TRACE CO">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M4 18V6"></path>
+                <path d="M4 18h16"></path>
+                <path d="M7 14l3-4 3 3 4-6 3 4"></path>
+              </svg>
+              <div class="name">TRACE</div>
+            </div>
+
+            <div class="logo" aria-label="QUEUE INC">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M6 6h12v12H6z"></path>
+                <path d="M8 10h8"></path>
+                <path d="M8 14h6"></path>
+              </svg>
+              <div class="name">QUEUE</div>
+            </div>
+
+            <div class="logo" aria-label="API UNION">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M6 5v10a6 6 0 0 0 12 0V5"></path>
+                <path d="M9 5v10a3 3 0 0 0 6 0V5"></path>
+              </svg>
+              <div class="name">API UNION</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="container sectionInner">
+        <p class="kicker">Features</p>
+        <h2>Three primitives. No mystery.</h2>
+
+        <div class="grid featuresGrid">
+          <article class="card" data-card="events" style="grid-column: span 4;">
+            <div class="cardHeader">
+              <h3>Events</h3>
+              <p>Ingest structured events. Get ids back. Fan-out later.</p>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Events snippet language tabs">
+              <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="events-js" id="events-tab-js">JS</button>
+              <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="events-py" id="events-tab-py" tabindex="-1">Python</button>
+              <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="events-curl" id="events-tab-curl" tabindex="-1">cURL</button>
+            </div>
+
+            <div class="codeBlock" aria-label="Events code snippet">
+              <div class="codeTop">
+                <span id="eventsLangLabel">LANG: JS</span>
+                <button class="copyBtn" type="button" data-copy="events">
+                  Copy
+                  <span class="tip" aria-hidden="true">Copied</span>
+                </button>
+              </div>
+
+              <div role="tabpanel" id="events-js" aria-labelledby="events-tab-js">
+                <pre><code>import { Gridforge } from "@gridforge/sdk";
+
+const gf = new Gridforge({ token: process.env.TOKEN });
+
+const res = await gf.events.ingest({
+  event: "build.complete",
+  meta: { sha: "a1b2c3" }
+});
+
+console.log(res.id);</code></pre>
+              </div>
+
+              <div role="tabpanel" id="events-py" aria-labelledby="events-tab-py" hidden>
+                <pre><code>import os
+from gridforge import Gridforge
+
+gf = Gridforge(token=os.environ["TOKEN"])
+
+res = gf.events.ingest(
+  event="build.complete",
+  meta={"sha": "a1b2c3"},
+)
+
+print(res["id"])</code></pre>
+              </div>
+
+              <div role="tabpanel" id="events-curl" aria-labelledby="events-tab-curl" hidden>
+                <pre><code>curl -X POST "https://api.gridforge.dev/v1/events" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"event":"build.complete","meta":{"sha":"a1b2c3"}}'</code></pre>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-card="auth" style="grid-column: span 4;">
+            <div class="cardHeader">
+              <h3>Auth</h3>
+              <p>Mint short-lived tokens. Rotate keys. Audit everything.</p>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Auth snippet language tabs">
+              <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="auth-js" id="auth-tab-js">JS</button>
+              <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="auth-py" id="auth-tab-py" tabindex="-1">Python</button>
+              <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="auth-curl" id="auth-tab-curl" tabindex="-1">cURL</button>
+            </div>
+
+            <div class="codeBlock" aria-label="Auth code snippet">
+              <div class="codeTop">
+                <span id="authLangLabel">LANG: JS</span>
+                <button class="copyBtn" type="button" data-copy="auth">
+                  Copy
+                  <span class="tip" aria-hidden="true">Copied</span>
+                </button>
+              </div>
+
+              <div role="tabpanel" id="auth-js" aria-labelledby="auth-tab-js">
+                <pre><code>import { Gridforge } from "@gridforge/sdk";
+
+const gf = new Gridforge({ token: process.env.TOKEN });
+
+const token = await gf.auth.mint({
+  subject: "user_42",
+  ttlSeconds: 900,
+  scopes: ["events:write"]
+});
+
+console.log(token.value);</code></pre>
+              </div>
+
+              <div role="tabpanel" id="auth-py" aria-labelledby="auth-tab-py" hidden>
+                <pre><code>import os
+from gridforge import Gridforge
+
+gf = Gridforge(token=os.environ["TOKEN"])
+
+token = gf.auth.mint(
+  subject="user_42",
+  ttl_seconds=900,
+  scopes=["events:write"],
+)
+
+print(token["value"])</code></pre>
+              </div>
+
+              <div role="tabpanel" id="auth-curl" aria-labelledby="auth-tab-curl" hidden>
+                <pre><code>curl -X POST "https://api.gridforge.dev/v1/auth/mint" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"subject":"user_42","ttlSeconds":900,"scopes":["events:write"]}'</code></pre>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-card="edgekv" style="grid-column: span 4;">
+            <div class="cardHeader">
+              <h3>Edge KV</h3>
+              <p>Read/write small values near users. Explicit limits. Explicit consistency.</p>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Edge KV snippet language tabs">
+              <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="kv-js" id="kv-tab-js">JS</button>
+              <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="kv-py" id="kv-tab-py" tabindex="-1">Python</button>
+              <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="kv-curl" id="kv-tab-curl" tabindex="-1">cURL</button>
+            </div>
+
+            <div class="codeBlock" aria-label="Edge KV code snippet">
+              <div class="codeTop">
+                <span id="kvLangLabel">LANG: JS</span>
+                <button class="copyBtn" type="button" data-copy="edgekv">
+                  Copy
+                  <span class="tip" aria-hidden="true">Copied</span>
+                </button>
+              </div>
+
+              <div role="tabpanel" id="kv-js" aria-labelledby="kv-tab-js">
+                <pre><code>import { Gridforge } from "@gridforge/sdk";
+
+const gf = new Gridforge({ token: process.env.TOKEN });
+
+await gf.kv.put("flags:checkout", "on", { ttlSeconds: 60 });
+
+const v = await gf.kv.get("flags:checkout");
+console.log(v);</code></pre>
+              </div>
+
+              <div role="tabpanel" id="kv-py" aria-labelledby="kv-tab-py" hidden>
+                <pre><code>import os
+from gridforge import Gridforge
+
+gf = Gridforge(token=os.environ["TOKEN"])
+
+gf.kv.put("flags:checkout", "on", ttl_seconds=60)
+
+v = gf.kv.get("flags:checkout")
+print(v)</code></pre>
+              </div>
+
+              <div role="tabpanel" id="kv-curl" aria-labelledby="kv-tab-curl" hidden>
+                <pre><code>curl -X PUT "https://api.gridforge.dev/v1/kv/flags:checkout" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"value":"on","ttlSeconds":60}'</code></pre>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="section">
+      <div class="container sectionInner">
+        <p class="kicker">Pricing</p>
+        <h2>Hard limits. Sticky header. No footnotes.</h2>
+
+        <div class="pricingWrap" aria-label="Pricing table with sticky header">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Plan</th>
+                <th scope="col">
+                  <div class="planHead">
+                    <div>
+                      <div class="planName">Free</div>
+                      <div class="planPrice">$0 · solo / prototypes</div>
+                    </div>
+                    <div class="cellCta">
+                      <button class="btn primary" type="button" data-open-modal="true" data-plan="Free">Start free</button>
+                    </div>
+                  </div>
+                </th>
+                <th scope="col">
+                  <div class="planHead">
+                    <div>
+                      <div class="planName">Pro</div>
+                      <div class="planPrice">$29 · teams shipping</div>
+                    </div>
+                    <div class="cellCta">
+                      <button class="btn primary" type="button" data-open-modal="true" data-plan="Pro">Start Pro</button>
+                    </div>
+                  </div>
+                </th>
+                <th scope="col">
+                  <div class="planHead">
+                    <div>
+                      <div class="planName">Enterprise</div>
+                      <div class="planPrice">Custom · regulated</div>
+                    </div>
+                    <div class="cellCta">
+                      <button class="btn primary" type="button" data-open-modal="true" data-plan="Enterprise">Contact</button>
+                    </div>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <th scope="row">Requests / month</th>
+                <td>100k</td>
+                <td>10M</td>
+                <td>Unlimited*</td>
+              </tr>
+              <tr>
+                <th scope="row">Projects</th>
+                <td>1</td>
+                <td>20</td>
+                <td>Unlimited</td>
+              </tr>
+              <tr>
+                <th scope="row">Environments</th>
+                <td>Dev</td>
+                <td>Dev + Staging + Prod</td>
+                <td>Custom</td>
+              </tr>
+              <tr>
+                <th scope="row">SLA</th>
+                <td class="muted">Best effort</td>
+                <td>99.9%</td>
+                <td>99.99%</td>
+              </tr>
+              <tr>
+                <th scope="row">Audit logs</th>
+                <td class="muted">—</td>
+                <td>90 days</td>
+                <td>365+ days</td>
+              </tr>
+              <tr>
+                <th scope="row">SSO (SAML/OIDC)</th>
+                <td class="muted">—</td>
+                <td class="muted">—</td>
+                <td>Included</td>
+              </tr>
+              <tr>
+                <th scope="row">Support</th>
+                <td>Community</td>
+                <td>48h</td>
+                <td>24/7</td>
+              </tr>
+              <tr>
+                <th scope="row">Data residency</th>
+                <td class="muted">—</td>
+                <td class="muted">—</td>
+                <td>EU/US/Custom</td>
+              </tr>
+              <tr>
+                <th scope="row">Signup</th>
+                <td><button class="btn" type="button" data-open-modal="true" data-plan="Free">Create workspace</button></td>
+                <td><button class="btn" type="button" data-open-modal="true" data-plan="Pro">Create workspace</button></td>
+                <td><button class="btn" type="button" data-open-modal="true" data-plan="Enterprise">Request access</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="fineprint">
+          * “Unlimited” means: contract-defined caps + predictable burst windows. We write it down. You can quote it back to us.
+        </p>
+      </div>
+    </section>
+
+    <footer id="footer" class="section footer">
+      <div class="container">
+        <div class="footerGrid" aria-label="Footer sitemap">
+          <div class="footCol" style="grid-column: span 4;">
+            <p class="footTitle">Product</p>
+            <ul class="footLinks">
+              <li><a href="#features">Overview</a></li>
+              <li><a href="#pricing">Pricing</a></li>
+              <li><a href="#proof">Customers</a></li>
+              <li><a href="#top" data-open-modal="true" data-plan="Free">Start free</a></li>
+            </ul>
+          </div>
+
+          <div class="footCol" style="grid-column: span 4;">
+            <p class="footTitle">Docs</p>
+            <ul class="footLinks">
+              <li><a href="#features">Quickstart</a></li>
+              <li><a href="#features">API reference</a></li>
+              <li><a href="#features">SDKs</a></li>
+              <li><a href="#features">Limits</a></li>
+            </ul>
+          </div>
+
+          <div class="footCol" style="grid-column: span 4;">
+            <p class="footTitle">Social</p>
+            <div class="socialRow" aria-label="Social links">
+              <a class="iconBtn" href="#top" aria-label="GitHub (placeholder)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                  <path d="M9 19c-4 1.5-4-2-5-2"></path>
+                  <path d="M14 21v-3.5c0-1 .2-1.7.6-2.2"></path>
+                  <path d="M19 15.3c.9-.2 1.8-.6 1.8-3.2 0-.7-.2-1.3-.7-1.9.1-.2.3-1-.1-2.1 0 0-.6-.2-2 .7-.6-.2-1.4-.3-2.3-.3s-1.7.1-2.3.3c-1.4-.9-2-.7-2-.7-.4 1.1-.2 1.9-.1 2.1-.5.6-.7 1.2-.7 1.9 0 2.6.9 3 1.8 3.2"></path>
+                  <path d="M12 3c-4.4 0-8 3.6-8 8 0 3.5 2.3 6.5 5.5 7.6"></path>
+                </svg>
+                GitHub
+              </a>
+
+              <a class="iconBtn" href="#top" aria-label="X (placeholder)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                  <path d="M5 5l14 14"></path>
+                  <path d="M19 5L5 19"></path>
+                </svg>
+                X
+              </a>
+
+              <a class="iconBtn" href="#top" aria-label="Discord (placeholder)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" shape-rendering="crispEdges" aria-hidden="true">
+                  <path d="M7 17c2 1.2 8 1.2 10 0"></path>
+                  <path d="M8 18l-1 3"></path>
+                  <path d="M16 18l1 3"></path>
+                  <path d="M8 7c2-1 6-1 8 0"></path>
+                  <path d="M6 16c-1-3-1-5 0-8 3-2 9-2 12 0 1 3 1 5 0 8-3 2-9 2-12 0z"></path>
+                  <path d="M10 12h0"></path>
+                  <path d="M14 12h0"></path>
+                </svg>
+                Discord
+              </a>
+            </div>
+
+            <p class="fineprint">
+              Keyboard: Tab through sitemap + buttons. Tabs: ←/→ changes language. ESC closes modal.
+            </p>
+          </div>
+        </div>
+
+        <div class="sectionInner" style="padding: 0 0 36px;">
+          <div style="border:2px solid var(--line); padding: 12px 14px; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted);">
+            © <span id="year"></span> GridForge. Monochrome by design. Grid by force.
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <div class="modal" id="signupModal" data-open="false" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
+      <div class="dialogHead">
+        <h3 id="signupTitle">Signup — Create Workspace</h3>
+        <button class="closeBtn" type="button" data-close-modal="true" aria-label="Close signup modal">Close</button>
+      </div>
+
+      <form class="dialogBody" id="signupForm">
+        <div class="field">
+          <label for="plan">Plan</label>
+          <select id="plan" name="plan">
+            <option>Free</option>
+            <option>Pro</option>
+            <option>Enterprise</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="team">Team size</label>
+          <select id="team" name="team">
+            <option>1</option>
+            <option>2–5</option>
+            <option>6–25</option>
+            <option>26–100</option>
+            <option>100+</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@company.dev" />
+        </div>
+
+        <div class="field full">
+          <label for="workspace">Workspace</label>
+          <input id="workspace" name="workspace" type="text" autocomplete="organization" required placeholder="brutal-labs" />
+        </div>
+
+        <div class="dialogActions">
+          <div class="muted" style="font-family: var(--mono); text-transform: uppercase; letter-spacing: .10em; font-size: 11px;">
+            No credit card for Free. Hard limits visible.
+          </div>
+          <div style="display:flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn" type="button" data-close-modal="true">Cancel</button>
+            <button class="btn primary" type="submit">Create</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const $ = (s, r=document) => r.querySelector(s);
+      const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+      // Year
+      const y = $("#year");
+      if (y) y.textContent = String(new Date().getFullYear());
+
+      // Theme toggle (invert)
+      const themeToggle = $("#themeToggle");
+      const root = document.documentElement;
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const stored = localStorage.getItem("gf_theme");
+      const initial = stored || (prefersDark ? "dark" : "light");
+      root.setAttribute("data-theme", initial);
+      if (themeToggle) themeToggle.checked = (initial === "dark");
+
+      function setTheme(next){
+        root.setAttribute("data-theme", next);
+        localStorage.setItem("gf_theme", next);
+      }
+      themeToggle && themeToggle.addEventListener("change", () => setTheme(themeToggle.checked ? "dark" : "light"));
+
+      // Cursor readout
+      const cursorOverlay = $("#cursorOverlay");
+      const cursorLabel = $("#cursorLabel");
+      const cornerHUD = $("#cornerHUD");
+
+      const rowH = () => {
+        const v = getComputedStyle(document.documentElement).getPropertyValue("--row").trim();
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? n : 32;
+      };
+
+      let mx = 0, my = 0, raf = 0;
+      function calcReadout(x, y){
+        const w = Math.max(1, window.innerWidth);
+        const col = Math.min(12, Math.max(1, Math.floor((x / w) * 12) + 1));
+        const rH = rowH();
+        const row = Math.max(1, Math.floor(y / rH) + 1);
+        return { col, row };
+      }
+      function paintCursor(){
+        raf = 0;
+        if (!cursorOverlay || !cursorLabel) return;
+        const { col, row } = calcReadout(mx, my);
+        cursorOverlay.style.transform = `translate(${mx + 14}px, ${my + 14}px)`;
+        const txt = `C${String(col).padStart(2,"0")} R${String(row).padStart(2,"0")}`;
+        cursorLabel.textContent = txt;
+        if (cornerHUD) cornerHUD.textContent = `GRID: ${txt}`;
+      }
+
+      const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+      if (!coarse){
+        window.addEventListener("mousemove", (e) => {
+          mx = e.clientX; my = e.clientY;
+          if (!raf) raf = requestAnimationFrame(paintCursor);
+        }, { passive: true });
+
+        window.addEventListener("mouseleave", () => {
+          if (cursorOverlay) cursorOverlay.style.transform = "translate(-9999px, -9999px)";
+        });
+      } else {
+        if (cursorOverlay) cursorOverlay.style.display = "none";
+      }
+
+      // Terminal typing demo
+      const terminalContent = $("#terminalContent");
+      const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const demo = [
+        "$ curl -sS https://api.gridforge.dev/v1/events \\",
+        "  -H \"Authorization: Bearer $TOKEN\" \\",
+        "  -H \"Content-Type: application/json\" \\",
+        "  -d '{\"event\":\"build.complete\",\"meta\":{\"sha\":\"a1b2c3\"}}'",
+        "",
+        "{\"id\":\"evt_8f2c\",\"status\":\"accepted\",\"queued\":true}",
+        "",
+        "$ curl -sS https://api.gridforge.dev/v1/events/evt_8f2c",
+        "{\"id\":\"evt_8f2c\",\"status\":\"processed\",\"tookMs\":17}"
+      ].join("\n");
+
+      function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+      async function typeLoop(){
+        if (!terminalContent) return;
+        if (reduceMotion){
+          terminalContent.textContent = demo;
+          return;
+        }
+
+        while(true){
+          terminalContent.textContent = "";
+          const s = demo;
+
+          for (let i = 0; i < s.length; i++){
+            terminalContent.textContent += s[i];
+            const c = s[i];
+            const base = (c === "\n") ? 24 : 12;
+            await sleep(base + Math.floor(Math.random() * 10));
+          }
+
+          await sleep(1200);
+
+          // Brutal erase: hard cut to keep it sharp
+          terminalContent.textContent = "";
+          await sleep(200);
+        }
+      }
+      typeLoop();
+
+      // Tabs (per card)
+      function setupCard(card){
+        const tablist = card.querySelector('[role="tablist"]');
+        const tabs = $$('[role="tab"]', card);
+        const panels = $$('[role="tabpanel"]', card);
+        const labelEl = card.querySelector('.codeTop span');
+
+        function setActive(tab){
+          const targetId = tab.getAttribute("aria-controls");
+          tabs.forEach(t => {
+            const on = (t === tab);
+            t.setAttribute("aria-selected", on ? "true" : "false");
+            t.tabIndex = on ? 0 : -1;
+          });
+          panels.forEach(p => p.hidden = (p.id !== targetId));
+          if (labelEl) labelEl.textContent = "LANG: " + (tab.textContent || "").trim();
+        }
+
+        tabs.forEach(tab => tab.addEventListener("click", () => setActive(tab)));
+
+        tablist && tablist.addEventListener("keydown", (e) => {
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home" && e.key !== "End") return;
+          e.preventDefault();
+          const current = tabs.findIndex(t => t.getAttribute("aria-selected") === "true");
+          let next = current;
+          if (e.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
+          if (e.key === "ArrowRight") next = (current + 1) % tabs.length;
+          if (e.key === "Home") next = 0;
+          if (e.key === "End") next = tabs.length - 1;
+          tabs[next].focus();
+          setActive(tabs[next]);
+        });
+      }
+      $$("[data-card]").forEach(setupCard);
+
+      // Copy buttons
+      async function copyText(text){
+        if (!text) return false;
+        try{
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          try{
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.setAttribute("readonly", "");
+            ta.style.position = "fixed";
+            ta.style.left = "-9999px";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            return true;
+          } catch {
+            return false;
+          }
+        }
+      }
+
+      $$(".copyBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const card = btn.closest("[data-card]");
+          if (!card) return;
+          const activePanel = card.querySelector('[role="tabpanel"]:not([hidden])');
+          const code = activePanel ? activePanel.querySelector("code") : null;
+          const txt = code ? code.textContent : "";
+          const ok = await copyText(txt);
+
+          const tip = btn.querySelector(".tip");
+          if (tip){
+            tip.textContent = ok ? "Copied" : "Failed";
+            tip.classList.add("show");
+            window.setTimeout(() => tip.classList.remove("show"), 900);
+          }
+        });
+      });
+
+      // Modal
+      const modal = $("#signupModal");
+      const planSelect = $("#plan");
+      const emailInput = $("#email");
+      const form = $("#signupForm");
+
+      function getFocusable(root){
+        const sel = [
+          'a[href]',
+          'button:not([disabled])',
+          'input:not([disabled])',
+          'select:not([disabled])',
+          'textarea:not([disabled])',
+          '[tabindex]:not([tabindex="-1"])'
+        ].join(",");
+        return $$(sel, root).filter(el => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length));
+      }
+
+      function openModal(plan){
+        if (!modal) return;
+        modal.setAttribute("data-open", "true");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        if (planSelect && plan) planSelect.value = plan;
+        window.setTimeout(() => (emailInput || planSelect || modal).focus(), 0);
+      }
+      function closeModal(){
+        if (!modal) return;
+        modal.setAttribute("data-open", "false");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+
+      $$('[data-open-modal="true"]').forEach(el => {
+        el.addEventListener("click", (e) => {
+          if (el.tagName.toLowerCase() === "a") e.preventDefault();
+          openModal(el.getAttribute("data-plan") || "Free");
+        });
+      });
+      $$('[data-close-modal="true"]').forEach(el => el.addEventListener("click", closeModal));
+
+      modal && modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (!modal) return;
+        const open = modal.getAttribute("data-open") === "true";
+        if (!open) return;
+
+        if (e.key === "Escape"){
+          e.preventDefault();
+          closeModal();
+          return;
+        }
+
+        if (e.key === "Tab"){
+          const focusables = getFocusable(modal);
+          if (!focusables.length) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first){
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last){
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      });
+
+      form && form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        // Brutalist: no network. Just close and show a minimal confirmation via title swap.
+        const title = $("#signupTitle");
+        if (title) title.textContent = "Signup — Request queued";
+        window.setTimeout(() => {
+          if (title) title.textContent = "Signup — Create Workspace";
+          closeModal();
+        }, 900);
+      });
+
+      // Keep HUD coherent on resize
+      window.addEventListener("resize", () => {
+        const { col, row } = calcReadout(mx, my);
+        const txt = `C${String(col).padStart(2,"0")} R${String(row).padStart(2,"0")}`;
+        if (cornerHUD) cornerHUD.textContent = `GRID: ${txt}`;
+      }, { passive: true });
+    })();
+  </script>
+</body>
+</html>
