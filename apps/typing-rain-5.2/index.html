@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>Typing Rain</title>
+  <style>
+    :root{
+      --bg0:#02040b;
+      --bg1:#050a18;
+      --panel: rgba(8, 12, 22, 0.58);
+      --panel2: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.10);
+      --border2: rgba(255, 255, 255, 0.07);
+      --text: rgba(234, 246, 255, 0.95);
+      --muted: rgba(234, 246, 255, 0.70);
+      --accent: rgba(140, 220, 255, 0.95);
+      --good: rgba(120, 255, 190, 0.95);
+      --bad: rgba(255, 120, 150, 0.95);
+      --shadow: rgba(0, 0, 0, 0.55);
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{ height: 100%; }
+    body{
+      margin: 0;
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background:
+        radial-gradient(circle at 40% 0%, rgba(120, 190, 255, 0.10), transparent 40%),
+        radial-gradient(circle at 70% 12%, rgba(255, 255, 255, 0.05), transparent 45%),
+        linear-gradient(to bottom, #050817 0%, var(--bg0) 70%);
+      overflow: hidden;
+    }
+
+    #app{
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    }
+
+    #hud{
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+      backdrop-filter: blur(10px);
+    }
+    #brand{
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 180px;
+    }
+    #brand .name{
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+    #brand .tag{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    .stats{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+      align-items: center;
+      flex: 1;
+    }
+    .stat{
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 7px 10px;
+      border-radius: 14px;
+      background: var(--panel2);
+      border: 1px solid var(--border2);
+      min-width: 96px;
+    }
+    .stat .label{
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .stat .value{
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+
+    .controls{
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    button{
+      appearance: none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 750;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    button:hover{ background: rgba(255,255,255,0.09); }
+    button:active{ transform: translateY(1px); }
+    button.primary{
+      border-color: rgba(140,220,255,0.30);
+      background: linear-gradient(to bottom, rgba(40, 90, 150, 0.40), rgba(18, 28, 55, 0.28));
+    }
+    button.ghost{
+      background: rgba(255,255,255,0.04);
+    }
+    button:disabled{
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    #gameWrap{
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #gameArea{
+      --cityH: 30%;
+      --rainIntensity: 0.25;
+
+      flex: 1;
+      min-height: 340px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--border2);
+      background:
+        radial-gradient(circle at 70% 18%, rgba(220, 240, 255, 0.11), transparent 45%),
+        radial-gradient(circle at 15% 22%, rgba(255, 255, 255, 0.06), transparent 48%),
+        linear-gradient(to bottom, #070b18 0%, #050814 40%, #03040b 100%);
+      box-shadow: 0 24px 90px rgba(0,0,0,0.55);
+      outline: none;
+    }
+
+    #rainLayer{
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: calc(0.10 + var(--rainIntensity) * 0.42);
+      background-image:
+        repeating-linear-gradient(115deg,
+          rgba(190, 230, 255, 0.10) 0px,
+          rgba(190, 230, 255, 0.10) 1px,
+          rgba(190, 230, 255, 0.00) 1px,
+          rgba(190, 230, 255, 0.00) 18px);
+      background-size: 320px 320px;
+      filter: blur(0.2px);
+      mix-blend-mode: screen;
+      animation: rainMove 1.35s linear infinite;
+    }
+    @keyframes rainMove{
+      from{ background-position: 0 0; }
+      to{ background-position: -160px 290px; }
+    }
+
+    .groundLine{
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: var(--cityH);
+      height: 1px;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.35;
+      background: linear-gradient(to right, transparent, rgba(160,220,255,0.24), transparent);
+    }
+
+    svg.city{
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--cityH);
+      width: 100%;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.92;
+      filter: drop-shadow(0 -10px 25px rgba(0,0,0,0.35));
+    }
+
+    #dropsLayer{
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+    #fxLayer{
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .vignette{
+      position: absolute;
+      inset: -1px;
+      z-index: 7;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 25%, rgba(0,0,0,0.00) 0%, rgba(0,0,0,0.30) 55%, rgba(0,0,0,0.70) 100%);
+      mix-blend-mode: multiply;
+    }
+
+    .drop{
+      position: absolute;
+      top: 0;
+      padding: 6px 10px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(170, 220, 255, 0.14);
+      background: linear-gradient(to bottom, rgba(20, 40, 70, 0.30), rgba(10, 18, 34, 0.18));
+      color: rgba(235, 248, 255, 0.96);
+      font-weight: 750;
+      letter-spacing: 0.2px;
+      font-size: clamp(14px, 1.9vw, 20px);
+      text-shadow: 0 0 12px rgba(120, 200, 255, 0.30), 0 2px 0 rgba(0, 0, 0, 0.35);
+      user-select: none;
+      white-space: nowrap;
+      transform: translate3d(0, -50px, 0);
+      will-change: transform;
+      backdrop-filter: blur(2px);
+    }
+    .drop::before{
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -38px;
+      width: 2px;
+      height: 36px;
+      transform: translateX(-50%);
+      border-radius: 2px;
+      background: linear-gradient(to bottom, rgba(130,200,255,0.00), rgba(130,200,255,0.34), rgba(130,200,255,0.00));
+      filter: drop-shadow(0 0 6px rgba(120,200,255,0.35));
+      opacity: 0.95;
+    }
+    .drop.target{
+      border-color: rgba(255,255,255,0.32);
+      background: linear-gradient(to bottom, rgba(35, 95, 155, 0.36), rgba(15, 25, 45, 0.20));
+      box-shadow: 0 0 0 2px rgba(120,200,255,0.18), 0 0 28px rgba(120,200,255,0.20);
+    }
+    .drop .typed{
+      color: var(--good);
+      text-shadow: 0 0 10px rgba(120,255,190,0.22);
+    }
+    .drop .rest{ opacity: 0.90; }
+
+    .pop{
+      position: absolute;
+      transform: translate(-50%, -50%);
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      font-size: 13px;
+      text-shadow: 0 0 14px rgba(255,255,255,0.10), 0 10px 25px rgba(0,0,0,0.35);
+      opacity: 0;
+      animation: pop 820ms ease-out forwards;
+      white-space: nowrap;
+    }
+    .pop.good{ color: var(--good); }
+    .pop.bad{ color: var(--bad); }
+    .pop.info{ color: rgba(170, 230, 255, 0.95); }
+    @keyframes pop{
+      0%{ opacity: 0; transform: translate(-50%, -30%) scale(0.95); filter: blur(0.2px); }
+      15%{ opacity: 1; }
+      100%{ opacity: 0; transform: translate(-50%, -180%) scale(1.03); filter: blur(0px); }
+    }
+
+    #overlay{
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: radial-gradient(circle at 50% 35%, rgba(0,0,0,0.35), rgba(0,0,0,0.78));
+      backdrop-filter: blur(8px);
+    }
+    #overlay.hidden{ display: none; }
+
+    .card{
+      width: min(640px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(10, 14, 24, 0.70);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.60);
+      padding: 18px 16px;
+    }
+    .card h2{
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      letter-spacing: 0.3px;
+      font-weight: 900;
+    }
+    .card p{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .card .grid{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .card .mini{
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      padding: 10px 10px;
+    }
+    .card .mini .k{
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .card .mini .v{
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .card .actions{
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .card .fine{
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(234,246,255,0.58);
+    }
+    kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.09);
+    }
+
+    #inputBar{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 10px 12px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+    }
+    #inputBar .left{
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 120px;
+    }
+    #inputBar .left .prompt{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    #targetLabel{
+      font-size: 12px;
+      color: rgba(234,246,255,0.80);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    #targetLabel strong{ color: rgba(180, 235, 255, 0.98); }
+
+    #typeInput{
+      flex: 1;
+      min-width: 120px;
+      font-size: 18px;
+      padding: 11px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.30);
+      color: var(--text);
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    #typeInput:focus{
+      border-color: rgba(140, 220, 255, 0.42);
+      box-shadow: 0 0 0 4px rgba(120, 200, 255, 0.10), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    #typeInput.bad{
+      border-color: rgba(255, 120, 150, 0.45);
+      box-shadow: 0 0 0 4px rgba(255, 120, 150, 0.10), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    #hint{
+      font-size: 12px;
+      color: rgba(234,246,255,0.62);
+      max-width: 360px;
+      display: none;
+    }
+
+    @media (max-width: 900px){
+      #hud{ flex-direction: column; }
+      #brand{ min-width: unset; }
+      .controls{ justify-content: flex-end; }
+      #hint{ display: none; }
+      #inputBar .left{ min-width: 92px; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      #rainLayer{ animation: none; }
+      .pop{ animation-duration: 0.01ms; }
+      button{ transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header id="hud">
+      <div id="brand">
+        <div class="name">Typing Rain</div>
+        <div class="tag">Type the falling words before they hit the streets.</div>
+      </div>
+
+      <div class="stats" aria-label="Game stats">
+        <div class="stat"><div class="label">Score</div><div class="value" id="score">0</div></div>
+        <div class="stat"><div class="label">Accuracy</div><div class="value" id="accuracy" title="Hits: 0 · Wrong: 0 · Missed: 0">100%</div></div>
+        <div class="stat"><div class="label">Level</div><div class="value" id="level">1</div></div>
+        <div class="stat"><div class="label">Lives</div><div class="value" id="lives">5</div></div>
+        <div class="stat"><div class="label">Best</div><div class="value" id="best">0</div></div>
+      </div>
+
+      <div class="controls" aria-label="Controls">
+        <button id="startBtn" class="primary">Start</button>
+        <button id="pauseBtn" disabled>Pause</button>
+        <button id="resetBtn" class="ghost">Reset</button>
+      </div>
+    </header>
+
+    <main id="gameWrap">
+      <div id="gameArea" tabindex="0" aria-label="Typing Rain playfield">
+        <div id="rainLayer"></div>
+        <div class="groundLine"></div>
+
+        <svg class="city" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="fogGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1b2a40" stop-opacity="0.00"/>
+              <stop offset="1" stop-color="#1b2a40" stop-opacity="0.35"/>
+            </linearGradient>
+
+            <pattern id="winA" width="34" height="34" patternUnits="userSpaceOnUse">
+              <rect width="34" height="34" fill="transparent"/>
+              <rect x="7" y="8" width="6" height="10" rx="1" fill="#8fd3ff" opacity="0.30"/>
+              <rect x="19" y="8" width="6" height="10" rx="1" fill="#8fd3ff" opacity="0.22"/>
+              <rect x="7" y="21" width="6" height="9" rx="1" fill="#8fd3ff" opacity="0.18"/>
+              <rect x="19" y="21" width="6" height="9" rx="1" fill="#8fd3ff" opacity="0.26"/>
+            </pattern>
+
+            <pattern id="winB" width="28" height="28" patternUnits="userSpaceOnUse">
+              <rect width="28" height="28" fill="transparent"/>
+              <rect x="6" y="7" width="5" height="9" rx="1" fill="#8fd3ff" opacity="0.22"/>
+              <rect x="16" y="7" width="5" height="9" rx="1" fill="#8fd3ff" opacity="0.18"/>
+              <rect x="6" y="18" width="5" height="8" rx="1" fill="#8fd3ff" opacity="0.16"/>
+              <rect x="16" y="18" width="5" height="8" rx="1" fill="#8fd3ff" opacity="0.20"/>
+            </pattern>
+          </defs>
+
+          <!-- Far skyline -->
+          <g opacity="0.72">
+            <rect x="0" y="110" width="120" height="190" fill="#071022"/>
+            <rect x="90" y="85" width="170" height="215" fill="#071022"/>
+            <rect x="230" y="120" width="90" height="180" fill="#071022"/>
+            <rect x="300" y="70" width="160" height="230" fill="#071022"/>
+            <rect x="440" y="105" width="140" height="195" fill="#071022"/>
+            <rect x="560" y="60" width="180" height="240" fill="#071022"/>
+            <rect x="710" y="115" width="120" height="185" fill="#071022"/>
+            <rect x="820" y="80" width="160" height="220" fill="#071022"/>
+            <rect x="960" y="125" width="110" height="175" fill="#071022"/>
+            <rect x="1045" y="95" width="155" height="205" fill="#071022"/>
+          </g>
+          <g opacity="0.16">
+            <rect x="0" y="110" width="120" height="190" fill="url(#winB)"/>
+            <rect x="90" y="85" width="170" height="215" fill="url(#winB)"/>
+            <rect x="230" y="120" width="90" height="180" fill="url(#winB)"/>
+            <rect x="300" y="70" width="160" height="230" fill="url(#winB)"/>
+            <rect x="440" y="105" width="140" height="195" fill="url(#winB)"/>
+            <rect x="560" y="60" width="180" height="240" fill="url(#winB)"/>
+            <rect x="710" y="115" width="120" height="185" fill="url(#winB)"/>
+            <rect x="820" y="80" width="160" height="220" fill="url(#winB)"/>
+            <rect x="960" y="125" width="110" height="175" fill="url(#winB)"/>
+            <rect x="1045" y="95" width="155" height="205" fill="url(#winB)"/>
+          </g>
+
+          <!-- Near skyline -->
+          <g opacity="0.96">
+            <rect x="0" y="170" width="140" height="130" fill="#04060d"/>
+            <rect x="120" y="150" width="130" height="150" fill="#04060d"/>
+            <rect x="240" y="185" width="110" height="115" fill="#04060d"/>
+            <rect x="330" y="140" width="150" height="160" fill="#04060d"/>
+            <rect x="470" y="175" width="135" height="125" fill="#04060d"/>
+            <rect x="590" y="145" width="190" height="155" fill="#04060d"/>
+            <rect x="760" y="180" width="120" height="120" fill="#04060d"/>
+            <rect x="860" y="155" width="160" height="145" fill="#04060d"/>
+            <rect x="1000" y="190" width="110" height="110" fill="#04060d"/>
+            <rect x="1090" y="165" width="110" height="135" fill="#04060d"/>
+            <!-- a couple antennas -->
+            <rect x="412" y="124" width="4" height="18" fill="#04060d"/>
+            <rect x="675" y="118" width="4" height="27" fill="#04060d"/>
+            <rect x="952" y="140" width="3" height="15" fill="#04060d"/>
+          </g>
+          <g opacity="0.22">
+            <rect x="0" y="170" width="140" height="130" fill="url(#winA)"/>
+            <rect x="120" y="150" width="130" height="150" fill="url(#winA)"/>
+            <rect x="240" y="185" width="110" height="115" fill="url(#winA)"/>
+            <rect x="330" y="140" width="150" height="160" fill="url(#winA)"/>
+            <rect x="470" y="175" width="135" height="125" fill="url(#winA)"/>
+            <rect x="590" y="145" width="190" height="155" fill="url(#winA)"/>
+            <rect x="760" y="180" width="120" height="120" fill="url(#winA)"/>
+            <rect x="860" y="155" width="160" height="145" fill="url(#winA)"/>
+            <rect x="1000" y="190" width="110" height="110" fill="url(#winA)"/>
+            <rect x="1090" y="165" width="110" height="135" fill="url(#winA)"/>
+          </g>
+
+          <!-- Soft fog at base -->
+          <rect x="0" y="0" width="1200" height="300" fill="url(#fogGrad)" opacity="0.70"/>
+        </svg>
+
+        <div id="dropsLayer" aria-hidden="true"></div>
+        <div id="fxLayer" aria-hidden="true"></div>
+
+        <div class="vignette"></div>
+
+        <div id="overlay">
+          <div class="card" role="dialog" aria-modal="true" aria-labelledby="overlayTitle" aria-describedby="overlayText">
+            <h2 id="overlayTitle">Typing Rain</h2>
+            <p id="overlayText">Type the falling words before they reach the skyline. Difficulty ramps up over time.</p>
+
+            <div class="grid" id="overlayGrid">
+              <div class="mini"><div class="k">Tip</div><div class="v">Finish the word to clear it</div></div>
+              <div class="mini"><div class="k">Controls</div><div class="v"><kbd>Enter</kbd> submit · <kbd>Esc</kbd> pause</div></div>
+              <div class="mini"><div class="k">Scoring</div><div class="v">Longer words = more points</div></div>
+            </div>
+
+            <div class="actions">
+              <button id="overlayPrimary" class="primary">Start</button>
+              <button id="overlaySecondary" class="ghost">Focus Input</button>
+            </div>
+
+            <div class="fine" id="overlayFine">Press <kbd>Enter</kbd> to start. Keep the streets dry.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="inputBar" aria-label="Typing input">
+        <div class="left">
+          <div class="prompt">Type here</div>
+          <div id="targetLabel">Target: <strong id="targetWord">—</strong></div>
+        </div>
+        <input id="typeInput" type="text" inputmode="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Start the rain..." disabled />
+        <div id="hint">Match the highlighted word. Finish it to clear.</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const BEST_KEY = "typing-rain-best-v1";
+
+      const startBtn = document.getElementById("startBtn");
+      const pauseBtn = document.getElementById("pauseBtn");
+      const resetBtn = document.getElementById("resetBtn");
+
+      const gameArea = document.getElementById("gameArea");
+      const dropsLayer = document.getElementById("dropsLayer");
+      const fxLayer = document.getElementById("fxLayer");
+      const cityEl = document.querySelector("svg.city");
+
+      const scoreEl = document.getElementById("score");
+      const accuracyEl = document.getElementById("accuracy");
+      const levelEl = document.getElementById("level");
+      const livesEl = document.getElementById("lives");
+      const bestEl = document.getElementById("best");
+
+      const overlay = document.getElementById("overlay");
+      const overlayTitle = document.getElementById("overlayTitle");
+      const overlayText = document.getElementById("overlayText");
+      const overlayFine = document.getElementById("overlayFine");
+      const overlayPrimary = document.getElementById("overlayPrimary");
+      const overlaySecondary = document.getElementById("overlaySecondary");
+
+      const typeInput = document.getElementById("typeInput");
+      const targetWordEl = document.getElementById("targetWord");
+
+      const MAX_LIVES = 5;
+
+      const WORDS = [
+        "rain","drop","storm","cloud","night","city","street","tower","neon","alley","puddle","siren","bridge","subway","traffic","window","shadow","signal","gutter","lamp",
+        "drizzle","downpour","thunder","lightning","forecast","umbrella","sidewalk","crosswalk","district","station","platform","midnight","afterglow","billboard","reflection",
+        "skyscraper","intersection","electric","overcast","misty","wetland","waterline","rivulet","raindrop","monsoon","tempest","barometer","pressure","humidity","atmosphere",
+        "commute","headlights","tailgate","roadwork","taxicab","busstop","avenue","boulevard","cobblestone","mailbox","turnstile","handrail","fireescape","rooftop","elevator",
+        "stairwell","basement","doorframe","doorknob","powerline","streetlight","panorama","horizon","riverbank","seawall","breakwater","harbor","dockyard","warehouse","backlot",
+        "districts","metropolis","cityscape","glasswork","blueprint","construction","concrete","steelbeam","scaffolding","foundation","infrastructure","architecture","corridor",
+        "conductor","electricity","transformer","generator","frequency","vibration","resonance","turbulence","velocity","momentum","trajectory","calibration","precision","accuracy",
+        "keyboard","typeface","keystroke","practice","stamina","focus","reflex","pattern","rhythm","tempo","cascade","current","signalman","switchboard","luminance","glowstick",
+        "moonlight","starlight","constellation","satellite","orbiting","astronomy","nightfall","dusk","twilight","nocturne","silhouette","hollow","shimmer","sparkle","flicker",
+        "schedule","deadline","notebook","clipboard","inventory","operator","dispatcher","courier","delivery","overhead","underpass","overpass","roundabout","lanechange","speedway",
+        "tollgate","ticket","turnkey","locksmith","keychain","handshake","footsteps","umbrella","raincoat","hooded","poncho","windproof","waterproof","soaked","saturated","splash",
+        "raindance","waterproofing","precipitation","condensation","evaporation","circulation","accumulation","confluence","distribution","microburst","stratosphere","ionosphere",
+        "telescope","microchip","algorithm","bandwidth","interface","protocol","encryption","compression","synchrony","latency","throughput","iteration","recursion","parameter",
+        "exception","function","variable","constant","operator","pipeline","framework","runtime","compiler","terminal","repository","versioning","benchmark","optimize","debugging",
+        "gentle","rapid","steady","calm","brisk","silent","hushed","distant","nearby","bright","dimmed","subtle","shallow","deeper","narrow","wider","taller","shorter","random",
+        "fountain","waterfall","streaming","sprinkle","sleet","hailstone","whirlwind","gale","breeze","drafty","pressure","frontline","windward","leeward","stormfront","eyelet",
+        "headwind","tailwind","squall","cyclone","typhoon","hurricane","rainstorm","snowmelt","spillway","watershed","riverstone","shoreline","floodgate","sandbag","overflow",
+        "resilient","consistent","persistent","improving","mastery","discipline","attention","concentration","perception","coordination","momentary","inevitable","remarkable"
+      ];
+
+      const state = {
+        mode: "idle", // idle | running | paused | over
+        raf: 0,
+        lastTs: 0,
+
+        drops: [],
+        dropSeq: 0,
+        targetId: null,
+
+        score: 0,
+        hits: 0,
+        wrong: 0,
+        missed: 0,
+        streak: 0,
+        lives: MAX_LIVES,
+
+        elapsed: 0,
+        level: 1,
+        spawnIn: 0.8,
+
+        best: 0,
+
+        metrics: {
+          w: 0,
+          h: 0,
+          cityH: 0,
+          groundY: 0
+        }
+      };
+
+      function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+      function rand(a, b){ return a + Math.random() * (b - a); }
+      function now(){ return performance.now(); }
+
+      function measure(){
+        state.metrics.w = gameArea.clientWidth || 1;
+        state.metrics.h = gameArea.clientHeight || 1;
+        state.metrics.cityH = cityEl ? (cityEl.clientHeight || Math.round(state.metrics.h * 0.30)) : Math.round(state.metrics.h * 0.30);
+        state.metrics.groundY = state.metrics.h - state.metrics.cityH + 6; // approx top of skyline
+      }
+
+      function setOverlayVisible(visible){
+        overlay.classList.toggle("hidden", !visible);
+      }
+
+      function setMode(mode){
+        state.mode = mode;
+        const running = mode === "running";
+        pauseBtn.disabled = !(mode === "running" || mode === "paused");
+        typeInput.disabled = !running;
+        if(running) {
+          pauseBtn.textContent = "Pause";
+          startBtn.disabled = true;
+        } else {
+          startBtn.disabled = false;
+        }
+      }
+
+      function computeLevel(){
+        // ramps with time and a little with score
+        const timePart = Math.floor(state.elapsed / 18);
+        const scorePart = Math.floor(state.score / 1400);
+        return clamp(1 + timePart + scorePart, 1, 30);
+      }
+
+      function spawnInterval(){
+        // smaller = faster spawns
+        return Math.max(0.52, 2.15 - state.level * 0.11);
+      }
+
+      function baseSpeed(){
+        return 58 + state.level * 16;
+      }
+
+      function maxDrops(){
+        return Math.min(36, Math.floor(14 + state.level * 1.15));
+      }
+
+      function pickWord(){
+        const minLen = clamp(3 + Math.floor(state.level * 0.45), 3, 10);
+        const maxLen = clamp(5 + Math.floor(state.level * 0.85), 6, 16);
+
+        // try a few times to find within length window, then fallback
+        for(let i=0;i<12;i++){
+          const w = WORDS[(Math.random() * WORDS.length) | 0];
+          if(w.length >= minLen && w.length <= maxLen) return w;
+        }
+        return WORDS[(Math.random() * WORDS.length) | 0];
+      }
+
+      function calcPoints(word){
+        const base = word.length * 10;
+        const streakBoost = 1 + Math.min(1.8, state.streak * 0.08);
+        const levelBoost = 1 + state.level * 0.05;
+        return Math.round(base * streakBoost * levelBoost);
+      }
+
+      function spawnPop(x, y, text, kind){
+        const el = document.createElement("div");
+        el.className = "pop " + kind;
+        el.textContent = text;
+        el.style.left = x + "px";
+        el.style.top = y + "px";
+        fxLayer.appendChild(el);
+        window.setTimeout(() => el.remove(), 900);
+      }
+
+      function clearTarget(){
+        if(state.targetId == null) return;
+        const prev = state.drops.find(d => d.id === state.targetId);
+        if(prev){
+          prev.el.classList.remove("target");
+          prev.el.textContent = prev.word;
+        }
+        state.targetId = null;
+        targetWordEl.textContent = "—";
+      }
+
+      function renderTarget(drop, typedLower){
+        const n = typedLower.length;
+        drop.el.innerHTML = "";
+        const a = document.createElement("span");
+        a.className = "typed";
+        a.textContent = drop.word.slice(0, n);
+        const b = document.createElement("span");
+        b.className = "rest";
+        b.textContent = drop.word.slice(n);
+        drop.el.append(a, b);
+      }
+
+      function setTarget(drop, typedLower){
+        if(!drop){
+          clearTarget();
+          return;
+        }
+
+        if(state.targetId !== drop.id){
+          // clear previous
+          if(state.targetId != null){
+            const prev = state.drops.find(d => d.id === state.targetId);
+            if(prev){
+              prev.el.classList.remove("target");
+              prev.el.textContent = prev.word;
+            }
+          }
+          state.targetId = drop.id;
+          drop.el.classList.add("target");
+        }
+        renderTarget(drop, typedLower);
+        targetWordEl.textContent = drop.word;
+      }
+
+      function findBestPrefix(prefixLower){
+        let best = null;
+        for(const d of state.drops){
+          if(d.wordLower.startsWith(prefixLower)){
+            if(!best || d.y > best.y) best = d; // closest to ground
+          }
+        }
+        return best;
+      }
+
+      function findExact(wordLower){
+        let best = null;
+        for(const d of state.drops){
+          if(d.wordLower === wordLower){
+            if(!best || d.y > best.y) best = d;
+          }
+        }
+        return best;
+      }
+
+      function removeDropAtIndex(i){
+        const d = state.drops[i];
+        if(state.targetId === d.id) state.targetId = null;
+        d.el.remove();
+        state.drops.splice(i, 1);
+      }
+
+      function registerHit(drop){
+        const pts = calcPoints(drop.word);
+        state.hits++;
+        state.score += pts;
+        state.streak++;
+
+        // pop near the word
+        const x = drop.x + (drop.el.offsetWidth * 0.5);
+        const y = drop.y + 16;
+        spawnPop(x, y, "+" + pts, "good");
+
+        // remove
+        const idx = state.drops.findIndex(d => d.id === drop.id);
+        if(idx >= 0) removeDropAtIndex(idx);
+
+        // best score
+        if(state.score > state.best){
+          state.best = state.score;
+          try { localStorage.setItem(BEST_KEY, String(state.best)); } catch(e){}
+        }
+
+        // refresh target from current input (may select a new one)
+        retargetFromInput();
+      }
+
+      function registerWrongAttempt(){
+        state.wrong++;
+        state.streak = 0;
+        spawnPop(state.metrics.w * 0.5, state.metrics.h * 0.16, "WRONG", "bad");
+      }
+
+      function registerMiss(drop){
+        state.missed++;
+        state.lives--;
+        state.streak = 0;
+
+        const x = drop.x + (drop.el.offsetWidth * 0.5);
+        const y = state.metrics.groundY - 6;
+        spawnPop(x, y, "SPLASH", "bad");
+      }
+
+      function updateHud(){
+        scoreEl.textContent = state.score.toLocaleString();
+        levelEl.textContent = String(state.level);
+        livesEl.textContent = String(state.lives);
+        bestEl.textContent = state.best.toLocaleString();
+
+        const total = state.hits + state.wrong + state.missed;
+        const acc = total ? (state.hits / total) : 1;
+        accuracyEl.textContent = Math.round(acc * 100) + "%";
+        accuracyEl.title = `Hits: ${state.hits} · Wrong: ${state.wrong} · Missed: ${state.missed}`;
+
+        const rain = clamp((state.level - 1) / 16, 0.15, 1);
+        gameArea.style.setProperty("--rainIntensity", String(rain));
+      }
+
+      function spawnDrop(){
+        if(state.drops.length >= maxDrops()) return;
+
+        const word = pickWord();
+        const el = document.createElement("div");
+        el.className = "drop";
+        el.textContent = word;
+        dropsLayer.appendChild(el);
+
+        // choose x after adding to DOM so we can measure width
+        const padding = 10;
+        const w = el.offsetWidth || 80;
+        const x = rand(padding, Math.max(padding, state.metrics.w - w - padding));
+
+        const speed = baseSpeed() * rand(0.86, 1.34);
+        const phase = rand(0, Math.PI * 2);
+        const sway = rand(0.9, 2.3) + state.level * 0.10;
+
+        const d = {
+          id: ++state.dropSeq,
+          word,
+          wordLower: word.toLowerCase(),
+          el,
+          x,
+          y: -rand(40, 140),
+          speed,
+          phase,
+          sway
+        };
+
+        el.style.left = x + "px";
+        el.style.transform = `translate3d(0, ${d.y}px, 0)`;
+        state.drops.push(d);
+      }
+
+      function retargetFromInput(){
+        if(state.mode !== "running") return;
+
+        const typedRaw = typeInput.value;
+        const typed = typedRaw.trim().toLowerCase();
+
+        if(!typed){
+          typeInput.classList.remove("bad");
+          clearTarget();
+          return;
+        }
+
+        // keep current target if still valid
+        if(state.targetId != null){
+          const cur = state.drops.find(d => d.id === state.targetId);
+          if(cur && cur.wordLower.startsWith(typed)){
+            typeInput.classList.remove("bad");
+            setTarget(cur, typed);
+            return;
+          }
+        }
+
+        const next = findBestPrefix(typed);
+        if(!next){
+          typeInput.classList.add("bad");
+          clearTarget();
+          return;
+        }
+
+        typeInput.classList.remove("bad");
+        setTarget(next, typed);
+      }
+
+      function gameOver(){
+        cancelAnimationFrame(state.raf);
+        state.raf = 0;
+        setMode("over");
+
+        overlayTitle.textContent = "Game Over";
+        const total = state.hits + state.wrong + state.missed;
+        const acc = total ? Math.round((state.hits / total) * 100) : 100;
+        overlayText.textContent = "The storm hit the skyline. Try again and keep your accuracy high as the rain speeds up.";
+        overlayFine.innerHTML = `Final score: <strong>${state.score.toLocaleString()}</strong> · Accuracy: <strong>${acc}%</strong> · Level: <strong>${state.level}</strong>`;
+        overlayPrimary.textContent = "Play Again";
+        overlaySecondary.textContent = "Focus Input";
+        setOverlayVisible(true);
+
+        pauseBtn.disabled = true;
+        startBtn.disabled = false;
+      }
+
+      function resetToIdle(){
+        cancelAnimationFrame(state.raf);
+        state.raf = 0;
+
+        // clear drops
+        for(const d of state.drops) d.el.remove();
+        state.drops.length = 0;
+
+        state.dropSeq = 0;
+        state.targetId = null;
+
+        state.score = 0;
+        state.hits = 0;
+        state.wrong = 0;
+        state.missed = 0;
+        state.streak = 0;
+        state.lives = MAX_LIVES;
+
+        state.elapsed = 0;
+        state.level = 1;
+        state.spawnIn = 0.8;
+
+        typeInput.value = "";
+        typeInput.classList.remove("bad");
+        clearTarget();
+
+        overlayTitle.textContent = "Typing Rain";
+        overlayText.textContent = "Type the falling words before they reach the skyline. Difficulty ramps up over time.";
+        overlayFine.innerHTML = `Press <kbd>Enter</kbd> to start. Use <kbd>Esc</kbd> to pause.`;
+        overlayPrimary.textContent = "Start";
+        overlaySecondary.textContent = "Focus Input";
+        setOverlayVisible(true);
+
+        setMode("idle");
+        pauseBtn.disabled = true;
+        pauseBtn.textContent = "Pause";
+        startBtn.disabled = false;
+
+        updateHud();
+      }
+
+      function startGame(){
+        // fresh start
+        for(const d of state.drops) d.el.remove();
+        state.drops.length = 0;
+        clearTarget();
+
+        state.score = 0;
+        state.hits = 0;
+        state.wrong = 0;
+        state.missed = 0;
+        state.streak = 0;
+        state.lives = MAX_LIVES;
+        state.elapsed = 0;
+        state.level = 1;
+        state.spawnIn = 0.85;
+
+        typeInput.value = "";
+        typeInput.classList.remove("bad");
+
+        measure();
+        setOverlayVisible(false);
+        setMode("running");
+        pauseBtn.disabled = false;
+
+        state.lastTs = now();
+        state.raf = requestAnimationFrame(loop);
+
+        typeInput.focus({ preventScroll: true });
+        updateHud();
+
+        spawnPop(state.metrics.w * 0.5, state.metrics.h * 0.18, "LEVEL 1", "info");
+      }
+
+      function pauseGame(){
+        if(state.mode !== "running") return;
+        cancelAnimationFrame(state.raf);
+        state.raf = 0;
+        setMode("paused");
+
+        overlayTitle.textContent = "Paused";
+        overlayText.textContent = "Take a breath. The rain will keep falling when you resume.";
+        overlayFine.innerHTML = `Press <kbd>Esc</kbd> or click Resume.`;
+        overlayPrimary.textContent = "Resume";
+        overlaySecondary.textContent = "Focus Input";
+        setOverlayVisible(true);
+
+        pauseBtn.textContent = "Resume";
+      }
+
+      function resumeGame(){
+        if(state.mode !== "paused") return;
+        setOverlayVisible(false);
+        setMode("running");
+        pauseBtn.textContent = "Pause";
+        typeInput.focus({ preventScroll: true });
+
+        state.lastTs = now();
+        state.raf = requestAnimationFrame(loop);
+      }
+
+      function togglePause(){
+        if(state.mode === "running") pauseGame();
+        else if(state.mode === "paused") resumeGame();
+      }
+
+      function loop(ts){
+        if(state.mode !== "running") return;
+
+        const dt = Math.min(0.050, Math.max(0, (ts - state.lastTs) / 1000));
+        state.lastTs = ts;
+        state.elapsed += dt;
+
+        const newLevel = computeLevel();
+        if(newLevel !== state.level){
+          state.level = newLevel;
+          spawnPop(state.metrics.w * 0.5, state.metrics.h * 0.18, "LEVEL " + state.level, "info");
+        }
+
+        // spawning
+        state.spawnIn -= dt;
+        let spawnGuard = 0;
+        while(state.spawnIn <= 0 && spawnGuard < 6){
+          spawnGuard++;
+          spawnDrop();
+          const base = spawnInterval();
+          state.spawnIn += base * rand(0.75, 1.15);
+
+          // occasional extra drop at higher levels
+          if(state.level >= 10 && Math.random() < 0.06 && state.drops.length < maxDrops()){
+            spawnDrop();
+          }
+        }
+
+        // move drops and detect misses
+        const ground = state.metrics.groundY;
+        for(let i = state.drops.length - 1; i >= 0; i--){
+          const d = state.drops[i];
+          d.y += d.speed * dt;
+          const sway = Math.sin(ts * 0.001 + d.phase) * d.sway;
+          d.el.style.transform = `translate3d(${sway}px, ${d.y}px, 0)`;
+
+          if(d.y >= ground - 26){
+            registerMiss(d);
+            removeDropAtIndex(i);
+
+            if(state.lives <= 0){
+              updateHud();
+              gameOver();
+              return;
+            }
+          }
+        }
+
+        // if target got removed by a miss, try to retarget
+        if(state.targetId == null && typeInput.value.trim()){
+          retargetFromInput();
+        }
+
+        updateHud();
+        state.raf = requestAnimationFrame(loop);
+      }
+
+      // Input events
+      typeInput.addEventListener("input", () => {
+        if(state.mode !== "running") return;
+
+        const typed = typeInput.value.trim().toLowerCase();
+        if(!typed){
+          typeInput.classList.remove("bad");
+          clearTarget();
+          return;
+        }
+
+        const candidate = findBestPrefix(typed);
+        if(!candidate){
+          typeInput.classList.add("bad");
+          clearTarget();
+          return;
+        }
+
+        typeInput.classList.remove("bad");
+        setTarget(candidate, typed);
+
+        // auto-submit on exact match
+        if(typed === candidate.wordLower){
+          typeInput.value = "";
+          typeInput.classList.remove("bad");
+          registerHit(candidate);
+        }
+      });
+
+      typeInput.addEventListener("keydown", (e) => {
+        if(e.key === "Enter"){
+          e.preventDefault();
+          if(state.mode !== "running") return;
+
+          const typed = typeInput.value.trim().toLowerCase();
+          if(!typed) return;
+
+          const exact = findExact(typed);
+          typeInput.value = "";
+          typeInput.classList.remove("bad");
+
+          if(exact) registerHit(exact);
+          else registerWrongAttempt();
+          retargetFromInput();
+          return;
+        }
+
+        if(e.key === "Escape"){
+          e.preventDefault();
+          togglePause();
+        }
+      });
+
+      // Buttons
+      startBtn.addEventListener("click", () => {
+        if(state.mode === "idle" || state.mode === "over") startGame();
+      });
+      pauseBtn.addEventListener("click", () => togglePause());
+      resetBtn.addEventListener("click", () => resetToIdle());
+
+      overlayPrimary.addEventListener("click", () => {
+        if(state.mode === "idle" || state.mode === "over") startGame();
+        else if(state.mode === "paused") resumeGame();
+      });
+      overlaySecondary.addEventListener("click", () => {
+        if(state.mode === "running") typeInput.focus({ preventScroll: true });
+        else {
+          // focus input for quick start
+          typeInput.disabled = false;
+          typeInput.focus({ preventScroll: true });
+          typeInput.disabled = (state.mode !== "running");
+        }
+      });
+
+      gameArea.addEventListener("pointerdown", () => {
+        if(state.mode === "running") typeInput.focus({ preventScroll: true });
+      });
+
+      // Global keys for convenience
+      window.addEventListener("keydown", (e) => {
+        if(e.key === "Enter" && (state.mode === "idle" || state.mode === "over")){
+          // avoid starting when typing in another control
+          if(document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "BUTTON")) return;
+          e.preventDefault();
+          startGame();
+        }
+        if(e.key === "Escape" && (state.mode === "running" || state.mode === "paused")){
+          e.preventDefault();
+          togglePause();
+        }
+      }, { passive: false });
+
+      // Auto-pause on tab hidden / window blur
+      document.addEventListener("visibilitychange", () => {
+        if(document.hidden && state.mode === "running") pauseGame();
+      });
+      window.addEventListener("blur", () => {
+        if(state.mode === "running") pauseGame();
+      });
+
+      // Resize
+      window.addEventListener("resize", () => measure(), { passive: true });
+
+      // Load best
+      try {
+        const stored = parseInt(localStorage.getItem(BEST_KEY) || "0", 10);
+        state.best = Number.isFinite(stored) ? stored : 0;
+      } catch(e) {
+        state.best = 0;
+      }
+      bestEl.textContent = state.best.toLocaleString();
+
+      // Init
+      measure();
+      resetToIdle();
+    })();
+  </script>
+</body>
+</html>

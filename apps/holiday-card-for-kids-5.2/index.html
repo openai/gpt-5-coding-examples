@@ -1,0 +1,1749 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Warm & Fun Holiday Card</title>
+  <style>
+    :root{
+      --bg1:#071524;
+      --bg2:#0b2a3d;
+      --bg3:#2a0c2f;
+
+      --cardA:#ffffff;
+      --cardB:#f3fbff;
+
+      --ink:#12324a;
+      --soft:#ffffffcc;
+      --glass: rgba(255,255,255,0.11);
+      --glass2: rgba(255,255,255,0.16);
+
+      --accent:#ffcc4d;
+      --accent2:#ff7aa2;
+      --accent3:#85f2d6;
+
+      --shadow: 0 18px 60px rgba(0,0,0,0.35);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; }
+    body{
+      font-family: ui-rounded, "Comic Sans MS", "Trebuchet MS", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #eef6ff;
+      overflow:hidden;
+      background:
+        radial-gradient(900px 600px at 20% 10%, rgba(255,204,77,0.12), transparent 60%),
+        radial-gradient(700px 500px at 80% 20%, rgba(255,122,162,0.12), transparent 60%),
+        radial-gradient(900px 650px at 50% 100%, rgba(133,242,214,0.10), transparent 70%),
+        radial-gradient(1200px 900px at 50% 40%, var(--bg2) 0%, var(--bg1) 55%, #040a12 100%);
+    }
+
+    /* twinkly background stars */
+    #bgStars{
+      position:fixed; inset:0;
+      pointer-events:none;
+      opacity:0.8;
+      background-image:
+        radial-gradient(2px 2px at 12% 18%, rgba(255,255,255,0.9) 50%, transparent 52%),
+        radial-gradient(1px 1px at 24% 66%, rgba(255,255,255,0.85) 50%, transparent 52%),
+        radial-gradient(2px 2px at 34% 34%, rgba(255,255,255,0.8) 50%, transparent 52%),
+        radial-gradient(1px 1px at 48% 20%, rgba(255,255,255,0.75) 50%, transparent 52%),
+        radial-gradient(2px 2px at 62% 70%, rgba(255,255,255,0.85) 50%, transparent 52%),
+        radial-gradient(1px 1px at 74% 42%, rgba(255,255,255,0.75) 50%, transparent 52%),
+        radial-gradient(2px 2px at 88% 24%, rgba(255,255,255,0.9) 50%, transparent 52%),
+        radial-gradient(1px 1px at 90% 78%, rgba(255,255,255,0.7) 50%, transparent 52%);
+      animation: twinkleBg 3.2s ease-in-out infinite alternate;
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.25));
+    }
+    @keyframes twinkleBg{
+      from{ opacity:0.55; }
+      to{ opacity:0.9; }
+    }
+
+    #app{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+    }
+
+    #topBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+      border-bottom: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .logo{
+      width:44px; height:44px;
+      display:grid; place-items:center;
+      border-radius:14px;
+      background: rgba(255,255,255,0.14);
+      border:1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      font-size: 22px;
+      animation: logoBob 2.4s ease-in-out infinite;
+    }
+    @keyframes logoBob{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-2px); }
+    }
+    .titles h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    }
+    .titles p{
+      margin: 2px 0 0;
+      opacity:0.9;
+      font-size: 12px;
+    }
+
+    .controls{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    button{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.12);
+      color:#eef6ff;
+      padding: 9px 10px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.20);
+      transition: transform 0.10s ease, background 0.15s ease, border-color 0.15s ease;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    button:hover{ background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.28); }
+    button:active{ transform: translateY(1px) scale(0.99); }
+    button.primary{
+      background: linear-gradient(180deg, rgba(255,204,77,0.28), rgba(255,122,162,0.18));
+      border-color: rgba(255,204,77,0.30);
+    }
+    button.danger{
+      background: linear-gradient(180deg, rgba(255,122,162,0.20), rgba(255,122,162,0.12));
+      border-color: rgba(255,122,162,0.30);
+    }
+
+    #main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      overflow:hidden;
+    }
+
+    #cardArea{
+      width: min(1180px, 98vw);
+      flex: 1;
+      display:flex;
+      gap:14px;
+      padding: 14px;
+      overflow:hidden;
+      align-items:stretch;
+    }
+
+    #card{
+      flex: 1;
+      position:relative;
+      border-radius: 26px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      background:
+        radial-gradient(900px 520px at 25% 20%, rgba(255,204,77,0.14), transparent 60%),
+        radial-gradient(800px 520px at 75% 20%, rgba(255,122,162,0.12), transparent 60%),
+        linear-gradient(180deg, var(--cardA), var(--cardB));
+      border: 10px solid rgba(255,255,255,0.60);
+      outline: 1px solid rgba(0,0,0,0.10);
+      transform: translateZ(0);
+    }
+
+    #card::before{
+      content:"";
+      position:absolute; inset:0;
+      background-image:
+        radial-gradient(2px 2px at 12% 24%, rgba(18,50,74,0.10) 55%, transparent 58%),
+        radial-gradient(1.5px 1.5px at 32% 18%, rgba(18,50,74,0.08) 55%, transparent 58%),
+        radial-gradient(2px 2px at 58% 26%, rgba(18,50,74,0.08) 55%, transparent 58%),
+        radial-gradient(2px 2px at 82% 22%, rgba(18,50,74,0.10) 55%, transparent 58%),
+        radial-gradient(1.5px 1.5px at 22% 56%, rgba(18,50,74,0.08) 55%, transparent 58%),
+        radial-gradient(2px 2px at 76% 60%, rgba(18,50,74,0.08) 55%, transparent 58%);
+      opacity: 0.35;
+      pointer-events:none;
+    }
+
+    #card.dropping{
+      box-shadow: 0 20px 70px rgba(0,0,0,0.35), 0 0 0 6px rgba(255,204,77,0.20);
+      outline-color: rgba(255,204,77,0.25);
+    }
+
+    #bgDecor{
+      position:absolute; inset:0;
+      pointer-events:none;
+      z-index:1;
+    }
+    .floatDeco{
+      position:absolute;
+      font-size: 18px;
+      opacity: 0.28;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.10));
+      animation: floaty 7s ease-in-out infinite;
+    }
+    @keyframes floaty{
+      0%,100%{ transform: translate(0,0) rotate(0deg); }
+      50%{ transform: translate(0, -10px) rotate(6deg); }
+    }
+
+    #cardInner{
+      position:absolute; inset:0;
+      padding: 54px 24px 76px;
+      z-index: 3;
+      pointer-events:none;
+    }
+
+    #greeting{
+      pointer-events:auto;
+      max-width: 560px;
+      color: var(--ink);
+      text-shadow: 0 3px 0 rgba(255,255,255,0.65);
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(18,50,74,0.10);
+      border-radius: 22px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+      backdrop-filter: blur(6px);
+    }
+    .headline{
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      line-height: 1.05;
+      margin-bottom: 6px;
+    }
+    .subline{
+      font-size: 13px;
+      opacity: 0.95;
+      margin-bottom: 8px;
+    }
+    .subline span[contenteditable="true"]{
+      display:inline-block;
+      padding: 2px 6px;
+      border-radius: 10px;
+      outline: none;
+      background: rgba(255,255,255,0.85);
+      border: 1px dashed rgba(18,50,74,0.18);
+      min-width: 64px;
+    }
+    .message{
+      font-size: 14px;
+      line-height: 1.35;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(18,50,74,0.10);
+      outline: none;
+      min-height: 50px;
+    }
+
+    #snow, #confetti{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      z-index: 4;
+      pointer-events:none;
+    }
+    #confetti{ z-index: 7; }
+
+    #snowPile{
+      position:absolute; left:-10%; right:-10%; bottom:-18px;
+      height: 56px;
+      background:
+        radial-gradient(60px 26px at 12% 30%, rgba(255,255,255,0.95) 60%, transparent 62%),
+        radial-gradient(80px 28px at 32% 40%, rgba(255,255,255,0.95) 60%, transparent 62%),
+        radial-gradient(70px 30px at 52% 35%, rgba(255,255,255,0.95) 60%, transparent 62%),
+        radial-gradient(90px 34px at 74% 45%, rgba(255,255,255,0.95) 60%, transparent 62%),
+        radial-gradient(70px 28px at 90% 35%, rgba(255,255,255,0.95) 60%, transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,0.92), rgba(225,245,255,0.92));
+      filter: blur(0.2px);
+      border-top: 1px solid rgba(18,50,74,0.08);
+      z-index: 2;
+      pointer-events:none;
+      transition: height 0.35s ease;
+    }
+
+    .lights{
+      position:absolute; left:0; right:0; top:0;
+      height: 56px;
+      z-index: 8;
+      pointer-events:none;
+    }
+    .lights::before{
+      content:"";
+      position:absolute; left:-20px; right:-20px; top:16px;
+      height: 2px;
+      background: rgba(18,50,74,0.20);
+      box-shadow: 0 2px 0 rgba(255,255,255,0.45);
+      opacity: 0.75;
+    }
+    .bulb{
+      position:absolute;
+      top: 16px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      transform: translate(-50%, 0);
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.18),
+        0 0 18px currentColor;
+      opacity: 0.95;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    .bulb::after{
+      content:"";
+      position:absolute;
+      left:50%; top:-8px;
+      width: 8px; height: 8px;
+      transform: translateX(-50%);
+      border-radius: 2px 2px 4px 4px;
+      background: rgba(18,50,74,0.30);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.40);
+    }
+    @keyframes blink{
+      0%,100%{ filter: brightness(0.92); opacity: 0.75; }
+      50%{ filter: brightness(1.25); opacity: 1; }
+    }
+
+    .placed-sticker{
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      transform:
+        translate(-50%, -50%)
+        rotate(var(--rot, 0deg))
+        scale(var(--scale, 1))
+        scaleX(var(--flipX, 1));
+      font-size: 58px;
+      line-height: 1;
+      cursor: grab;
+      user-select:none;
+      touch-action:none;
+      z-index: 6;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.18));
+      will-change: left, top, transform;
+      animation: popIn 0.25s ease-out both;
+    }
+    @keyframes popIn{
+      from{ transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(0.7) scaleX(var(--flipX,1)); opacity: 0.0; }
+      to{ transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(var(--scale,1)) scaleX(var(--flipX,1)); opacity: 1; }
+    }
+    .placed-sticker:active{ cursor: grabbing; }
+    .placed-sticker.selected{
+      outline: 3px solid rgba(255,204,77,0.65);
+      outline-offset: 6px;
+      border-radius: 18px;
+      filter: drop-shadow(0 12px 22px rgba(0,0,0,0.22));
+    }
+    .placed-sticker.wiggle{
+      animation: wiggle 0.38s ease-in-out both;
+    }
+    @keyframes wiggle{
+      0%{ transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(var(--scale,1)) scaleX(var(--flipX,1)); }
+      25%{ transform: translate(-50%,-50%) rotate(calc(var(--rot,0deg) - 10deg)) scale(calc(var(--scale,1) * 1.02)) scaleX(var(--flipX,1)); }
+      55%{ transform: translate(-50%,-50%) rotate(calc(var(--rot,0deg) + 10deg)) scale(calc(var(--scale,1) * 1.03)) scaleX(var(--flipX,1)); }
+      100%{ transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(var(--scale,1)) scaleX(var(--flipX,1)); }
+    }
+
+    #stickerControls{
+      position:absolute;
+      z-index: 9;
+      display:flex;
+      gap:8px;
+      padding: 8px;
+      border-radius: 18px;
+      background: rgba(18,50,74,0.14);
+      border: 1px solid rgba(18,50,74,0.14);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+      backdrop-filter: blur(10px);
+      transform: translate(-50%, -100%);
+      pointer-events:auto;
+    }
+    #stickerControls button{
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(18,50,74,0.12);
+      color: #12324a;
+      font-weight: 900;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.10);
+    }
+    #stickerControls button:active{ transform: translateY(1px) scale(0.99); }
+
+    #sideTools{
+      width: 250px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      padding: 12px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 18px 45px rgba(0,0,0,0.22);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .toolBoxTitle{
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      font-size: 14px;
+      margin: 0;
+      opacity: 0.95;
+    }
+    .toolRow{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(0,0,0,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .toolToggle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-weight: 800;
+      font-size: 13px;
+      user-select:none;
+    }
+    .toolToggle input{
+      width: 20px;
+      height: 20px;
+      accent-color: #ffcc4d;
+    }
+    .toolRow label{
+      font-size: 13px;
+      font-weight: 800;
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color: #ffcc4d;
+    }
+
+    #trash{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight: 900;
+      font-size: 13px;
+      padding: 14px 10px;
+      border-radius: 18px;
+      background: rgba(255,122,162,0.14);
+      border: 1px solid rgba(255,122,162,0.20);
+      user-select:none;
+      min-height: 56px;
+    }
+    #trash.hot{
+      background: rgba(255,122,162,0.22);
+      border-color: rgba(255,122,162,0.32);
+      box-shadow: 0 0 0 6px rgba(255,122,162,0.14);
+    }
+
+    #traySection{
+      width: min(1180px, 98vw);
+      padding: 0 14px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .trayTitleRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 0 6px;
+      opacity: 0.95;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+    }
+    .trayTitleRow .tip{
+      opacity: 0.85;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    #stickerTray{
+      display:flex;
+      gap:10px;
+      padding: 12px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 18px 45px rgba(0,0,0,0.22);
+      backdrop-filter: blur(10px);
+      overflow-x:auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+    }
+    .traySticker{
+      width: 86px;
+      min-width: 86px;
+      height: 86px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.85);
+      border: 2px solid rgba(18,50,74,0.12);
+      color: #12324a;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.14);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      cursor: grab;
+      user-select:none;
+      touch-action:none;
+      scroll-snap-align: start;
+      transition: transform 0.12s ease, filter 0.12s ease;
+      padding: 6px;
+    }
+    .traySticker:hover{
+      transform: translateY(-2px);
+      filter: brightness(1.02);
+    }
+    .traySticker:active{
+      cursor: grabbing;
+      transform: translateY(0) scale(0.99);
+    }
+    .traySticker .emo{ font-size: 34px; line-height: 1; }
+    .traySticker .lbl{
+      font-size: 11px;
+      font-weight: 900;
+      opacity: 0.92;
+      text-align:center;
+      line-height: 1.05;
+    }
+
+    .dragGhost{
+      position:fixed;
+      left:0; top:0;
+      transform: translate(-50%,-50%) scale(1.22);
+      font-size: 58px;
+      line-height: 1;
+      pointer-events:none;
+      z-index: 9999;
+      filter: drop-shadow(0 18px 28px rgba(0,0,0,0.30));
+      will-change: left, top;
+    }
+
+    .sparkle{
+      position:absolute;
+      left:0; top:0;
+      transform: translate(-50%,-50%) rotate(var(--r,0deg)) scale(var(--s,1));
+      font-size: 26px;
+      pointer-events:none;
+      z-index: 8;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.18));
+      animation: sparkleUp 0.72s ease-out forwards;
+    }
+    @keyframes sparkleUp{
+      0%{ opacity:0; transform: translate(-50%,-45%) rotate(var(--r,0deg)) scale(calc(var(--s,1) * 0.8)); }
+      15%{ opacity:1; }
+      100%{ opacity:0; transform: translate(-50%,-120%) rotate(calc(var(--r,0deg) + 35deg)) scale(calc(var(--s,1) * 1.2)); }
+    }
+
+    #footer{
+      padding: 10px 14px 14px;
+      opacity: 0.82;
+      font-size: 12px;
+      text-align:center;
+    }
+    kbd{
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 940px){
+      body{ overflow:auto; }
+      #cardArea{
+        flex-direction:column;
+        overflow:visible;
+      }
+      #sideTools{
+        width: 100%;
+        flex-direction:row;
+        flex-wrap:wrap;
+        justify-content:space-between;
+      }
+      .toolRow{
+        flex:1;
+        min-width: 220px;
+      }
+      #trash{
+        flex: 1;
+        min-width: 220px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      #bgStars{ animation:none; }
+      .logo{ animation:none; }
+      .bulb{ animation:none; }
+      .floatDeco{ animation:none; }
+      .placed-sticker{ animation:none; }
+      .sparkle{ animation:none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="bgStars" aria-hidden="true"></div>
+
+  <div id="app">
+    <header id="topBar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">❄️</div>
+        <div class="titles">
+          <h1>Warm & Fun Holiday Card</h1>
+          <p>Drag stickers • Tap for silly sounds • Make it snow!</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="btnSound" class="primary" aria-pressed="true" title="Toggle sound (and voices)">🔊 Sound: On</button>
+        <button id="btnJingle" title="Play a short holiday jingle">🎶 Play Jingle</button>
+        <button id="btnCelebrate" class="primary" title="Confetti party!">🎉 Celebrate!</button>
+        <button id="btnReset" class="danger" title="Clear and put back the starter stickers">🧼 Reset</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section id="cardArea" aria-label="Card builder">
+        <div id="card" role="application" aria-label="Holiday card (drop stickers here)">
+          <div class="lights" aria-hidden="true" id="lights"></div>
+          <div id="bgDecor" aria-hidden="true"></div>
+          <div id="snowPile" aria-hidden="true"></div>
+          <canvas id="snow" aria-hidden="true"></canvas>
+          <canvas id="confetti" aria-hidden="true"></canvas>
+
+          <div id="cardInner">
+            <div id="greeting" aria-label="Card message (editable)">
+              <div class="headline">Happy Holidays!</div>
+              <div class="subline">
+                To:
+                <span id="toName" contenteditable="true" spellcheck="false" aria-label="To">My Friend</span>
+                &nbsp;•&nbsp; From:
+                <span id="fromName" contenteditable="true" spellcheck="false" aria-label="From">Me</span>
+              </div>
+              <div class="message" id="message" contenteditable="true" spellcheck="false" aria-label="Message">
+                Drag stickers from the shelf onto the card. Tap a sticker to make it wiggle and play a fun sound!
+              </div>
+            </div>
+          </div>
+
+          <div id="stickerControls" hidden aria-label="Sticker controls">
+            <button data-act="bigger" title="Make bigger">＋</button>
+            <button data-act="smaller" title="Make smaller">－</button>
+            <button data-act="rotL" title="Rotate left">⟲</button>
+            <button data-act="rotR" title="Rotate right">⟳</button>
+            <button data-act="flip" title="Flip">⇋</button>
+            <button data-act="delete" title="Delete">🗑</button>
+          </div>
+        </div>
+
+        <aside id="sideTools" aria-label="Tools">
+          <div class="toolRow">
+            <p class="toolBoxTitle" style="margin:0 0 6px;">Magic Tools</p>
+            <label class="toolToggle" title="Tap the card to stamp sparkles">
+              <span>✨ Sparkle Pen</span>
+              <input type="checkbox" id="sparkleMode" />
+            </label>
+            <label class="toolToggle" title="Snap sticker positions to a gentle grid">
+              <span>🧲 Snap</span>
+              <input type="checkbox" id="magnetMode" />
+            </label>
+          </div>
+
+          <div class="toolRow">
+            <p class="toolBoxTitle" style="margin:0 0 6px;">Snowfall</p>
+            <label for="snowLevel">❄️ Snow Level: <span id="snowLabel" style="font-weight:900;">2</span></label>
+            <input id="snowLevel" type="range" min="0" max="3" step="1" value="2" />
+            <div style="font-size:12px;opacity:0.9;font-weight:800;line-height:1.25;">
+              Tip: Use the mouse wheel over a sticker to resize it.
+            </div>
+          </div>
+
+          <div id="trash" aria-label="Trash (drop sticker here to delete)">
+            🗑 Drop here to delete
+          </div>
+        </aside>
+      </section>
+
+      <section id="traySection" aria-label="Sticker shelf">
+        <div class="trayTitleRow">
+          <div>Sticker Shelf (drag onto the card!)</div>
+          <div class="tip">Double-click a sticker to remove • Click empty card to deselect</div>
+        </div>
+
+        <div id="stickerTray">
+          <button class="traySticker" data-emoji="🎅" data-label="Santa" data-sound="santa"><div class="emo">🎅</div><div class="lbl">Santa</div></button>
+          <button class="traySticker" data-emoji="🤶" data-label="Mrs Claus" data-sound="santa"><div class="emo">🤶</div><div class="lbl">Mrs Claus</div></button>
+          <button class="traySticker" data-emoji="🧑‍🎄" data-label="Santa Pal" data-sound="santa"><div class="emo">🧑‍🎄</div><div class="lbl">Santa Pal</div></button>
+          <button class="traySticker" data-emoji="🦌" data-label="Reindeer" data-sound="bell"><div class="emo">🦌</div><div class="lbl">Reindeer</div></button>
+          <button class="traySticker" data-emoji="🛷" data-label="Sleigh" data-sound="whoosh"><div class="emo">🛷</div><div class="lbl">Sleigh</div></button>
+
+          <button class="traySticker" data-emoji="⛄" data-label="Snowman" data-sound="boing"><div class="emo">⛄</div><div class="lbl">Snowman</div></button>
+          <button class="traySticker" data-emoji="❄️" data-label="Snowflake" data-sound="twinkle"><div class="emo">❄️</div><div class="lbl">Snowflake</div></button>
+          <button class="traySticker" data-emoji="⭐" data-label="Star" data-sound="twinkle"><div class="emo">⭐</div><div class="lbl">Star</div></button>
+          <button class="traySticker" data-emoji="🌟" data-label="Sparkle" data-sound="twinkle"><div class="emo">🌟</div><div class="lbl">Sparkle</div></button>
+          <button class="traySticker" data-emoji="🔔" data-label="Bell" data-sound="bell"><div class="emo">🔔</div><div class="lbl">Bell</div></button>
+
+          <button class="traySticker" data-emoji="🎄" data-label="Tree" data-sound="twinkle"><div class="emo">🎄</div><div class="lbl">Tree</div></button>
+          <button class="traySticker" data-emoji="🎁" data-label="Gift" data-sound="pop"><div class="emo">🎁</div><div class="lbl">Gift</div></button>
+          <button class="traySticker" data-emoji="🎀" data-label="Bow" data-sound="bell"><div class="emo">🎀</div><div class="lbl">Bow</div></button>
+          <button class="traySticker" data-emoji="🧦" data-label="Stocking" data-sound="bell"><div class="emo">🧦</div><div class="lbl">Stocking</div></button>
+          <button class="traySticker" data-emoji="🕯️" data-label="Candle" data-sound="twinkle"><div class="emo">🕯️</div><div class="lbl">Candle</div></button>
+
+          <button class="traySticker" data-emoji="🍪" data-label="Cookie" data-sound="chomp"><div class="emo">🍪</div><div class="lbl">Cookie</div></button>
+          <button class="traySticker" data-emoji="🧁" data-label="Cupcake" data-sound="pop"><div class="emo">🧁</div><div class="lbl">Cupcake</div></button>
+          <button class="traySticker" data-emoji="🍬" data-label="Candy" data-sound="bell"><div class="emo">🍬</div><div class="lbl">Candy</div></button>
+          <button class="traySticker" data-emoji="🍭" data-label="Candy Cane" data-sound="bell"><div class="emo">🍭</div><div class="lbl">Candy Cane</div></button>
+          <button class="traySticker" data-emoji="☕" data-label="Cocoa" data-sound="sip"><div class="emo">☕</div><div class="lbl">Cocoa</div></button>
+
+          <button class="traySticker" data-emoji="🧸" data-label="Teddy" data-sound="boing"><div class="emo">🧸</div><div class="lbl">Teddy</div></button>
+          <button class="traySticker" data-emoji="🐧" data-label="Penguin" data-sound="boing"><div class="emo">🐧</div><div class="lbl">Penguin</div></button>
+          <button class="traySticker" data-emoji="🐻‍❄️" data-label="Polar Bear" data-sound="boing"><div class="emo">🐻‍❄️</div><div class="lbl">Polar Bear</div></button>
+          <button class="traySticker" data-emoji="🦊" data-label="Fox Friend" data-sound="twinkle"><div class="emo">🦊</div><div class="lbl">Fox Friend</div></button>
+          <button class="traySticker" data-emoji="😇" data-label="Angel" data-sound="twinkle"><div class="emo">😇</div><div class="lbl">Angel</div></button>
+
+          <button class="traySticker" data-emoji="❤️" data-label="Heart" data-sound="twinkle"><div class="emo">❤️</div><div class="lbl">Heart</div></button>
+          <button class="traySticker" data-emoji="🌈" data-label="Rainbow" data-sound="twinkle"><div class="emo">🌈</div><div class="lbl">Rainbow</div></button>
+          <button class="traySticker" data-emoji="🦖" data-label="Dino" data-sound="roar"><div class="emo">🦖</div><div class="lbl">Dino</div></button>
+          <button class="traySticker" data-emoji="🎵" data-label="Music" data-sound="twinkle"><div class="emo">🎵</div><div class="lbl">Music</div></button>
+          <button class="traySticker" data-emoji="🎲" data-label="Surprise!" data-sound="pop"><div class="emo">🎲</div><div class="lbl">Surprise!</div></button>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer">
+      Sound unlock tip: click anywhere once if your device blocks sounds. Keyboard: <kbd>Del</kbd> deletes selected • <kbd>+</kbd>/<kbd>-</kbd> resize • Arrow keys move.
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const $ = (sel, root=document) => root.querySelector(sel);
+
+      const card = $("#card");
+      const tray = $("#stickerTray");
+      const trash = $("#trash");
+      const controls = $("#stickerControls");
+      const sparkleMode = $("#sparkleMode");
+      const magnetMode = $("#magnetMode");
+      const snowLevelEl = $("#snowLevel");
+      const snowLabel = $("#snowLabel");
+      const snowPile = $("#snowPile");
+      const snowCanvas = $("#snow");
+      const confettiCanvas = $("#confetti");
+      const lights = $("#lights");
+      const bgDecor = $("#bgDecor");
+
+      const btnSound = $("#btnSound");
+      const btnJingle = $("#btnJingle");
+      const btnCelebrate = $("#btnCelebrate");
+      const btnReset = $("#btnReset");
+
+      let soundEnabled = true;
+      let selected = null;
+      let zCounter = 10;
+
+      // --- Cute lights along the top ---
+      function buildLights(){
+        const colors = ["#ff4d6d","#ffcc4d","#49e2ff","#7cff7c","#b06cff","#ffd1f0"];
+        const count = 18;
+        for(let i=0;i<count;i++){
+          const b = document.createElement("div");
+          b.className = "bulb";
+          const c = colors[i % colors.length];
+          b.style.color = c;
+          b.style.background = c;
+          b.style.left = (4 + (i*(92/(count-1)))) + "%";
+          b.style.animationDelay = (Math.random()*1.2).toFixed(2) + "s";
+          b.style.animationDuration = (1.1 + Math.random()*1.0).toFixed(2) + "s";
+          lights.appendChild(b);
+        }
+      }
+
+      // --- Floating background decor inside the card ---
+      function buildBgDecor(){
+        const icons = ["❄️","✨","⭐","🌟","❄️","✨","⭐","❄️"];
+        const count = 16;
+        for(let i=0;i<count;i++){
+          const s = document.createElement("div");
+          s.className = "floatDeco";
+          s.textContent = icons[i % icons.length];
+          s.style.left = (Math.random()*92 + 4).toFixed(2) + "%";
+          s.style.top = (Math.random()*70 + 18).toFixed(2) + "%";
+          s.style.animationDelay = (Math.random()*3).toFixed(2) + "s";
+          s.style.animationDuration = (5.5 + Math.random()*4.5).toFixed(2) + "s";
+          bgDecor.appendChild(s);
+        }
+      }
+
+      // --- Sound (WebAudio + optional speech) ---
+      const Sound = (() => {
+        let ctx = null;
+        let master = null;
+        let enabled = true;
+
+        function init(){
+          if(ctx) return;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if(!AC) return;
+          ctx = new AC();
+          master = ctx.createGain();
+          master.gain.value = 0.75;
+          master.connect(ctx.destination);
+        }
+        async function resume(){
+          init();
+          if(!ctx) return;
+          if(ctx.state === "suspended"){
+            try{ await ctx.resume(); }catch(_){}
+          }
+        }
+        function setEnabled(v){
+          enabled = !!v;
+          if(master && ctx){
+            const t = ctx.currentTime;
+            master.gain.cancelScheduledValues(t);
+            master.gain.setValueAtTime(master.gain.value, t);
+            master.gain.linearRampToValueAtTime(enabled ? 0.75 : 0.0, t + 0.05);
+          }
+        }
+
+        function beep(freq, duration, type="sine", gain=0.16){
+          if(!enabled) return;
+          init(); if(!ctx) return;
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = type;
+          o.frequency.value = freq;
+          const t = ctx.currentTime;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+          o.connect(g); g.connect(master);
+          o.start(t);
+          o.stop(t + duration + 0.03);
+        }
+
+        function slideBeep(f1, f2, duration, type="triangle", gain=0.18){
+          if(!enabled) return;
+          init(); if(!ctx) return;
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = type;
+          const t = ctx.currentTime;
+          o.frequency.setValueAtTime(f1, t);
+          o.frequency.exponentialRampToValueAtTime(Math.max(10, f2), t + duration);
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + duration + 0.02);
+          o.connect(g); g.connect(master);
+          o.start(t);
+          o.stop(t + duration + 0.06);
+        }
+
+        function noise(duration, gain=0.10, highpass=800){
+          if(!enabled) return;
+          init(); if(!ctx) return;
+          const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * duration)), ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for(let i=0;i<data.length;i++){
+            const env = Math.pow(1 - i/data.length, 0.6);
+            data[i] = (Math.random()*2 - 1) * env;
+          }
+          const src = ctx.createBufferSource();
+          src.buffer = buffer;
+
+          const hp = ctx.createBiquadFilter();
+          hp.type = "highpass";
+          hp.frequency.value = highpass;
+
+          const g = ctx.createGain();
+          g.gain.value = gain;
+
+          src.connect(hp);
+          hp.connect(g);
+          g.connect(master);
+          src.start();
+          src.stop(ctx.currentTime + duration + 0.02);
+        }
+
+        function plop(){
+          beep(240, 0.12, "sine", 0.22);
+          beep(160, 0.16, "triangle", 0.14);
+        }
+        function twinkle(){
+          beep(1200, 0.06, "sine", 0.10);
+          beep(1600, 0.08, "sine", 0.08);
+        }
+        function bell(){
+          beep(880, 0.20, "sine", 0.18);
+          beep(1320, 0.18, "sine", 0.12);
+          beep(1760, 0.16, "sine", 0.08);
+        }
+        function boing(){
+          slideBeep(460, 140, 0.28, "triangle", 0.22);
+        }
+        function pop(){
+          noise(0.08, 0.16, 1000);
+        }
+        function whoosh(){
+          noise(0.18, 0.09, 1200);
+        }
+
+        function jingle(){
+          if(!enabled) return;
+          init(); if(!ctx) return;
+          const notes = [
+            [784,0.18],[784,0.18],[784,0.22],[784,0.18],[784,0.18],[784,0.22],
+            [784,0.18],[988,0.18],[659,0.18],[698,0.18],[784,0.32],
+            [880,0.18],[880,0.18],[880,0.18],[880,0.18],[880,0.18],
+            [784,0.18],[784,0.18],[784,0.12],[784,0.12],[698,0.18],[698,0.18],
+            [784,0.18],[698,0.22],[988,0.24]
+          ];
+          let time = ctx.currentTime + 0.03;
+
+          for(const [f,d] of notes){
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = "sine";
+            o.frequency.value = f;
+
+            g.gain.setValueAtTime(0.0001, time);
+            g.gain.exponentialRampToValueAtTime(0.095, time + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, time + d);
+
+            o.connect(g); g.connect(master);
+            o.start(time); o.stop(time + d + 0.03);
+
+            const o2 = ctx.createOscillator();
+            const g2 = ctx.createGain();
+            o2.type = "sine";
+            o2.frequency.value = f * 2;
+
+            g2.gain.setValueAtTime(0.0001, time);
+            g2.gain.exponentialRampToValueAtTime(0.030, time + 0.01);
+            g2.gain.exponentialRampToValueAtTime(0.0001, time + d);
+
+            o2.connect(g2); g2.connect(master);
+            o2.start(time); o2.stop(time + d + 0.03);
+
+            time += d + 0.02;
+          }
+        }
+
+        function speak(text){
+          if(!enabled) return;
+          if(!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") return;
+          try{
+            const u = new SpeechSynthesisUtterance(text);
+            u.rate = 1.06;
+            u.pitch = 1.18;
+            u.volume = 0.95;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(u);
+          }catch(_){}
+        }
+
+        return { init, resume, setEnabled, plop, twinkle, bell, boing, pop, whoosh, jingle, speak };
+      })();
+
+      function playStickerSound(kind){
+        if(!soundEnabled) return;
+        Sound.resume();
+
+        switch(kind){
+          case "twinkle": Sound.twinkle(); break;
+          case "bell": Sound.bell(); break;
+          case "boing": Sound.boing(); break;
+          case "whoosh": Sound.whoosh(); break;
+          case "pop": Sound.pop(); break;
+          case "sip":
+            Sound.twinkle();
+            setTimeout(() => Sound.bell(), 80);
+            break;
+          case "chomp":
+            Sound.pop();
+            setTimeout(() => Sound.boing(), 70);
+            break;
+          case "roar":
+            Sound.boing();
+            setTimeout(() => Sound.whoosh(), 90);
+            setTimeout(() => Sound.pop(), 160);
+            Sound.speak("Rawr! Happy holidays!");
+            break;
+          case "santa":
+            Sound.bell();
+            setTimeout(() => Sound.twinkle(), 80);
+            Sound.speak("Ho ho ho! Happy holidays!");
+            break;
+          default:
+            Sound.plop();
+        }
+      }
+
+      // Unlock audio on first gesture
+      window.addEventListener("pointerdown", () => {
+        if(soundEnabled) Sound.resume();
+      }, {passive:true});
+
+      btnSound.addEventListener("click", async () => {
+        soundEnabled = !soundEnabled;
+        btnSound.setAttribute("aria-pressed", String(soundEnabled));
+        btnSound.textContent = soundEnabled ? "🔊 Sound: On" : "🔇 Sound: Off";
+        Sound.setEnabled(soundEnabled);
+        if(soundEnabled) await Sound.resume();
+      });
+
+      btnJingle.addEventListener("click", async () => {
+        if(!soundEnabled) return;
+        await Sound.resume();
+        Sound.jingle();
+        stampSparkles(6, 0.12);
+      });
+
+      // --- Snow + Confetti canvases ---
+      const snowCtx = snowCanvas.getContext("2d", {alpha:true});
+      const confettiCtx = confettiCanvas.getContext("2d", {alpha:true});
+
+      let cardRect = null;
+      let dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      let snowLevel = parseInt(snowLevelEl.value, 10);
+      let flakes = [];
+      let confetti = [];
+      let confettiTimeLeft = 0;
+
+      const pointer = { x: 0, y: 0, inside: false };
+
+      function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+      function updateCardRect(){
+        cardRect = card.getBoundingClientRect();
+        dpr = Math.max(1, window.devicePixelRatio || 1);
+
+        for(const c of [snowCanvas, confettiCanvas]){
+          c.width = Math.max(1, Math.floor(cardRect.width * dpr));
+          c.height = Math.max(1, Math.floor(cardRect.height * dpr));
+          c.style.width = cardRect.width + "px";
+          c.style.height = cardRect.height + "px";
+        }
+        snowCtx.setTransform(dpr,0,0,dpr,0,0);
+        confettiCtx.setTransform(dpr,0,0,dpr,0,0);
+
+        regenFlakes(true);
+      }
+
+      function regenFlakes(reseed=false){
+        const w = cardRect?.width || 800;
+        const h = cardRect?.height || 500;
+
+        const base = Math.round((w*h)/9000); // ~40-60 on typical card
+        const mult = [0, 1.0, 1.8, 2.8][snowLevel] ?? 1.8;
+        const target = Math.round(base * mult);
+
+        if(reseed){
+          flakes = [];
+        }
+
+        // Adjust to target
+        while(flakes.length < target){
+          flakes.push({
+            x: Math.random()*w,
+            y: Math.random()*h,
+            r: 1 + Math.random()*3.2,
+            vy: 0.45 + Math.random()*1.5,
+            vx: -0.35 + Math.random()*0.7,
+            wob: Math.random()*Math.PI*2,
+            wobSpd: 0.012 + Math.random()*0.03,
+            a: 0.55 + Math.random()*0.45
+          });
+        }
+        if(flakes.length > target){
+          flakes.length = target;
+        }
+
+        snowLabel.textContent = String(snowLevel);
+        snowPile.style.height = (44 + snowLevel*10) + "px";
+      }
+
+      function launchConfetti(){
+        const w = cardRect.width;
+        const h = cardRect.height;
+        const colors = ["#ff4d6d","#ffcc4d","#49e2ff","#7cff7c","#b06cff","#ffd1f0","#ff9f43","#6dffef"];
+        const count = 220;
+
+        confetti.length = 0;
+        confettiTimeLeft = 2.8;
+
+        for(let i=0;i<count;i++){
+          const fromTop = Math.random() < 0.33;
+          const x = Math.random()*w;
+          const y = fromTop ? -10 - Math.random()*40 : h + 10 + Math.random()*40;
+          const vx = (Math.random()*2 - 1) * 2.6;
+          const vy = fromTop ? (1.8 + Math.random()*3.2) : (-2.0 - Math.random()*3.5);
+          confetti.push({
+            x, y, vx, vy,
+            g: 3.2 + Math.random()*2.4,
+            s: 4 + Math.random()*7,
+            rot: Math.random()*Math.PI*2,
+            vr: (Math.random()*2 - 1) * 9.0,
+            col: colors[(Math.random()*colors.length)|0],
+            a: 0.9
+          });
+        }
+      }
+
+      function tick(dt){
+        if(!cardRect) return;
+
+        const w = cardRect.width;
+        const h = cardRect.height;
+
+        // Snow
+        snowCtx.clearRect(0,0,w,h);
+        if(snowLevel > 0 && flakes.length){
+          snowCtx.save();
+          snowCtx.globalCompositeOperation = "lighter";
+
+          for(const f of flakes){
+            const swirl = pointer.inside ? ((pointer.x - w/2) / (w/2)) : 0;
+            f.wob += f.wobSpd;
+            f.x += f.vx + Math.sin(f.wob)*0.35 + swirl*0.18;
+            f.y += f.vy;
+
+            if(f.y > h + 10){ f.y = -10; f.x = Math.random()*w; }
+            if(f.x < -20) f.x = w + 20;
+            if(f.x > w + 20) f.x = -20;
+
+            snowCtx.globalAlpha = f.a;
+            snowCtx.fillStyle = "rgba(255,255,255,0.95)";
+            snowCtx.beginPath();
+            snowCtx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+            snowCtx.fill();
+          }
+          snowCtx.restore();
+        }
+
+        // Confetti
+        confettiCtx.clearRect(0,0,w,h);
+        if(confettiTimeLeft > 0 && confetti.length){
+          confettiTimeLeft -= dt;
+          for(const p of confetti){
+            p.vy += p.g * dt;
+            p.x += p.vx * (60*dt);
+            p.y += p.vy * (60*dt);
+            p.rot += p.vr * dt;
+
+            p.a *= 0.997;
+            confettiCtx.globalAlpha = Math.max(0, Math.min(1, p.a));
+            confettiCtx.save();
+            confettiCtx.translate(p.x, p.y);
+            confettiCtx.rotate(p.rot);
+            confettiCtx.fillStyle = p.col;
+            confettiCtx.fillRect(-p.s/2, -p.s/2, p.s, p.s*0.65);
+            confettiCtx.restore();
+          }
+          // Cleanup if done
+          if(confettiTimeLeft <= 0){
+            confetti.length = 0;
+            confettiCtx.clearRect(0,0,w,h);
+          }
+        }
+      }
+
+      // animation loop
+      let lastT = performance.now();
+      function loop(t){
+        const dt = Math.min(0.05, (t - lastT)/1000);
+        lastT = t;
+        tick(dt);
+        requestAnimationFrame(loop);
+      }
+
+      // Track pointer for snow swirl
+      card.addEventListener("pointermove", (e) => {
+        if(!cardRect) return;
+        pointer.x = e.clientX - cardRect.left;
+        pointer.y = e.clientY - cardRect.top;
+        pointer.inside = pointer.x >= 0 && pointer.x <= cardRect.width && pointer.y >= 0 && pointer.y <= cardRect.height;
+      }, {passive:true});
+      card.addEventListener("pointerleave", () => { pointer.inside = false; }, {passive:true});
+
+      // Resize observer for card size changes
+      const ro = new ResizeObserver(() => updateCardRect());
+      ro.observe(card);
+      window.addEventListener("resize", () => updateCardRect(), {passive:true});
+
+      // --- Stickers (drag & drop) ---
+      function makePlacedSticker({emoji, label, sound, x, y, scale=1, rotDeg=0, flipX=1}){
+        const el = document.createElement("div");
+        el.className = "placed-sticker";
+        el.textContent = emoji;
+        el.style.left = x + "px";
+        el.style.top = y + "px";
+        el.style.setProperty("--scale", String(scale));
+        el.style.setProperty("--rot", rotDeg + "deg");
+        el.style.setProperty("--flipX", String(flipX));
+        el.dataset.sound = sound || "plop";
+        el.dataset.label = label || "Sticker";
+        el.tabIndex = 0;
+        el.setAttribute("role", "button");
+        el.setAttribute("aria-label", label || "Sticker");
+        el.style.zIndex = String(++zCounter);
+
+        // drag existing sticker
+        el.addEventListener("pointerdown", (e) => beginDragExisting(e, el));
+
+        el.addEventListener("dblclick", (e) => {
+          e.stopPropagation();
+          deleteSticker(el);
+        });
+
+        el.addEventListener("click", (e) => {
+          // a click after a drag can still happen on some browsers; ignore if dragging
+          if(drag && drag.el === el && drag.moved) return;
+          e.stopPropagation();
+          selectSticker(el);
+          tapSticker(el);
+        });
+
+        el.addEventListener("keydown", (e) => {
+          if(e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            selectSticker(el);
+            tapSticker(el);
+          }
+        });
+
+        card.appendChild(el);
+        return el;
+      }
+
+      function tapSticker(el){
+        el.classList.remove("wiggle");
+        // restart animation
+        void el.offsetWidth;
+        el.classList.add("wiggle");
+
+        const sound = el.dataset.sound || "plop";
+        playStickerSound(sound);
+
+        // special: gift surprise
+        if(el.textContent === "🎁"){
+          if(Math.random() < 0.35){
+            launchConfetti();
+            if(soundEnabled) { Sound.resume(); Sound.pop(); setTimeout(() => Sound.twinkle(), 70); }
+          }
+        }
+        // cookie crumbs sparkles
+        if(el.textContent === "🍪" && Math.random() < 0.5){
+          const p = getStickerCenterInCard(el);
+          stampSparkles(4, 0.08, p.x, p.y);
+        }
+      }
+
+      function getStickerCenterInCard(el){
+        if(!cardRect) updateCardRect();
+        const r = el.getBoundingClientRect();
+        const cr = card.getBoundingClientRect();
+        return { x: (r.left + r.width/2) - cr.left, y: (r.top + r.height/2) - cr.top };
+      }
+
+      function selectSticker(el){
+        if(selected === el) { updateControlsPosition(); return; }
+        if(selected) selected.classList.remove("selected");
+        selected = el || null;
+        if(selected){
+          selected.classList.add("selected");
+          controls.hidden = false;
+          updateControlsPosition();
+        }else{
+          controls.hidden = true;
+        }
+      }
+
+      function deleteSticker(el){
+        if(!el) return;
+        if(selected === el) selectSticker(null);
+        el.remove();
+        if(soundEnabled) { Sound.resume(); Sound.pop(); }
+      }
+
+      function updateControlsPosition(){
+        if(!selected) return;
+        const cr = card.getBoundingClientRect();
+        const sr = selected.getBoundingClientRect();
+        const cx = (sr.left + sr.width/2) - cr.left;
+        const top = (sr.top - cr.top) - 8;
+        const x = clamp(cx, 80, cr.width - 80);
+        const y = clamp(top, 52, cr.height - 12);
+        controls.style.left = x + "px";
+        controls.style.top = y + "px";
+      }
+
+      // Sparkle stamping
+      function addSparkleAt(x, y, emo){
+        const s = document.createElement("div");
+        s.className = "sparkle";
+        const choices = ["✨","⭐","🌟","❄️","💖","💫"];
+        s.textContent = emo || choices[(Math.random()*choices.length)|0];
+        s.style.left = x + "px";
+        s.style.top = y + "px";
+        s.style.setProperty("--r", ((Math.random()*70 - 35)|0) + "deg");
+        s.style.setProperty("--s", (0.85 + Math.random()*0.9).toFixed(2));
+        card.appendChild(s);
+        setTimeout(() => s.remove(), 800);
+      }
+
+      function stampSparkles(n=6, spread=0.12, cx=null, cy=null){
+        if(!cardRect) updateCardRect();
+        const w = cardRect.width, h = cardRect.height;
+        const x0 = (cx == null) ? (w*0.5) : cx;
+        const y0 = (cy == null) ? (h*0.25) : cy;
+        for(let i=0;i<n;i++){
+          const a = Math.random()*Math.PI*2;
+          const r = (Math.random() * Math.min(w,h) * spread);
+          addSparkleAt(x0 + Math.cos(a)*r, y0 + Math.sin(a)*r);
+        }
+        if(soundEnabled) { Sound.resume(); Sound.twinkle(); }
+      }
+
+      // Drag state
+      let drag = null;
+      function beginDragNewFromTray(e, trayButton){
+        if(!trayButton) return;
+        e.preventDefault();
+        if(soundEnabled) Sound.resume();
+
+        const emoji = trayButton.dataset.emoji;
+        const label = trayButton.dataset.label || "Sticker";
+        const sound = trayButton.dataset.sound || "plop";
+
+        // Surprise button: pick random sticker each time
+        let finalEmoji = emoji;
+        let finalLabel = label;
+        let finalSound = sound;
+        if(emoji === "🎲"){
+          const pool = [...tray.querySelectorAll(".traySticker")].filter(b => b.dataset.emoji !== "🎲");
+          const pick = pool[(Math.random()*pool.length)|0];
+          finalEmoji = pick.dataset.emoji;
+          finalLabel = "Surprise: " + (pick.dataset.label || "Sticker");
+          finalSound = pick.dataset.sound || "pop";
+        }
+
+        const ghost = document.createElement("div");
+        ghost.className = "dragGhost";
+        ghost.textContent = finalEmoji;
+        ghost.style.left = e.clientX + "px";
+        ghost.style.top = e.clientY + "px";
+        document.body.appendChild(ghost);
+
+        trayButton.setPointerCapture(e.pointerId);
+        drag = {
+          mode: "new",
+          pointerId: e.pointerId,
+          ghost,
+          emoji: finalEmoji,
+          label: finalLabel,
+          sound: finalSound,
+          moved: false,
+          startX: e.clientX,
+          startY: e.clientY
+        };
+
+        highlightDropTarget(e.clientX, e.clientY);
+      }
+
+      function beginDragExisting(e, el){
+        e.preventDefault();
+        e.stopPropagation();
+        if(soundEnabled) Sound.resume();
+
+        selectSticker(el);
+        el.setPointerCapture(e.pointerId);
+
+        const cr = card.getBoundingClientRect();
+        const px = e.clientX - cr.left;
+        const py = e.clientY - cr.top;
+
+        const left = parseFloat(el.style.left) || px;
+        const top = parseFloat(el.style.top) || py;
+
+        drag = {
+          mode: "move",
+          pointerId: e.pointerId,
+          el,
+          offsetX: px - left,
+          offsetY: py - top,
+          moved: false,
+          startX: e.clientX,
+          startY: e.clientY
+        };
+
+        el.style.zIndex = String(++zCounter);
+        updateControlsPosition();
+      }
+
+      function highlightDropTarget(clientX, clientY){
+        const cr = card.getBoundingClientRect();
+        const inCard = (clientX >= cr.left && clientX <= cr.right && clientY >= cr.top && clientY <= cr.bottom);
+        card.classList.toggle("dropping", inCard);
+      }
+
+      function hotTrash(clientX, clientY){
+        const tr = trash.getBoundingClientRect();
+        const hot = (clientX >= tr.left && clientX <= tr.right && clientY >= tr.top && clientY <= tr.bottom);
+        trash.classList.toggle("hot", hot);
+        return hot;
+      }
+
+      function onPointerMove(e){
+        if(!drag || e.pointerId !== drag.pointerId) return;
+
+        const movedDist = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY);
+        if(movedDist > 4) drag.moved = true;
+
+        if(drag.mode === "new"){
+          drag.ghost.style.left = e.clientX + "px";
+          drag.ghost.style.top = e.clientY + "px";
+          highlightDropTarget(e.clientX, e.clientY);
+          hotTrash(e.clientX, e.clientY);
+        }else if(drag.mode === "move"){
+          const cr = card.getBoundingClientRect();
+          let x = (e.clientX - cr.left) - drag.offsetX;
+          let y = (e.clientY - cr.top) - drag.offsetY;
+
+          if(magnetMode.checked){
+            const grid = 12;
+            x = Math.round(x / grid) * grid;
+            y = Math.round(y / grid) * grid;
+          }
+
+          drag.el.style.left = x + "px";
+          drag.el.style.top = y + "px";
+          updateControlsPosition();
+          hotTrash(e.clientX, e.clientY);
+        }
+      }
+
+      function onPointerUp(e){
+        if(!drag || e.pointerId !== drag.pointerId) return;
+
+        const wasMoved = drag.moved;
+        const trHot = hotTrash(e.clientX, e.clientY);
+        trash.classList.remove("hot");
+
+        if(drag.mode === "new"){
+          card.classList.remove("dropping");
+
+          const cr = card.getBoundingClientRect();
+          const inCard = (e.clientX >= cr.left && e.clientX <= cr.right && e.clientY >= cr.top && e.clientY <= cr.bottom);
+
+          drag.ghost.remove();
+
+          if(inCard && !trHot){
+            let x = e.clientX - cr.left;
+            let y = e.clientY - cr.top;
+
+            // clamp within card area
+            x = clamp(x, 34, cr.width - 34);
+            y = clamp(y, 70, cr.height - 54);
+
+            const rot = ((Math.random()*18 - 9)|0);
+            const scale = 0.92 + Math.random()*0.25;
+
+            const el = makePlacedSticker({
+              emoji: drag.emoji,
+              label: drag.label,
+              sound: drag.sound,
+              x, y,
+              rotDeg: rot,
+              scale
+            });
+
+            selectSticker(el);
+            updateControlsPosition();
+
+            if(soundEnabled) { Sound.resume(); Sound.plop(); }
+            addSparkleAt(x, y, Math.random() < 0.5 ? "✨" : "❄️");
+          } else {
+            if(soundEnabled) { Sound.resume(); Sound.whoosh(); }
+          }
+        } else if(drag.mode === "move"){
+          if(trHot){
+            deleteSticker(drag.el);
+          } else {
+            // Clamp inside card bounds gently
+            const cr = card.getBoundingClientRect();
+            let x = parseFloat(drag.el.style.left) || 0;
+            let y = parseFloat(drag.el.style.top) || 0;
+            x = clamp(x, 24, cr.width - 24);
+            y = clamp(y, 58, cr.height - 44);
+            drag.el.style.left = x + "px";
+            drag.el.style.top = y + "px";
+            updateControlsPosition();
+
+            // if it was basically a tap, do tap action
+            if(!wasMoved){
+              tapSticker(drag.el);
+            } else {
+              if(soundEnabled) { Sound.resume(); Sound.plop(); }
+            }
+          }
+        }
+
+        drag = null;
+        card.classList.remove("dropping");
+      }
+
+      window.addEventListener("pointermove", onPointerMove, {passive:false});
+      window.addEventListener("pointerup", onPointerUp, {passive:false});
+      window.addEventListener("pointercancel", onPointerUp, {passive:false});
+
+      tray.addEventListener("pointerdown", (e) => {
+        const btn = e.target.closest(".traySticker");
+        if(!btn) return;
+        beginDragNewFromTray(e, btn);
+      });
+
+      // Card background interactions (sparkle pen + deselect)
+      card.addEventListener("pointerdown", async (e) => {
+        // allow editing inside contenteditable without stamping
+        if(e.target.closest("[contenteditable='true']")) return;
+        if(e.target.closest(".placed-sticker")) return;
+        if(e.target.closest("#stickerControls")) return;
+
+        if(soundEnabled) await Sound.resume();
+
+        const cr = card.getBoundingClientRect();
+        const x = e.clientX - cr.left;
+        const y = e.clientY - cr.top;
+
+        if(sparkleMode.checked){
+          addSparkleAt(x, y);
+          if(soundEnabled) Sound.twinkle();
+        }else{
+          selectSticker(null);
+          if(soundEnabled && Math.random() < 0.15) Sound.twinkle();
+        }
+      });
+
+      document.addEventListener("pointerdown", (e) => {
+        // click outside card/tray controls -> deselect
+        if(e.target.closest("#card")) return;
+        if(e.target.closest("#stickerTray")) return;
+        if(e.target.closest("#topBar")) return;
+        selectSticker(null);
+      });
+
+      // Sticker controls actions
+      controls.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-act]");
+        if(!btn || !selected) return;
+
+        const act = btn.dataset.act;
+        const getVar = (name, fallback) => {
+          const v = getComputedStyle(selected).getPropertyValue(name).trim();
+          if(!v) return fallback;
+          if(name === "--rot") return parseFloat(v) || fallback;
+          if(name === "--scale") return parseFloat(v) || fallback;
+          if(name === "--flipX") return parseFloat(v) || fallback;
+          return fallback;
+        };
+
+        if(act === "bigger"){
+          const s = getVar("--scale", 1);
+          selected.style.setProperty("--scale", String(clamp(s + 0.10, 0.35, 2.2)));
+          if(soundEnabled) Sound.twinkle();
+        } else if(act === "smaller"){
+          const s = getVar("--scale", 1);
+          selected.style.setProperty("--scale", String(clamp(s - 0.10, 0.35, 2.2)));
+          if(soundEnabled) Sound.twinkle();
+        } else if(act === "rotL"){
+          const r = getVar("--rot", 0);
+          selected.style.setProperty("--rot", (r - 12) + "deg");
+          if(soundEnabled) Sound.bell();
+        } else if(act === "rotR"){
+          const r = getVar("--rot", 0);
+          selected.style.setProperty("--rot", (r + 12) + "deg");
+          if(soundEnabled) Sound.bell();
+        } else if(act === "flip"){
+          const f = getVar("--flipX", 1);
+          selected.style.setProperty("--flipX", String(f * -1));
+          if(soundEnabled) Sound.pop();
+        } else if(act === "delete"){
+          deleteSticker(selected);
+        }
+
+        updateControlsPosition();
+      });
+
+      // Wheel resize on stickers
+      card.addEventListener("wheel", (e) => {
+        const el = e.target.closest(".placed-sticker");
+        if(!el) return;
+        e.preventDefault();
+        selectSticker(el);
+
+        const current = parseFloat(getComputedStyle(el).getPropertyValue("--scale")) || 1;
+        const delta = (e.deltaY < 0) ? 0.08 : -0.08;
+        el.style.setProperty("--scale", String(clamp(current + delta, 0.35, 2.2)));
+        updateControlsPosition();
+        if(soundEnabled) Sound.twinkle();
+      }, {passive:false});
+
+      // Keyboard controls for selected sticker
+      window.addEventListener("keydown", (e) => {
+        if(!selected) return;
+
+        const step = e.shiftKey ? 12 : 6;
+        const cr = card.getBoundingClientRect();
+
+        let x = parseFloat(selected.style.left) || (cr.width/2);
+        let y = parseFloat(selected.style.top) || (cr.height/2);
+
+        if(e.key === "Delete" || e.key === "Backspace"){
+          e.preventDefault();
+          deleteSticker(selected);
+          return;
+        }
+
+        if(e.key === "+" || e.key === "="){
+          e.preventDefault();
+          const s = parseFloat(getComputedStyle(selected).getPropertyValue("--scale")) || 1;
+          selected.style.setProperty("--scale", String(clamp(s + 0.10, 0.35, 2.2)));
+          updateControlsPosition();
+          if(soundEnabled) Sound.twinkle();
+          return;
+        }
+        if(e.key === "-" || e.key === "_"){
+          e.preventDefault();
+          const s = parseFloat(getComputedStyle(selected).getPropertyValue("--scale")) || 1;
+          selected.style.setProperty("--scale", String(clamp(s - 0.10, 0.35, 2.2)));
+          updateControlsPosition();
+          if(soundEnabled) Sound.twinkle();
+          return;
+        }
+
+        if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
+          e.preventDefault();
+          if(e.key === "ArrowLeft") x -= step;
+          if(e.key === "ArrowRight") x += step;
+          if(e.key === "ArrowUp") y -= step;
+          if(e.key === "ArrowDown") y += step;
+
+          x = clamp(x, 24, cr.width - 24);
+          y = clamp(y, 58, cr.height - 44);
+
+          selected.style.left = x + "px";
+          selected.style.top = y + "px";
+          updateControlsPosition();
+          if(soundEnabled && Math.random() < 0.22) Sound.plop();
+        }
+      });
+
+      // Snow slider
+      snowLevelEl.addEventListener("input", () => {
+        snowLevel = parseInt(snowLevelEl.value, 10);
+        regenFlakes(false);
+        if(soundEnabled) { Sound.resume(); Sound.twinkle(); }
+      });
+
+      // Celebrate button
+      btnCelebrate.addEventListener("click", async () => {
+        if(soundEnabled) await Sound.resume();
+        launchConfetti();
+        stampSparkles(10, 0.18);
+        if(soundEnabled){
+          Sound.pop();
+          setTimeout(() => Sound.jingle(), 80);
+          setTimeout(() => Sound.speak("Happy holidays!"), 220);
+        }
+      });
+
+      // Reset button: clear stickers and restore starters
+      function clearPlacedStickers(){
+        for(const el of [...card.querySelectorAll(".placed-sticker")]){
+          el.remove();
+        }
+        selectSticker(null);
+      }
+
+      function addStarterStickers(){
+        if(!cardRect) updateCardRect();
+        const w = cardRect.width, h = cardRect.height;
+
+        const starters = [
+          {emoji:"🎄", label:"Tree", sound:"twinkle", x:w*0.52, y:h*0.78, scale:1.22, rotDeg:-3},
+          {emoji:"⭐", label:"Star", sound:"twinkle", x:w*0.52, y:h*0.18, scale:1.05, rotDeg:6},
+          {emoji:"⛄", label:"Snowman", sound:"boing", x:w*0.22, y:h*0.72, scale:1.08, rotDeg:-6},
+          {emoji:"🎁", label:"Gift", sound:"pop", x:w*0.78, y:h*0.77, scale:1.05, rotDeg:4},
+          {emoji:"🦌", label:"Reindeer", sound:"bell", x:w*0.78, y:h*0.52, scale:0.96, rotDeg:-8}
+        ];
+
+        for(const s of starters){
+          makePlacedSticker(s);
+        }
+
+        // Little extra charm
+        makePlacedSticker({emoji:"🔔", label:"Bell", sound:"bell", x:w*0.24, y:h*0.30, scale:0.88, rotDeg:12});
+        makePlacedSticker({emoji:"❄️", label:"Snowflake", sound:"twinkle", x:w*0.84, y:h*0.30, scale:0.90, rotDeg:-10});
+      }
+
+      btnReset.addEventListener("click", async () => {
+        if(soundEnabled) await Sound.resume();
+        clearPlacedStickers();
+        addStarterStickers();
+        stampSparkles(8, 0.20);
+        if(soundEnabled) { Sound.whoosh(); setTimeout(() => Sound.plop(), 80); }
+      });
+
+      // Initial load
+      buildLights();
+      buildBgDecor();
+      updateCardRect();
+      regenFlakes(true);
+      addStarterStickers();
+      requestAnimationFrame(loop);
+
+      // A tiny welcome sparkle
+      setTimeout(() => stampSparkles(7, 0.18), 450);
+    })();
+  </script>
+</body>
+</html>

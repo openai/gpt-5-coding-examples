@@ -1,0 +1,2038 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0f2a1b" />
+  <title>Camping Gear Checklist</title>
+  <style>
+    :root{
+      --sky-0:#9bd7ff;
+      --sky-1:#6fbef7;
+      --pine-0:#0f2a1b;
+      --pine-1:#0b2015;
+      --moss:#22c55e;
+      --moss-2:#16a34a;
+      --ember:#f59e0b;
+      --stone:#94a3b8;
+      --clay:#8b5e34;
+      --danger:#ef4444;
+
+      --text:#ecf4ee;
+      --muted:#b9c9bf;
+      --muted-2:#93a79b;
+
+      --card:rgba(9, 24, 16, .66);
+      --card-2:rgba(9, 24, 16, .54);
+      --line:rgba(236, 244, 238, .12);
+      --line-2:rgba(236, 244, 238, .18);
+      --shadow: 0 18px 55px rgba(0,0,0,.38);
+      --shadow-2: 0 10px 24px rgba(0,0,0,.28);
+
+      --radius:18px;
+      --radius-sm:12px;
+
+      --focus: 0 0 0 3px rgba(34, 197, 94, .35), 0 0 0 1px rgba(34, 197, 94, .65) inset;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background: radial-gradient(1200px 900px at 20% 10%, rgba(155, 215, 255, .55), transparent 55%),
+                  radial-gradient(1000px 700px at 80% 20%, rgba(245, 158, 11, .15), transparent 55%),
+                  linear-gradient(180deg, var(--sky-0), var(--sky-1) 35%, #2f6b46 62%, #133521 100%);
+      overflow-x:hidden;
+    }
+
+    .scene{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:-2;
+      pointer-events:none;
+      opacity:.98;
+    }
+
+    .grain{
+      position:fixed;
+      inset:-50%;
+      z-index:-1;
+      pointer-events:none;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,.05) 0 1px, transparent 2px),
+        radial-gradient(circle at 40% 60%, rgba(255,255,255,.04) 0 1px, transparent 2px),
+        radial-gradient(circle at 80% 30%, rgba(0,0,0,.05) 0 1px, transparent 2px);
+      background-size: 170px 170px, 220px 220px, 260px 260px;
+      mix-blend-mode: overlay;
+      opacity:.35;
+      transform: rotate(2deg);
+      filter: blur(.2px);
+    }
+
+    .app{
+      min-height:100%;
+      padding: 18px 14px 44px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header.top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 16px 16px 14px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(9,24,16,.72), rgba(9,24,16,.54));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand{
+      display:flex;
+      gap: 12px;
+      min-width: 260px;
+      align-items:flex-start;
+    }
+    .logo{
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: radial-gradient(circle at 30% 30%, rgba(34, 197, 94, .35), transparent 55%),
+                  radial-gradient(circle at 60% 70%, rgba(245, 158, 11, .22), transparent 60%),
+                  linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      display:grid;
+      place-items:center;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+    }
+    .brand h1{
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: .2px;
+    }
+    .brand p{
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .top-controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      justify-content:flex-end;
+      align-items:flex-end;
+      min-width: min(520px, 100%);
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width: 160px;
+    }
+    .field.grow{ flex: 1 1 240px; min-width: 220px; }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .2px;
+    }
+    input[type="text"], input[type="search"], input[type="number"], select{
+      width:100%;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 11px;
+      outline:none;
+      box-shadow: 0 1px 0 rgba(0,0,0,.18) inset;
+    }
+    input::placeholder{ color: rgba(236,244,238,.55); }
+    input:focus, select:focus, textarea:focus{
+      box-shadow: var(--focus);
+      border-color: rgba(34,197,94,.5);
+    }
+    select{ appearance:none; background-image: linear-gradient(45deg, transparent 50%, rgba(236,244,238,.7) 50%), linear-gradient(135deg, rgba(236,244,238,.7) 50%, transparent 50%); background-position: calc(100% - 16px) calc(50% - 3px), calc(100% - 11px) calc(50% - 3px); background-size: 6px 6px, 6px 6px; background-repeat:no-repeat; padding-right: 30px; }
+
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 600;
+      letter-spacing:.15px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ border-color: var(--line-2); background: rgba(255,255,255,.08); }
+    .btn:active{ transform: translateY(1px); box-shadow: 0 8px 14px rgba(0,0,0,.18); }
+    .btn:focus{ outline:none; box-shadow: var(--focus), 0 10px 18px rgba(0,0,0,.18); }
+    .btn.primary{
+      border-color: rgba(34,197,94,.4);
+      background: linear-gradient(180deg, rgba(34,197,94,.35), rgba(22,163,74,.2));
+    }
+    .btn.danger{
+      border-color: rgba(239,68,68,.45);
+      background: linear-gradient(180deg, rgba(239,68,68,.25), rgba(239,68,68,.12));
+    }
+    .btn.slim{ padding: 9px 10px; font-weight: 700; }
+
+    main.grid{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap: 14px;
+      align-items:start;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(9,24,16,.68), rgba(9,24,16,.52));
+      box-shadow: var(--shadow-2);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .card-head{
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 12px;
+    }
+    .card h2{
+      margin:0;
+      font-size: 16px;
+      letter-spacing:.2px;
+    }
+    .subhead{
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height:1.35;
+    }
+
+    .card-body{ padding: 14px; }
+
+    .mini-controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .mini-controls > *{ min-width: 0; }
+    .mini-controls .btn{ box-shadow:none; }
+
+    .add-form{
+      padding: 14px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    }
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+    }
+    .row + .row{ margin-top: 10px; }
+    .weight-input{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+    }
+    .weight-input input{ flex: 1 1 auto; min-width: 100px; }
+    .weight-input select{ width: 92px; }
+
+    .add-actions{
+      margin-top: 12px;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .hint kbd{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+    }
+
+    .list-wrap{ padding: 10px 10px 12px; }
+    ul.items{
+      list-style:none;
+      margin:0;
+      padding:0;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .item{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.14);
+    }
+    .item.packed{
+      background: rgba(34,197,94,.09);
+      border-color: rgba(34,197,94,.22);
+    }
+    .item .main{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .item input[type="checkbox"]{
+      width: 18px;
+      height: 18px;
+      accent-color: var(--moss);
+      cursor:pointer;
+      flex: 0 0 auto;
+    }
+    .item .title{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .item .name{
+      font-weight: 700;
+      font-size: 14px;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .item.packed .name{ text-decoration: line-through; color: rgba(236,244,238,.82); }
+    .item .notes{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .meta{
+      display:flex;
+      gap: 6px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      font-size: 11.5px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      white-space:nowrap;
+    }
+    .pill.cat{ border-color: rgba(148,163,184,.22); color: rgba(236,244,238,.92); }
+    .pill.wt{ border-color: rgba(245,158,11,.2); }
+    .pill.qty{ border-color: rgba(34,197,94,.2); }
+
+    .item .actions{
+      display:flex;
+      gap: 6px;
+      align-items:center;
+      flex: 0 0 auto;
+    }
+    .icon-btn{
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display:grid;
+      place-items:center;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      cursor:pointer;
+    }
+    .icon-btn:hover{ border-color: var(--line-2); background: rgba(255,255,255,.08); }
+    .icon-btn:focus{ outline:none; box-shadow: var(--focus); }
+    .icon{
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: rgba(236,244,238,.92);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .empty{
+      margin: 10px 4px 2px;
+      padding: 14px 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(236,244,238,.22);
+      color: var(--muted);
+      display:none;
+      background: rgba(0,0,0,.1);
+    }
+    .empty strong{ color: var(--text); }
+
+    aside.side{
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      position: sticky;
+      top: 14px;
+      align-self:start;
+    }
+
+    .stats{
+      padding: 14px;
+    }
+    .stats-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stat{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 10px;
+      background: rgba(255,255,255,.04);
+    }
+    .stat .label{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .stat .value{
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+    .stat .small{
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .progress{
+      margin-top: 12px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 10px 11px;
+      background: rgba(0,0,0,.12);
+    }
+    .bar{
+      height: 10px;
+      border-radius: 999px;
+      border:1px solid rgba(236,244,238,.14);
+      background: rgba(255,255,255,.05);
+      overflow:hidden;
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(34,197,94,.75), rgba(245,158,11,.55));
+      border-radius: 999px;
+      transition: width .25s ease;
+    }
+    .progress-meta{
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .breakdown{
+      margin-top: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+    .breakdown h3{
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: rgba(236,244,238,.92);
+      letter-spacing:.2px;
+    }
+    .break-rows{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+    .break-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 8px 9px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+    .break-row .left{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      min-width: 0;
+    }
+    .break-row .cat{
+      font-weight: 700;
+      font-size: 12.5px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 180px;
+    }
+    .break-row .right{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex: 0 0 auto;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .chip{
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.12);
+      color: var(--muted);
+    }
+
+    .saved{
+      padding: 14px;
+    }
+    .status-line{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin-top: 8px;
+      flex-wrap:wrap;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      color: var(--muted);
+      user-select:none;
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius: 999px;
+      background: rgba(148,163,184,.8);
+      box-shadow: 0 0 0 3px rgba(148,163,184,.12);
+    }
+    .status-pill.saved .dot{ background: rgba(34,197,94,.85); box-shadow: 0 0 0 3px rgba(34,197,94,.12); }
+    .status-pill.dirty .dot{ background: rgba(245,158,11,.9); box-shadow: 0 0 0 3px rgba(245,158,11,.12); }
+    .status-pill.unsaved .dot{ background: rgba(148,163,184,.8); box-shadow: 0 0 0 3px rgba(148,163,184,.12); }
+
+    .saved-actions{
+      margin-top: 12px;
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+    }
+    .saved-actions .btn{ box-shadow:none; }
+
+    .saved-head{
+      margin-top: 12px;
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .import-label{
+      position:relative;
+      overflow:hidden;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .import-label input[type="file"]{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      cursor:pointer;
+      width:100%;
+      height:100%;
+    }
+    ul.saved-lists{
+      list-style:none;
+      margin: 10px 0 0;
+      padding: 0;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      max-height: 340px;
+      overflow:auto;
+      padding-right: 4px;
+    }
+    .saved-item{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.12);
+    }
+    .saved-item.active{
+      border-color: rgba(34,197,94,.26);
+      background: rgba(34,197,94,.08);
+    }
+    .saved-item .info{
+      flex:1 1 auto;
+      min-width: 0;
+      display:flex;
+      flex-direction:column;
+      gap: 3px;
+    }
+    .saved-item .title{
+      font-weight: 800;
+      font-size: 13.5px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .saved-item .sub{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .saved-item .btn{ box-shadow:none; padding: 9px 10px; }
+
+    .tips{
+      padding: 14px;
+    }
+    .tips ul{
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height:1.5;
+    }
+
+    footer{
+      margin-top: 14px;
+      padding: 12px 6px;
+      color: rgba(236,244,238,.72);
+      font-size: 12px;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    footer a{
+      color: rgba(236,244,238,.84);
+      text-decoration:none;
+      border-bottom:1px dashed rgba(236,244,238,.25);
+    }
+    footer a:hover{ border-bottom-color: rgba(236,244,238,.55); }
+
+    dialog{
+      border:1px solid var(--line);
+      border-radius: 18px;
+      padding: 0;
+      background: linear-gradient(180deg, rgba(9,24,16,.92), rgba(9,24,16,.82));
+      color: var(--text);
+      box-shadow: var(--shadow);
+      width: min(720px, calc(100vw - 22px));
+    }
+    dialog::backdrop{
+      background: rgba(0,0,0,.52);
+      backdrop-filter: blur(4px);
+    }
+    .dlg-head{
+      padding: 14px 14px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .dlg-head h3{ margin:0; font-size: 15px; }
+    .dlg-body{ padding: 14px; }
+    .dlg-actions{
+      padding: 12px 14px 14px;
+      border-top:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      background: rgba(255,255,255,.03);
+    }
+    .dlg-actions .left, .dlg-actions .right{
+      display:flex; gap: 8px; flex-wrap:wrap;
+    }
+
+    .toast{
+      position:fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      z-index: 9999;
+      background: rgba(9,24,16,.92);
+      border:1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 12px;
+      color: var(--text);
+      box-shadow: var(--shadow-2);
+      backdrop-filter: blur(10px);
+      display:none;
+      max-width: min(760px, calc(100vw - 22px));
+      font-size: 13px;
+      align-items:center;
+      gap: 10px;
+    }
+    .toast.show{ display:flex; }
+    .toast .tag{
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+    .toast .msg{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    @media (max-width: 980px){
+      main.grid{ grid-template-columns: 1fr; }
+      aside.side{ position: static; }
+      header.top{ flex-direction:column; align-items:stretch; }
+      .brand{ min-width: 0; }
+      .top-controls{ justify-content:flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="scene" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="gSky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#a7ddff"/>
+        <stop offset="0.38" stop-color="#69b7f3"/>
+        <stop offset="0.62" stop-color="#2c6a45"/>
+        <stop offset="1" stop-color="#0c2015"/>
+      </linearGradient>
+      <linearGradient id="gMount1" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#1f4d33" stop-opacity="0.95"/>
+        <stop offset="1" stop-color="#0d2417" stop-opacity="0.95"/>
+      </linearGradient>
+      <linearGradient id="gMount2" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#2b6a45" stop-opacity="0.9"/>
+        <stop offset="1" stop-color="#0e2a1b" stop-opacity="0.92"/>
+      </linearGradient>
+      <radialGradient id="gSun" cx="28%" cy="18%" r="40%">
+        <stop offset="0" stop-color="#ffd9a3" stop-opacity="0.55"/>
+        <stop offset="0.45" stop-color="#ffd9a3" stop-opacity="0.18"/>
+        <stop offset="1" stop-color="#ffd9a3" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="1440" height="900" fill="url(#gSky)"/>
+    <rect x="0" y="0" width="1440" height="900" fill="url(#gSun)"/>
+    <!-- far mountains -->
+    <path d="M0 540 L140 485 L240 510 L360 450 L470 490 L640 415 L760 470 L900 420 L1030 480 L1160 430 L1290 500 L1440 455 L1440 900 L0 900 Z" fill="url(#gMount2)" opacity="0.65"/>
+    <!-- near mountains -->
+    <path d="M0 650 L160 560 L310 630 L420 540 L580 640 L690 560 L830 660 L940 560 L1090 650 L1230 590 L1440 640 L1440 900 L0 900 Z" fill="url(#gMount1)" opacity="0.78"/>
+    <!-- foreground ridge -->
+    <path d="M0 780 C240 700, 460 820, 720 760 C980 700, 1180 820, 1440 760 L1440 900 L0 900 Z" fill="#0b2015" opacity="0.65"/>
+  </svg>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="app" id="app">
+    <header class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(236,244,238,.92)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 20h18"></path>
+            <path d="M5 20l7-14 7 14"></path>
+            <path d="M9 20l3-6 3 6"></path>
+            <path d="M4 12c2-1 4-1 6 0"></path>
+            <path d="M14 12c2-1 4-1 6 0"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>Camping Gear Checklist</h1>
+          <p>Track gear for trips, calculate pack weight, and save lists locally in your browser.</p>
+        </div>
+      </div>
+
+      <div class="top-controls">
+        <div class="field grow">
+          <label for="tripName">Trip name</label>
+          <input id="tripName" type="text" maxlength="60" placeholder="e.g., Weekend at Lake Crescent" autocomplete="off" />
+        </div>
+        <div class="field" style="min-width: 150px;">
+          <label for="unitSelect">Display units</label>
+          <select id="unitSelect" aria-label="Display units">
+            <option value="g">Grams (g)</option>
+            <option value="kg">Kilograms (kg)</option>
+            <option value="lb">Pounds (lb)</option>
+          </select>
+        </div>
+        <button class="btn slim" id="newListBtn" type="button" title="Start a new list">New list</button>
+        <button class="btn primary slim" id="saveListBtn" type="button" title="Save or update this list (Ctrl/⌘+S)">Save</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card" aria-label="Checklist">
+        <div class="card-head">
+          <div>
+            <h2>Checklist</h2>
+            <div class="subhead">Check items as you pack. Weight totals update instantly.</div>
+          </div>
+          <div class="mini-controls">
+            <input id="searchInput" type="search" placeholder="Search gear…" aria-label="Search gear" style="min-width: 200px;" />
+            <select id="filterPacked" aria-label="Filter packed">
+              <option value="all">All</option>
+              <option value="unpacked">Unpacked</option>
+              <option value="packed">Packed</option>
+            </select>
+            <select id="filterCategory" aria-label="Filter category">
+              <option value="__all__">All categories</option>
+            </select>
+            <button class="btn" id="packAllBtn" type="button" title="Mark all as packed">Pack all</button>
+            <button class="btn" id="unpackAllBtn" type="button" title="Mark all as unpacked">Unpack all</button>
+          </div>
+        </div>
+
+        <form class="add-form" id="addForm" autocomplete="off">
+          <div class="row">
+            <div class="field grow">
+              <label for="itemName">Item</label>
+              <input id="itemName" type="text" required maxlength="80" placeholder="e.g., Sleeping bag" />
+            </div>
+            <div class="field" style="min-width: 190px;">
+              <label for="itemCategory">Category</label>
+              <input id="itemCategory" type="text" list="categoryOptions" maxlength="40" placeholder="e.g., Sleep" />
+              <datalist id="categoryOptions"></datalist>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field" style="min-width: 120px;">
+              <label for="itemQty">Qty</label>
+              <input id="itemQty" type="number" inputmode="numeric" min="1" step="1" value="1" />
+            </div>
+            <div class="field" style="min-width: 210px;">
+              <label for="itemWeight">Weight</label>
+              <div class="weight-input">
+                <input id="itemWeight" type="number" min="0" step="0.1" placeholder="0" required />
+                <select id="itemWeightUnit" aria-label="Weight unit">
+                  <option value="g">g</option>
+                  <option value="kg">kg</option>
+                  <option value="lb">lb</option>
+                </select>
+              </div>
+            </div>
+            <div class="field grow">
+              <label for="itemNotes">Notes (optional)</label>
+              <input id="itemNotes" type="text" maxlength="120" placeholder="e.g., Include stakes & poles" />
+            </div>
+          </div>
+
+          <div class="add-actions">
+            <button class="btn primary" type="submit">Add item</button>
+            <div class="hint">Tip: Press <kbd>Enter</kbd> in the Item field to add quickly.</div>
+          </div>
+        </form>
+
+        <div class="list-wrap">
+          <div class="empty" id="emptyState">
+            <strong>No items match your filters.</strong>
+            <div style="margin-top:6px;">Try clearing search, switching category, or add new gear above.</div>
+          </div>
+          <ul class="items" id="itemsList" aria-label="Gear items"></ul>
+        </div>
+      </section>
+
+      <aside class="side" aria-label="Sidebar">
+        <section class="card stats" aria-label="Weight and progress">
+          <h2>Weight & progress</h2>
+
+          <div class="stats-grid" style="margin-top:10px;">
+            <div class="stat">
+              <div class="label">Packed weight</div>
+              <div class="value" id="packedWeight">—</div>
+              <div class="small" id="packedCount">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Total list weight</div>
+              <div class="value" id="totalWeight">—</div>
+              <div class="small" id="totalCount">—</div>
+            </div>
+          </div>
+
+          <div class="progress" aria-label="Packing progress">
+            <div class="bar" aria-hidden="true"><div id="progressBar"></div></div>
+            <div class="progress-meta">
+              <span id="progressText">—</span>
+              <span id="remainingText">—</span>
+            </div>
+          </div>
+
+          <div class="breakdown">
+            <h3>By category</h3>
+            <div class="break-rows" id="categoryBreakdown"></div>
+          </div>
+        </section>
+
+        <section class="card saved" aria-label="Saved lists">
+          <h2>Saved lists</h2>
+
+          <div class="status-line">
+            <div class="status-pill unsaved" id="activeStatus" title="Save status">
+              <span class="dot" aria-hidden="true"></span>
+              <span id="activeStatusText">Unsaved</span>
+            </div>
+            <div class="hint" id="activeMeta">—</div>
+          </div>
+
+          <div class="saved-actions">
+            <button class="btn primary" id="saveAsBtn" type="button">Save / Update</button>
+            <button class="btn" id="duplicateBtn" type="button">Duplicate</button>
+            <button class="btn danger" id="deleteBtn" type="button">Delete</button>
+          </div>
+
+          <div class="saved-head">
+            <input id="savedSearch" type="search" placeholder="Find saved list…" aria-label="Search saved lists" class="grow" style="flex:1 1 220px;" />
+            <button class="btn" id="exportBtn" type="button">Export</button>
+            <label class="btn import-label" title="Import saved lists (JSON)">
+              <input id="importFile" type="file" accept="application/json" />
+              Import
+            </label>
+          </div>
+
+          <ul class="saved-lists" id="savedLists" aria-label="Saved lists"></ul>
+        </section>
+
+        <section class="card tips" aria-label="Trail notes">
+          <h2>Trail notes</h2>
+          <ul>
+            <li>Check items as you pack; the packed weight is what’s actually in your bag.</li>
+            <li>Use categories to spot heavy areas (often <em>Shelter</em>, <em>Sleep</em>, and <em>Kitchen</em>).</li>
+            <li>Saved lists live in your browser storage. Export JSON for a backup.</li>
+          </ul>
+        </section>
+      </aside>
+    </main>
+
+    <footer>
+      <div>Local-first: your lists stay on this device (unless you export them).</div>
+      <div><a href="#" id="aboutLink">About</a> · <a href="#" id="resetLink">Reset local data</a></div>
+    </footer>
+  </div>
+
+  <dialog id="editDialog" aria-label="Edit item dialog">
+    <div class="dlg-head">
+      <div>
+        <h3>Edit item</h3>
+        <div class="subhead" id="editSubtitle">Update details or remove from the list.</div>
+      </div>
+      <button class="icon-btn" id="editCloseBtn" type="button" aria-label="Close dialog" title="Close">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form id="editForm">
+      <div class="dlg-body">
+        <div class="row">
+          <div class="field grow">
+            <label for="editName">Item</label>
+            <input id="editName" type="text" required maxlength="80" />
+          </div>
+          <div class="field" style="min-width: 190px;">
+            <label for="editCategory">Category</label>
+            <input id="editCategory" type="text" list="categoryOptions" maxlength="40" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field" style="min-width: 120px;">
+            <label for="editQty">Qty</label>
+            <input id="editQty" type="number" min="1" step="1" />
+          </div>
+          <div class="field" style="min-width: 220px;">
+            <label for="editWeight">Weight</label>
+            <div class="weight-input">
+              <input id="editWeight" type="number" min="0" step="0.1" required />
+              <select id="editWeightUnit" aria-label="Edit weight unit">
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="lb">lb</option>
+              </select>
+            </div>
+          </div>
+          <div class="field grow">
+            <label for="editNotes">Notes</label>
+            <input id="editNotes" type="text" maxlength="120" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top: 6px;">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input id="editPacked" type="checkbox" style="width:18px;height:18px; accent-color: var(--moss);" />
+            <span style="color: var(--text); font-weight: 700;">Packed</span>
+            <span class="hint" style="margin-left:6px;">(checked items count toward packed weight)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="dlg-actions">
+        <div class="left">
+          <button class="btn danger" id="editDeleteBtn" type="button">Delete item</button>
+        </div>
+        <div class="right">
+          <button class="btn" id="editCancelBtn" type="button">Cancel</button>
+          <button class="btn primary" id="editSaveBtn" type="submit">Save changes</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span class="tag" id="toastTag">Info</span>
+    <span class="msg" id="toastMsg"></span>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const STORAGE = {
+        current: 'camping-gear-checklist.current.v1',
+        lists: 'camping-gear-checklist.lists.v1'
+      };
+
+      const DEFAULT_CATEGORIES = [
+        'Shelter', 'Sleep', 'Kitchen', 'Water', 'Clothing', 'Navigation', 'Safety', 'Hygiene', 'Tools', 'Misc'
+      ];
+
+      const DEFAULT_ITEMS = [
+        { name: 'Tent', category: 'Shelter', weight: 2100, qty: 1, notes: 'Including poles & stakes', packed: false },
+        { name: 'Sleeping bag', category: 'Sleep', weight: 1200, qty: 1, notes: '', packed: false },
+        { name: 'Sleeping pad', category: 'Sleep', weight: 520, qty: 1, notes: '', packed: false },
+        { name: 'Stove', category: 'Kitchen', weight: 300, qty: 1, notes: '', packed: false },
+        { name: 'Fuel canister', category: 'Kitchen', weight: 230, qty: 1, notes: '', packed: false },
+        { name: 'Pot / mug', category: 'Kitchen', weight: 260, qty: 1, notes: '', packed: false },
+        { name: 'Water filter', category: 'Water', weight: 95, qty: 1, notes: '', packed: false },
+        { name: 'Headlamp', category: 'Safety', weight: 90, qty: 1, notes: 'Bring spare batteries', packed: false },
+        { name: 'First aid kit', category: 'Safety', weight: 180, qty: 1, notes: '', packed: false },
+        { name: 'Rain jacket', category: 'Clothing', weight: 350, qty: 1, notes: '', packed: false },
+        { name: 'Extra socks', category: 'Clothing', weight: 75, qty: 2, notes: 'Pairs', packed: false },
+        { name: 'Map / compass', category: 'Navigation', weight: 60, qty: 1, notes: '', packed: false },
+        { name: 'Toothbrush & paste', category: 'Hygiene', weight: 45, qty: 1, notes: '', packed: false }
+      ];
+
+      const unitToGrams = { g: 1, kg: 1000, lb: 453.59237 };
+
+      const $ = (sel, root = document) => root.querySelector(sel);
+
+      const els = {
+        tripName: $('#tripName'),
+        unitSelect: $('#unitSelect'),
+        newListBtn: $('#newListBtn'),
+        saveListBtn: $('#saveListBtn'),
+
+        searchInput: $('#searchInput'),
+        filterPacked: $('#filterPacked'),
+        filterCategory: $('#filterCategory'),
+        packAllBtn: $('#packAllBtn'),
+        unpackAllBtn: $('#unpackAllBtn'),
+
+        addForm: $('#addForm'),
+        itemName: $('#itemName'),
+        itemCategory: $('#itemCategory'),
+        itemQty: $('#itemQty'),
+        itemWeight: $('#itemWeight'),
+        itemWeightUnit: $('#itemWeightUnit'),
+        itemNotes: $('#itemNotes'),
+
+        itemsList: $('#itemsList'),
+        emptyState: $('#emptyState'),
+
+        packedWeight: $('#packedWeight'),
+        totalWeight: $('#totalWeight'),
+        packedCount: $('#packedCount'),
+        totalCount: $('#totalCount'),
+        progressBar: $('#progressBar'),
+        progressText: $('#progressText'),
+        remainingText: $('#remainingText'),
+        categoryBreakdown: $('#categoryBreakdown'),
+
+        activeStatus: $('#activeStatus'),
+        activeStatusText: $('#activeStatusText'),
+        activeMeta: $('#activeMeta'),
+        saveAsBtn: $('#saveAsBtn'),
+        duplicateBtn: $('#duplicateBtn'),
+        deleteBtn: $('#deleteBtn'),
+        savedSearch: $('#savedSearch'),
+        exportBtn: $('#exportBtn'),
+        importFile: $('#importFile'),
+        savedLists: $('#savedLists'),
+
+        categoryOptions: $('#categoryOptions'),
+
+        editDialog: $('#editDialog'),
+        editForm: $('#editForm'),
+        editCloseBtn: $('#editCloseBtn'),
+        editCancelBtn: $('#editCancelBtn'),
+        editSaveBtn: $('#editSaveBtn'),
+        editDeleteBtn: $('#editDeleteBtn'),
+        editSubtitle: $('#editSubtitle'),
+        editName: $('#editName'),
+        editCategory: $('#editCategory'),
+        editQty: $('#editQty'),
+        editWeight: $('#editWeight'),
+        editWeightUnit: $('#editWeightUnit'),
+        editNotes: $('#editNotes'),
+        editPacked: $('#editPacked'),
+
+        toast: $('#toast'),
+        toastTag: $('#toastTag'),
+        toastMsg: $('#toastMsg'),
+
+        aboutLink: $('#aboutLink'),
+        resetLink: $('#resetLink')
+      };
+
+      let lists = [];
+      let state = null;
+      let editingId = null;
+      let saveTimer = null;
+      let toastTimer = null;
+
+      function uuid() {
+        if (crypto && crypto.randomUUID) return crypto.randomUUID();
+        return 'id-' + Math.random().toString(16).slice(2) + '-' + Date.now().toString(16);
+      }
+
+      function deepCopy(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+      function safeParse(json, fallback) {
+        try { return JSON.parse(json); } catch { return fallback; }
+      }
+
+      function clampInt(n, min, max) {
+        n = Number.isFinite(n) ? Math.trunc(n) : min;
+        return Math.max(min, Math.min(max, n));
+      }
+
+      function toGrams(value, unit) {
+        const v = Number(value);
+        const u = unitToGrams[unit] ?? 1;
+        if (!Number.isFinite(v) || v < 0) return 0;
+        return Math.round(v * u);
+      }
+
+      function fromGrams(grams, unit) {
+        const u = unitToGrams[unit] ?? 1;
+        return grams / u;
+      }
+
+      function formatWeight(grams, unit) {
+        grams = Math.max(0, Math.round(Number(grams) || 0));
+        if (unit === 'g') return grams.toLocaleString() + ' g';
+        if (unit === 'kg') {
+          const v = grams / 1000;
+          return trimZeros(v.toFixed(2)) + ' kg';
+        }
+        const v = grams / 453.59237;
+        return trimZeros(v.toFixed(2)) + ' lb';
+      }
+
+      function trimZeros(s) {
+        return s.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+      }
+
+      function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+          '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[c]));
+      }
+
+      function normalizeItem(raw) {
+        const item = {
+          id: String(raw?.id || uuid()),
+          name: String(raw?.name || '').trim(),
+          category: String(raw?.category || '').trim(),
+          weightGrams: Math.max(0, Math.round(Number(raw?.weightGrams ?? raw?.weight ?? 0) || 0)),
+          qty: clampInt(Number(raw?.qty ?? 1), 1, 999),
+          notes: String(raw?.notes || '').trim(),
+          packed: Boolean(raw?.packed)
+        };
+        if (!item.name) item.name = 'Untitled item';
+        return item;
+      }
+
+      function freshState(withTemplate = true) {
+        return {
+          activeListId: null,
+          listName: 'New trip',
+          unit: 'g',
+          items: withTemplate ? DEFAULT_ITEMS.map(x => normalizeItem({
+            id: uuid(),
+            name: x.name,
+            category: x.category,
+            weightGrams: x.weight,
+            qty: x.qty,
+            notes: x.notes,
+            packed: x.packed
+          })) : [],
+          dirty: true,
+          lastSavedAt: null,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+      }
+
+      function loadFromStorage() {
+        let storedLists = [];
+        let storedState = null;
+
+        try { storedLists = safeParse(localStorage.getItem(STORAGE.lists), []); } catch { storedLists = []; }
+        try { storedState = safeParse(localStorage.getItem(STORAGE.current), null); } catch { storedState = null; }
+
+        lists = Array.isArray(storedLists) ? storedLists.map(normalizeList).filter(Boolean) : [];
+
+        if (!storedState || !Array.isArray(storedState.items)) {
+          state = freshState(true);
+          scheduleSaveCurrent();
+          return;
+        }
+
+        state = normalizeState(storedState);
+        if (!state.listName) state.listName = 'My trip';
+        if (!['g','kg','lb'].includes(state.unit)) state.unit = 'g';
+        if (!Array.isArray(state.items)) state.items = [];
+        state.items = state.items.map(normalizeItem);
+        state.dirty = Boolean(storedState.dirty);
+      }
+
+      function normalizeList(raw) {
+        if (!raw) return null;
+        const id = String(raw.id || uuid());
+        const name = String(raw.name || 'Untitled list').trim();
+        const items = Array.isArray(raw.items) ? raw.items.map(normalizeItem) : [];
+        const createdAt = Number(raw.createdAt || Date.now());
+        const updatedAt = Number(raw.updatedAt || createdAt);
+        return { id, name, items, createdAt, updatedAt };
+      }
+
+      function normalizeState(raw) {
+        return {
+          activeListId: raw.activeListId ? String(raw.activeListId) : null,
+          listName: String(raw.listName || raw.name || 'My trip'),
+          unit: String(raw.unit || 'g'),
+          items: Array.isArray(raw.items) ? raw.items : [],
+          dirty: Boolean(raw.dirty),
+          lastSavedAt: raw.lastSavedAt ? Number(raw.lastSavedAt) : null,
+          createdAt: raw.createdAt ? Number(raw.createdAt) : Date.now(),
+          updatedAt: raw.updatedAt ? Number(raw.updatedAt) : Date.now()
+        };
+      }
+
+      function saveListsToStorage() {
+        try { localStorage.setItem(STORAGE.lists, JSON.stringify(lists)); }
+        catch (e) { toast('Could not save lists (storage unavailable).', 'Warning'); }
+      }
+
+      function saveCurrentToStorage() {
+        try { localStorage.setItem(STORAGE.current, JSON.stringify(state)); }
+        catch (e) { toast('Could not save current list (storage unavailable).', 'Warning'); }
+      }
+
+      function scheduleSaveCurrent() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => saveCurrentToStorage(), 120);
+      }
+
+      function markDirty() {
+        state.dirty = true;
+        state.updatedAt = Date.now();
+        scheduleSaveCurrent();
+        renderStatus();
+      }
+
+      function itemTotalGrams(item) {
+        return Math.max(0, Math.round((Number(item.weightGrams) || 0) * (Number(item.qty) || 1)));
+      }
+
+      function computeStats(items) {
+        let totalAll = 0;
+        let totalPacked = 0;
+        let countAll = 0;
+        let countPacked = 0;
+
+        const byCat = new Map();
+
+        for (const it of items) {
+          const qty = clampInt(Number(it.qty ?? 1), 1, 999);
+          const grams = Math.max(0, Math.round(Number(it.weightGrams) || 0));
+          const total = grams * qty;
+
+          totalAll += total;
+          countAll += 1;
+
+          if (it.packed) {
+            totalPacked += total;
+            countPacked += 1;
+          }
+
+          const cat = (String(it.category || '').trim() || 'Uncategorized');
+          if (!byCat.has(cat)) byCat.set(cat, { all: 0, packed: 0, items: 0, packedItems: 0 });
+          const row = byCat.get(cat);
+          row.all += total;
+          row.items += 1;
+          if (it.packed) { row.packed += total; row.packedItems += 1; }
+        }
+
+        return { totalAll, totalPacked, countAll, countPacked, byCat };
+      }
+
+      function formatDateTime(ts) {
+        if (!ts) return '—';
+        const d = new Date(ts);
+        const fmt = new Intl.DateTimeFormat(undefined, { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+        return fmt.format(d);
+      }
+
+      function toast(msg, tag='Info') {
+        clearTimeout(toastTimer);
+        els.toastTag.textContent = tag;
+        els.toastMsg.textContent = msg;
+        els.toast.classList.add('show');
+        toastTimer = setTimeout(() => els.toast.classList.remove('show'), 2600);
+      }
+
+      function currentListSnapshot() {
+        return {
+          id: state.activeListId || uuid(),
+          name: (state.listName || 'Untitled list').trim() || 'Untitled list',
+          items: deepCopy(state.items.map(normalizeItem)),
+          createdAt: state.createdAt || Date.now(),
+          updatedAt: Date.now()
+        };
+      }
+
+      function findActiveList() {
+        if (!state.activeListId) return null;
+        return lists.find(l => l.id === state.activeListId) || null;
+      }
+
+      function confirmLoseChanges(actionName) {
+        if (!state.dirty) return true;
+        return confirm(`You have unsaved changes.\n\n${actionName} anyway?`);
+      }
+
+      function ensureCategoryOptions() {
+        const cats = new Set(DEFAULT_CATEGORIES);
+        for (const it of state.items) {
+          const c = String(it.category || '').trim();
+          if (c) cats.add(c);
+        }
+
+        const sorted = Array.from(cats).sort((a,b) => a.localeCompare(b, undefined, { sensitivity:'base' }));
+
+        els.categoryOptions.innerHTML = sorted.map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+      }
+
+      function renderCategoryFilter() {
+        const selected = els.filterCategory.value || '__all__';
+
+        const cats = new Set();
+        for (const it of state.items) {
+          const c = String(it.category || '').trim() || 'Uncategorized';
+          cats.add(c);
+        }
+
+        const sorted = Array.from(cats).sort((a,b) => a.localeCompare(b, undefined, { sensitivity:'base' }));
+        const opts = [
+          { v: '__all__', t: 'All categories' },
+          ...sorted.map(c => ({ v: c, t: c }))
+        ];
+
+        els.filterCategory.innerHTML = opts.map(o => `<option value="${escapeHtml(o.v)}">${escapeHtml(o.t)}</option>`).join('');
+
+        if (opts.some(o => o.v === selected)) els.filterCategory.value = selected;
+        else els.filterCategory.value = '__all__';
+      }
+
+      function getFilteredItems() {
+        const q = (els.searchInput.value || '').trim().toLowerCase();
+        const packedFilter = els.filterPacked.value || 'all';
+        const catFilter = els.filterCategory.value || '__all__';
+
+        return state.items.filter(it => {
+          if (packedFilter === 'packed' && !it.packed) return false;
+          if (packedFilter === 'unpacked' && it.packed) return false;
+
+          const cat = (String(it.category || '').trim() || 'Uncategorized');
+          if (catFilter !== '__all__' && cat !== catFilter) return false;
+
+          if (!q) return true;
+          const hay = (it.name + ' ' + cat + ' ' + (it.notes || '')).toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      function renderItems() {
+        const items = getFilteredItems();
+        els.itemsList.innerHTML = '';
+
+        if (items.length === 0) {
+          els.emptyState.style.display = 'block';
+          return;
+        }
+        els.emptyState.style.display = 'none';
+
+        const unit = state.unit;
+
+        const html = items.map(it => {
+          const cat = (String(it.category || '').trim() || 'Uncategorized');
+          const totalGrams = itemTotalGrams(it);
+          const qty = clampInt(Number(it.qty ?? 1), 1, 999);
+
+          const notes = it.notes ? `<div class="notes">${escapeHtml(it.notes)}</div>` : '';
+          const qtyPill = qty > 1 ? `<span class="pill qty" title="Quantity">×${qty}</span>` : '';
+          const packedCls = it.packed ? 'packed' : '';
+
+          return `
+            <li class="item ${packedCls}" data-id="${escapeHtml(it.id)}">
+              <div class="main">
+                <input type="checkbox" data-action="toggle" data-id="${escapeHtml(it.id)}" ${it.packed ? 'checked' : ''} aria-label="Packed: ${escapeHtml(it.name)}" />
+                <div class="title">
+                  <div class="name" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
+                  ${notes}
+                </div>
+              </div>
+              <div class="meta" aria-hidden="true">
+                <span class="pill cat" title="Category">${escapeHtml(cat)}</span>
+                ${qtyPill}
+                <span class="pill wt" title="Item weight (${escapeHtml(unit)})">${escapeHtml(formatWeight(totalGrams, unit))}</span>
+              </div>
+              <div class="actions">
+                <button class="icon-btn" type="button" data-action="edit" data-id="${escapeHtml(it.id)}" aria-label="Edit item" title="Edit">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                </button>
+                <button class="icon-btn" type="button" data-action="delete" data-id="${escapeHtml(it.id)}" aria-label="Delete item" title="Delete">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                </button>
+              </div>
+            </li>
+          `;
+        }).join('');
+
+        els.itemsList.innerHTML = html;
+      }
+
+      function renderStats() {
+        const { totalAll, totalPacked, countAll, countPacked, byCat } = computeStats(state.items);
+        els.packedWeight.textContent = formatWeight(totalPacked, state.unit);
+        els.totalWeight.textContent = formatWeight(totalAll, state.unit);
+
+        els.packedCount.textContent = `${countPacked} / ${countAll} items packed`;
+        els.totalCount.textContent = `${countAll} items`;
+
+        const pct = countAll ? Math.round((countPacked / countAll) * 100) : 0;
+        els.progressBar.style.width = pct + '%';
+        els.progressText.textContent = `${pct}% packed`;
+        const remainingGrams = Math.max(0, totalAll - totalPacked);
+        els.remainingText.textContent = `${formatWeight(remainingGrams, state.unit)} remaining`;
+
+        // breakdown
+        const rows = Array.from(byCat.entries())
+          .sort((a,b) => b[1].all - a[1].all);
+
+        if (rows.length === 0) {
+          els.categoryBreakdown.innerHTML = `<div class="hint">Add items to see category totals.</div>`;
+          return;
+        }
+
+        els.categoryBreakdown.innerHTML = rows.map(([cat, v]) => {
+          const left = `<div class="left"><div class="cat" title="${escapeHtml(cat)}">${escapeHtml(cat)}</div><div class="chip">${v.packedItems}/${v.items}</div></div>`;
+          const right = `<div class="right"><span>${escapeHtml(formatWeight(v.packed, state.unit))}</span><span aria-hidden="true">/</span><span>${escapeHtml(formatWeight(v.all, state.unit))}</span></div>`;
+          return `<div class="break-row">${left}${right}</div>`;
+        }).join('');
+      }
+
+      function renderSavedLists() {
+        const q = (els.savedSearch.value || '').trim().toLowerCase();
+        const activeId = state.activeListId;
+
+        const sorted = [...lists].sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        const filtered = q
+          ? sorted.filter(l => (l.name || '').toLowerCase().includes(q))
+          : sorted;
+
+        if (filtered.length === 0) {
+          els.savedLists.innerHTML = `<li class="saved-item" style="justify-content:space-between;">
+            <div class="info">
+              <div class="title">No saved lists</div>
+              <div class="sub">Use <strong>Save</strong> to store this trip on this device.</div>
+            </div>
+          </li>`;
+          return;
+        }
+
+        els.savedLists.innerHTML = filtered.map(l => {
+          const activeCls = l.id === activeId ? 'active' : '';
+          const st = computeStats(l.items || []);
+          const sub = `${(l.items||[]).length} items • ${formatWeight(st.totalAll, state.unit)} total • Updated ${formatDateTime(l.updatedAt)}`;
+
+          return `
+            <li class="saved-item ${activeCls}" data-id="${escapeHtml(l.id)}">
+              <div class="info">
+                <div class="title" title="${escapeHtml(l.name)}">${escapeHtml(l.name)}</div>
+                <div class="sub" title="${escapeHtml(sub)}">${escapeHtml(sub)}</div>
+              </div>
+              <button class="btn" type="button" data-action="load" data-id="${escapeHtml(l.id)}">Load</button>
+              <button class="btn danger" type="button" data-action="remove" data-id="${escapeHtml(l.id)}" aria-label="Delete saved list">Delete</button>
+            </li>
+          `;
+        }).join('');
+      }
+
+      function renderStatus() {
+        const active = findActiveList();
+        const dirty = Boolean(state.dirty);
+
+        els.tripName.value = state.listName || '';
+
+        if (!active) {
+          els.activeStatus.className = 'status-pill unsaved';
+          els.activeStatusText.textContent = 'Unsaved';
+          els.activeMeta.textContent = 'Not saved yet';
+        } else if (dirty) {
+          els.activeStatus.className = 'status-pill dirty';
+          els.activeStatusText.textContent = 'Unsaved changes';
+          els.activeMeta.textContent = `Saved as “${active.name}” • last saved ${formatDateTime(state.lastSavedAt || active.updatedAt)}`;
+        } else {
+          els.activeStatus.className = 'status-pill saved';
+          els.activeStatusText.textContent = 'Saved';
+          els.activeMeta.textContent = `Saved as “${active.name}” • ${formatDateTime(state.lastSavedAt || active.updatedAt)}`;
+        }
+
+        // button enablement
+        const hasActive = Boolean(active);
+        els.deleteBtn.disabled = !hasActive;
+      }
+
+      function renderAll() {
+        ensureCategoryOptions();
+        renderCategoryFilter();
+        renderItems();
+        renderStats();
+        renderSavedLists();
+        renderStatus();
+        scheduleSaveCurrent();
+      }
+
+      function addItemFromForm() {
+        const name = (els.itemName.value || '').trim();
+        if (!name) return;
+
+        const category = (els.itemCategory.value || '').trim();
+        const qty = clampInt(Number(els.itemQty.value || 1), 1, 999);
+        const wUnit = els.itemWeightUnit.value || 'g';
+        const wVal = els.itemWeight.value;
+        const weightGrams = toGrams(wVal, wUnit);
+        const notes = (els.itemNotes.value || '').trim();
+
+        const item = normalizeItem({
+          id: uuid(),
+          name,
+          category,
+          qty,
+          weightGrams,
+          notes,
+          packed: false
+        });
+
+        state.items.push(item);
+        state.updatedAt = Date.now();
+        markDirty();
+
+        els.itemName.value = '';
+        els.itemNotes.value = '';
+        els.itemQty.value = '1';
+        els.itemWeight.value = '';
+        els.itemName.focus();
+
+        toast('Item added to checklist.', 'Saved');
+        renderAll();
+      }
+
+      function setAllPacked(packed) {
+        state.items = state.items.map(it => ({ ...it, packed: Boolean(packed) }));
+        markDirty();
+        renderAll();
+      }
+
+      function removeItem(id) {
+        const idx = state.items.findIndex(it => it.id === id);
+        if (idx < 0) return;
+        const name = state.items[idx].name;
+        state.items.splice(idx, 1);
+        markDirty();
+        renderAll();
+        toast(`Removed “${name}”.`, 'Info');
+      }
+
+      function togglePacked(id, packed) {
+        const it = state.items.find(x => x.id === id);
+        if (!it) return;
+        it.packed = Boolean(packed);
+        markDirty();
+        renderAll();
+      }
+
+      function openEditDialog(id) {
+        const it = state.items.find(x => x.id === id);
+        if (!it) return;
+
+        editingId = id;
+
+        const unit = state.unit;
+        els.editName.value = it.name || '';
+        els.editCategory.value = it.category || '';
+        els.editQty.value = String(clampInt(Number(it.qty ?? 1), 1, 999));
+        els.editWeightUnit.value = unit;
+
+        const w = fromGrams(Number(it.weightGrams) || 0, unit);
+        els.editWeight.value = unit === 'g' ? String(Math.round(w)) : trimZeros(w.toFixed(2));
+        els.editNotes.value = it.notes || '';
+        els.editPacked.checked = Boolean(it.packed);
+
+        els.editSubtitle.textContent = `Editing “${it.name}”`;
+
+        if (typeof els.editDialog.showModal === 'function') {
+          els.editDialog.showModal();
+          setTimeout(() => els.editName.focus(), 0);
+        } else {
+          // Fallback (very old browsers)
+          const newName = prompt('Edit item name:', it.name);
+          if (newName !== null && newName.trim()) {
+            it.name = newName.trim();
+            markDirty();
+            renderAll();
+          }
+        }
+      }
+
+      function closeEditDialog() {
+        if (els.editDialog.open) els.editDialog.close();
+        editingId = null;
+      }
+
+      function saveEditDialog() {
+        const it = state.items.find(x => x.id === editingId);
+        if (!it) return;
+
+        const name = (els.editName.value || '').trim();
+        if (!name) { els.editName.focus(); return; }
+
+        const category = (els.editCategory.value || '').trim();
+        const qty = clampInt(Number(els.editQty.value || 1), 1, 999);
+        const unit = els.editWeightUnit.value || 'g';
+        const weightGrams = toGrams(els.editWeight.value, unit);
+        const notes = (els.editNotes.value || '').trim();
+        const packed = Boolean(els.editPacked.checked);
+
+        it.name = name;
+        it.category = category;
+        it.qty = qty;
+        it.weightGrams = weightGrams;
+        it.notes = notes;
+        it.packed = packed;
+
+        markDirty();
+        closeEditDialog();
+        renderAll();
+        toast('Item updated.', 'Saved');
+      }
+
+      function doSaveOrUpdate() {
+        const name = (state.listName || '').trim() || 'Untitled trip';
+
+        if (state.activeListId) {
+          const idx = lists.findIndex(l => l.id === state.activeListId);
+          if (idx >= 0) {
+            lists[idx] = {
+              ...lists[idx],
+              name,
+              items: deepCopy(state.items.map(normalizeItem)),
+              updatedAt: Date.now()
+            };
+            state.lastSavedAt = lists[idx].updatedAt;
+            state.dirty = false;
+            saveListsToStorage();
+            scheduleSaveCurrent();
+            renderAll();
+            toast('List updated.', 'Saved');
+            return;
+          }
+        }
+
+        // create new
+        const snap = currentListSnapshot();
+        snap.name = name;
+        lists.push(snap);
+
+        state.activeListId = snap.id;
+        state.lastSavedAt = snap.updatedAt;
+        state.dirty = false;
+
+        saveListsToStorage();
+        scheduleSaveCurrent();
+        renderAll();
+        toast('List saved.', 'Saved');
+      }
+
+      function doDuplicate() {
+        const baseName = (state.listName || '').trim() || 'Untitled trip';
+        const snap = currentListSnapshot();
+        snap.id = uuid();
+        snap.name = `${baseName} (copy)`;
+        snap.createdAt = Date.now();
+        snap.updatedAt = Date.now();
+
+        lists.push(snap);
+        state.activeListId = snap.id;
+        state.listName = snap.name;
+        state.lastSavedAt = snap.updatedAt;
+        state.dirty = false;
+
+        saveListsToStorage();
+        scheduleSaveCurrent();
+        renderAll();
+        toast('List duplicated.', 'Saved');
+      }
+
+      function doDeleteActive() {
+        if (!state.activeListId) return;
+        const active = findActiveList();
+        if (!active) { state.activeListId = null; renderAll(); return; }
+
+        const ok = confirm(`Delete the saved list “${active.name}”?\n\nThis cannot be undone.`);
+        if (!ok) return;
+
+        lists = lists.filter(l => l.id !== active.id);
+        saveListsToStorage();
+
+        state.activeListId = null;
+        state.lastSavedAt = null;
+        state.dirty = true; // still keep current items, now unsaved
+        scheduleSaveCurrent();
+
+        renderAll();
+        toast('Saved list deleted.', 'Info');
+      }
+
+      function loadSavedList(id) {
+        const l = lists.find(x => x.id === id);
+        if (!l) return;
+
+        if (!confirmLoseChanges('Load this saved list')) return;
+
+        state.activeListId = l.id;
+        state.listName = l.name;
+        state.items = deepCopy((l.items || []).map(normalizeItem));
+        state.dirty = false;
+        state.lastSavedAt = l.updatedAt || Date.now();
+        state.createdAt = l.createdAt || Date.now();
+        state.updatedAt = Date.now();
+
+        scheduleSaveCurrent();
+        renderAll();
+        toast('Saved list loaded.', 'Info');
+      }
+
+      function removeSavedList(id) {
+        const l = lists.find(x => x.id === id);
+        if (!l) return;
+
+        const ok = confirm(`Delete saved list “${l.name}”?`);
+        if (!ok) return;
+
+        lists = lists.filter(x => x.id !== id);
+        saveListsToStorage();
+
+        if (state.activeListId === id) {
+          state.activeListId = null;
+          state.lastSavedAt = null;
+          state.dirty = true;
+          scheduleSaveCurrent();
+        }
+
+        renderAll();
+        toast('Saved list deleted.', 'Info');
+      }
+
+      function newList() {
+        if (!confirmLoseChanges('Start a new list')) return;
+
+        const startWithTemplate = confirm('Start with a starter gear template?\n\nOK = template\nCancel = blank list');
+        state = freshState(startWithTemplate);
+        state.unit = els.unitSelect.value || 'g';
+        state.listName = 'New trip';
+        scheduleSaveCurrent();
+        renderAll();
+        toast('New list started.', 'Info');
+      }
+
+      function exportLists() {
+        const payload = {
+          app: 'Camping Gear Checklist',
+          version: 1,
+          exportedAt: Date.now(),
+          lists
+        };
+        const json = JSON.stringify(payload, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        const safeName = (state.listName || 'camping-gear-lists').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'camping-gear-lists';
+        a.download = `${safeName}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        toast('Exported JSON file.', 'Saved');
+      }
+
+      async function importListsFromFile(file) {
+        const text = await file.text();
+        const data = safeParse(text, null);
+        if (!data || !Array.isArray(data.lists)) {
+          toast('Import failed: invalid JSON format.', 'Warning');
+          return;
+        }
+
+        let imported = data.lists.map(normalizeList).filter(Boolean);
+        if (imported.length === 0) {
+          toast('Import had no usable lists.', 'Warning');
+          return;
+        }
+
+        // Resolve ID collisions
+        const existingIds = new Set(lists.map(l => l.id));
+        imported = imported.map(l => {
+          if (existingIds.has(l.id)) l.id = uuid();
+          existingIds.add(l.id);
+          return l;
+        });
+
+        lists = lists.concat(imported);
+        saveListsToStorage();
+        renderSavedLists();
+        renderStatus();
+        toast(`Imported ${imported.length} list(s).`, 'Saved');
+      }
+
+      function resetLocalData() {
+        const ok = confirm('Reset all local Camping Gear Checklist data?\n\nThis removes saved lists and the current list from this browser.');
+        if (!ok) return;
+        try {
+          localStorage.removeItem(STORAGE.lists);
+          localStorage.removeItem(STORAGE.current);
+        } catch {}
+        lists = [];
+        state = freshState(true);
+        scheduleSaveCurrent();
+        renderAll();
+        toast('Local data reset.', 'Info');
+      }
+
+      function wireEvents() {
+        els.unitSelect.addEventListener('change', () => {
+          const u = els.unitSelect.value;
+          state.unit = (['g','kg','lb'].includes(u) ? u : 'g');
+          scheduleSaveCurrent();
+          renderAll();
+        });
+
+        els.tripName.addEventListener('input', () => {
+          state.listName = (els.tripName.value || '').slice(0, 60);
+          // Renaming a saved list without saving should mark dirty
+          markDirty();
+        });
+
+        els.addForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          addItemFromForm();
+        });
+
+        els.searchInput.addEventListener('input', () => renderItems());
+        els.filterPacked.addEventListener('change', () => renderItems());
+        els.filterCategory.addEventListener('change', () => renderItems());
+
+        els.packAllBtn.addEventListener('click', () => setAllPacked(true));
+        els.unpackAllBtn.addEventListener('click', () => setAllPacked(false));
+
+        els.itemsList.addEventListener('change', (e) => {
+          const t = e.target;
+          if (t && t.matches('input[type="checkbox"][data-action="toggle"]')) {
+            const id = t.getAttribute('data-id');
+            togglePacked(id, t.checked);
+          }
+        });
+
+        els.itemsList.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
+          if (!id) return;
+
+          if (action === 'edit') openEditDialog(id);
+          if (action === 'delete') {
+            const it = state.items.find(x => x.id === id);
+            if (!it) return;
+            const ok = confirm(`Delete “${it.name}” from this checklist?`);
+            if (ok) removeItem(id);
+          }
+        });
+
+        els.newListBtn.addEventListener('click', newList);
+        els.saveListBtn.addEventListener('click', doSaveOrUpdate);
+        els.saveAsBtn.addEventListener('click', doSaveOrUpdate);
+        els.duplicateBtn.addEventListener('click', () => {
+          if (state.items.length === 0) { toast('Nothing to duplicate yet.', 'Warning'); return; }
+          doDuplicate();
+        });
+        els.deleteBtn.addEventListener('click', doDeleteActive);
+
+        els.savedSearch.addEventListener('input', renderSavedLists);
+
+        els.savedLists.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
+          if (!id) return;
+
+          if (action === 'load') loadSavedList(id);
+          if (action === 'remove') removeSavedList(id);
+        });
+
+        els.exportBtn.addEventListener('click', exportLists);
+        els.importFile.addEventListener('change', async () => {
+          const file = els.importFile.files && els.importFile.files[0];
+          els.importFile.value = '';
+          if (!file) return;
+          try { await importListsFromFile(file); }
+          catch { toast('Import failed.', 'Warning'); }
+        });
+
+        // Edit dialog controls
+        els.editCloseBtn.addEventListener('click', closeEditDialog);
+        els.editCancelBtn.addEventListener('click', closeEditDialog);
+        els.editForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          saveEditDialog();
+        });
+        els.editDeleteBtn.addEventListener('click', () => {
+          const it = state.items.find(x => x.id === editingId);
+          if (!it) return;
+          const ok = confirm(`Delete “${it.name}”?`);
+          if (!ok) return;
+          closeEditDialog();
+          removeItem(it.id);
+        });
+
+        // Saved/Update shortcut
+        window.addEventListener('keydown', (e) => {
+          const isSave = (e.key === 's' || e.key === 'S') && (e.ctrlKey || e.metaKey);
+          if (isSave) {
+            e.preventDefault();
+            doSaveOrUpdate();
+          }
+          if (e.key === 'Escape' && els.editDialog.open) closeEditDialog();
+        });
+
+        els.aboutLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          alert(
+            'Camping Gear Checklist\n\n' +
+            '• Checklist items with categories, notes, quantities\n' +
+            '• Packed vs total weight calculator\n' +
+            '• Save/load multiple lists via local browser storage\n\n' +
+            'Tip: Use Export to back up your saved lists as JSON.'
+          );
+        });
+
+        els.resetLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          resetLocalData();
+        });
+      }
+
+      function init() {
+        loadFromStorage();
+
+        els.unitSelect.value = (['g','kg','lb'].includes(state.unit) ? state.unit : 'g');
+        els.itemWeightUnit.value = 'g';
+
+        // Default trip name if empty
+        if (!state.listName || !state.listName.trim()) state.listName = 'New trip';
+        els.tripName.value = state.listName;
+
+        wireEvents();
+        renderAll();
+
+        // If the current list is linked to a saved list and nothing is dirty, sync display name (but don’t overwrite user's current work)
+        const active = findActiveList();
+        if (active && !state.dirty && active.name !== state.listName) {
+          state.listName = active.name;
+          els.tripName.value = state.listName;
+          scheduleSaveCurrent();
+          renderStatus();
+        }
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

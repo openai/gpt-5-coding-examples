@@ -1,0 +1,1457 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Virtual Drum Kit</title>
+  <style>
+    :root{
+      --bg0:#060910;
+      --bg1:#0b1020;
+      --bg2:#070b14;
+      --panel: rgba(16, 25, 45, 0.72);
+      --panelSolid:#0f1930;
+      --stroke: rgba(233, 239, 255, 0.10);
+      --stroke2: rgba(233, 239, 255, 0.16);
+      --text:#e9efff;
+      --muted:#a9b5d6;
+      --accent:#7cf7ff;
+      --accent2:#b6ff71;
+      --danger:#ff3b5c;
+      --warn:#ffd166;
+      --shadow: 0 18px 55px rgba(0,0,0,.60);
+      --shadow2: 0 8px 22px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    html, body { height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: linear-gradient(180deg, var(--bg0), var(--bg1) 35%, var(--bg2));
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 500px at 22% 0%, rgba(124,247,255,.12), transparent 60%),
+        radial-gradient(800px 520px at 78% 0%, rgba(255,59,92,.10), transparent 60%),
+        radial-gradient(700px 500px at 50% 35%, rgba(182,255,113,.06), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent 18%),
+        linear-gradient(180deg, transparent, rgba(0,0,0,.30));
+      z-index:-2;
+    }
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.40;
+      background:
+        repeating-linear-gradient(90deg, rgba(233,239,255,.05) 0 1px, transparent 1px 64px),
+        repeating-linear-gradient(0deg, rgba(233,239,255,.04) 0 1px, transparent 1px 64px);
+      z-index:-1;
+      mix-blend-mode: overlay;
+    }
+
+    #app{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+    }
+
+    header{
+      padding: 20px 16px 10px;
+      text-align:center;
+    }
+    .brand{
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    h1{
+      margin:0;
+      font-size: clamp(26px, 4.6vw, 44px);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+    .tagline{
+      margin: 8px auto 0;
+      max-width: 56rem;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    main.studio{
+      flex:1;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      gap: 16px;
+      padding: 10px 12px 22px;
+    }
+
+    .speaker{
+      width: 150px;
+      min-width: 150px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid rgba(233,239,255,.10);
+      box-shadow: var(--shadow2);
+      position:relative;
+      overflow:hidden;
+      display:none;
+      align-self:center;
+      height: 560px;
+      max-height: calc(100vh - 190px);
+    }
+    .speaker::before{
+      content:"";
+      position:absolute;
+      inset:-40px -60px auto -60px;
+      height: 160px;
+      background: radial-gradient(circle at 50% 100%, rgba(124,247,255,.18), transparent 70%);
+      filter: blur(1px);
+    }
+    .speaker .grill{
+      position:absolute;
+      inset: 10px;
+      border-radius: 18px;
+      background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,.25) 0 2px, rgba(255,255,255,.03) 2px 6px),
+        repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 2px, rgba(255,255,255,.02) 2px 6px),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.24));
+      border: 1px solid rgba(233,239,255,.10);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.30);
+    }
+    .speaker .driver{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      width: 105px;
+      height: 105px;
+      border-radius: 999px;
+      top: 115px;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.12), rgba(0,0,0,.35) 55%, rgba(0,0,0,.65));
+      border: 1px solid rgba(233,239,255,.14);
+      box-shadow: inset 0 0 0 10px rgba(0,0,0,.35), 0 14px 24px rgba(0,0,0,.35);
+    }
+    .speaker .driver.small{
+      top: 280px;
+      width: 80px;
+      height: 80px;
+      opacity:.95;
+      box-shadow: inset 0 0 0 8px rgba(0,0,0,.35), 0 14px 24px rgba(0,0,0,.28);
+    }
+    .speaker .logo{
+      position:absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(233,239,255,.70);
+    }
+
+    @media (min-width: 1050px){
+      .speaker{ display:block; }
+    }
+
+    .center{
+      width: min(1020px, 100%);
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      align-items:stretch;
+    }
+
+    .panel{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    #mixer{
+      padding: 12px;
+    }
+
+    .controls{
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      gap: 10px;
+    }
+    .spacer{ flex:1; }
+
+    .ctl{
+      appearance:none;
+      -webkit-appearance:none;
+      border: 1px solid rgba(233,239,255,.16);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.22));
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      font-size: 12px;
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      cursor:pointer;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    .ctl:focus-visible{
+      outline: 3px solid rgba(124,247,255,.45);
+      outline-offset: 2px;
+    }
+    .ctl:active{
+      transform: translateY(1px);
+    }
+    .ctl[disabled]{
+      opacity:.45;
+      cursor:not-allowed;
+      transform:none !important;
+    }
+
+    .ctl.primary{
+      border-color: rgba(124,247,255,.35);
+      box-shadow: 0 10px 22px rgba(124,247,255,.10), 0 12px 26px rgba(0,0,0,.25);
+    }
+    .ctl.ghost{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.24));
+      border-color: rgba(233,239,255,.10);
+    }
+
+    .ctl.record{
+      border-color: rgba(255,59,92,.35);
+      box-shadow: 0 10px 22px rgba(255,59,92,.10), 0 12px 26px rgba(0,0,0,.25);
+    }
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,59,92,.55);
+      box-shadow: 0 0 0 3px rgba(255,59,92,.15);
+    }
+    body.is-recording .ctl.record .dot{
+      background: var(--danger);
+      box-shadow: 0 0 0 3px rgba(255,59,92,.18), 0 0 18px rgba(255,59,92,.55);
+      animation: blink 0.8s steps(2) infinite;
+    }
+    @keyframes blink { 50%{ opacity:.35; } }
+
+    .toggle{
+      gap: 10px;
+      padding: 8px 12px;
+    }
+    .toggle input{
+      accent-color: var(--accent);
+      transform: scale(1.15);
+    }
+    .toggle span{
+      font-weight: 900;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .fader{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(233,239,255,.12);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.20));
+    }
+    .fader-label{
+      font-size: 12px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: rgba(233,239,255,.85);
+      user-select:none;
+    }
+    input[type="range"]{
+      width: 170px;
+      max-width: 34vw;
+      touch-action: pan-x;
+    }
+
+    .vumeter{
+      width: 140px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(233,239,255,.16);
+      overflow:hidden;
+      background: rgba(0,0,0,.28);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
+    }
+    .vumeter .bar{
+      height:100%;
+      width:100%;
+      transform-origin: left center;
+      transform: scaleX(0);
+      background: linear-gradient(90deg, rgba(124,247,255,.95), rgba(182,255,113,.95) 60%, rgba(255,209,102,.95) 82%, rgba(255,59,92,.95));
+      filter: drop-shadow(0 0 8px rgba(124,247,255,.28));
+      transition: transform 60ms linear;
+    }
+
+    .status{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(233,239,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.18));
+      color: rgba(233,239,255,.92);
+      font-size: 13px;
+      line-height: 1.35;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .status small{
+      color: rgba(233,239,255,.70);
+    }
+
+    .kitWrap{
+      padding: 0;
+    }
+
+    .kit{
+      position:relative;
+      width: min(96vw, 980px);
+      margin: 0 auto;
+      aspect-ratio: 16 / 10;
+      border-radius: 26px;
+      border: 1px solid rgba(233,239,255,.12);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      background:
+        radial-gradient(800px 420px at 50% 35%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(900px 600px at 50% 110%, rgba(0,0,0,.55), rgba(0,0,0,.70) 55%, rgba(0,0,0,.82)),
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.42));
+      touch-action: manipulation;
+    }
+    .kit::before{
+      content:"";
+      position:absolute;
+      inset: 10% 10% 16% 10%;
+      border-radius: 48% 48% 34% 34% / 70% 70% 40% 40%;
+      border: 2px solid rgba(233,239,255,.06);
+      border-bottom: 0;
+      pointer-events:none;
+      filter: drop-shadow(0 16px 24px rgba(0,0,0,.30));
+    }
+    .kit::after{
+      content:"";
+      position:absolute;
+      inset: 0;
+      pointer-events:none;
+      background:
+        radial-gradient(1400px 500px at 50% 0%, rgba(124,247,255,.10), transparent 60%),
+        radial-gradient(900px 420px at 16% 20%, rgba(255,59,92,.08), transparent 60%),
+        radial-gradient(900px 420px at 84% 20%, rgba(182,255,113,.06), transparent 60%);
+      mix-blend-mode: screen;
+      opacity: .85;
+    }
+
+    .pad{
+      position:absolute;
+      left: calc(var(--x) * 1%);
+      top: calc(var(--y) * 1%);
+      width: var(--size);
+      height: var(--size);
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(10, 14, 26, 0.65);
+      box-shadow:
+        0 18px 30px rgba(0,0,0,.45),
+        inset 0 0 0 4px rgba(255,255,255,.12),
+        inset 0 -18px 26px rgba(0,0,0,.26);
+      cursor:pointer;
+      user-select:none;
+      touch-action: manipulation;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      padding: 10px;
+      text-align:center;
+      color: rgba(12, 16, 30, .95);
+      background: radial-gradient(circle at 35% 32%, #fbfdff, #d8dfef 56%, #9aa4b8 100%);
+    }
+
+    .pad::before{
+      content:"";
+      position:absolute;
+      inset: -10px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 50% 25%, rgba(255,255,255,.10), transparent 55%),
+        radial-gradient(circle at 50% 90%, rgba(0,0,0,.22), transparent 60%);
+      filter: blur(0.3px);
+      opacity:.8;
+      pointer-events:none;
+    }
+
+    .pad .pad-name{
+      font-weight: 1000;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: clamp(12px, 1.8vw, 15px);
+      line-height: 1.05;
+      text-shadow: 0 1px 0 rgba(255,255,255,.22);
+    }
+    .pad .pad-key{
+      font-size: 12px;
+      color: rgba(0,0,0,.70);
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-weight: 900;
+      font-size: 12px;
+      padding: 2px 7px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,.25);
+      background: rgba(255,255,255,.60);
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.12);
+    }
+
+    .pad:focus-visible{
+      outline: 4px solid rgba(124,247,255,.55);
+      outline-offset: 3px;
+    }
+
+    .pad.active{
+      transform: translate(-50%, -50%) scale(0.97);
+      filter: saturate(1.08) brightness(1.06);
+      box-shadow:
+        0 12px 24px rgba(0,0,0,.40),
+        0 0 0 3px rgba(124,247,255,.20),
+        0 0 34px rgba(124,247,255,.22),
+        inset 0 0 0 4px rgba(255,255,255,.16),
+        inset 0 -16px 22px rgba(0,0,0,.22);
+    }
+
+    /* Kit voice styling */
+    .pad.kick{
+      background: radial-gradient(circle at 35% 32%, #343b4c, #171c2c 58%, #0c1020 100%);
+      color: rgba(233,239,255,.92);
+      border-color: rgba(0,0,0,.70);
+      box-shadow:
+        0 22px 34px rgba(0,0,0,.55),
+        inset 0 0 0 4px rgba(255,255,255,.07),
+        inset 0 -18px 26px rgba(0,0,0,.40);
+    }
+    .pad.kick kbd{
+      background: rgba(255,255,255,.16);
+      border-color: rgba(233,239,255,.18);
+      color: rgba(233,239,255,.92);
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.25);
+    }
+
+    .pad.snare{
+      background: radial-gradient(circle at 35% 32%, #fbfdff, #dae3f4 58%, #9aa4b8 100%);
+    }
+
+    .pad.tom{
+      background: radial-gradient(circle at 35% 32%, #f7fbff, #d4ddef 55%, #8f99b0 100%);
+    }
+
+    .pad.cymbal{
+      background: radial-gradient(circle at 35% 30%, #fff5bf, #f0d26d 56%, #9f7b11 100%);
+      border-color: rgba(79, 55, 0, .55);
+      box-shadow:
+        0 18px 30px rgba(0,0,0,.45),
+        inset 0 0 0 4px rgba(255,255,255,.14),
+        inset 0 -18px 26px rgba(0,0,0,.22);
+    }
+    .pad.hat{
+      background: radial-gradient(circle at 35% 30%, #fff2b0, #e6c95a 56%, #8a6909 100%);
+      border-color: rgba(79, 55, 0, .55);
+    }
+
+    .pad.aux{
+      background: radial-gradient(circle at 35% 32%, #eff4ff, #cdd7ea 56%, #8a96ad 100%);
+      border-color: rgba(10, 14, 26, 0.55);
+    }
+
+    /* Auxiliary pads can be slightly rounded-corner for "studio pad" vibe */
+    .pad.aux{
+      border-radius: 22px;
+    }
+    .pad.aux::before{
+      border-radius: 28px;
+    }
+
+    .help{
+      padding: 12px 14px;
+    }
+    .help-grid{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 12px 14px;
+      align-items:start;
+    }
+    .help h2{
+      margin: 0 0 6px;
+      font-size: 14px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(233,239,255,.90);
+    }
+    .help ul{
+      margin: 0;
+      padding-left: 18px;
+      color: rgba(233,239,255,.82);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .help li{ margin: 4px 0; }
+    .keymap{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      padding: 2px 0 0;
+    }
+    .kmrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      align-items:center;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(233,239,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.16));
+      color: rgba(233,239,255,.86);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      user-select:none;
+    }
+    .chip kbd{
+      background: rgba(255,255,255,.15);
+      border-color: rgba(233,239,255,.18);
+      color: rgba(233,239,255,.92);
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.25);
+    }
+
+    footer.foot{
+      padding: 6px 8px 0;
+      text-align:center;
+      color: rgba(233,239,255,.62);
+      font-size: 12px;
+    }
+
+    .audioHint{
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 50;
+      border-radius: 16px;
+      border: 1px solid rgba(233,239,255,.14);
+      background: rgba(10, 16, 32, .72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow2);
+      padding: 10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .audioHint .msg{
+      color: rgba(233,239,255,.88);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+    .audioHint button{
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(124,247,255,.28);
+      background: rgba(124,247,255,.14);
+      color: rgba(233,239,255,.95);
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: 12px;
+      cursor:pointer;
+      touch-action: manipulation;
+    }
+    .audioHint.hidden{ display:none; }
+
+    @media (max-width: 860px){
+      .help-grid{ grid-template-columns: 1fr; }
+      input[type="range"]{ width: 160px; }
+      .vumeter{ width: 120px; }
+    }
+    @media (max-width: 520px){
+      .controls{ gap: 8px; }
+      .ctl{ padding: 10px 10px; }
+      .pad .pad-name{ letter-spacing: .06em; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .vumeter .bar{ transition: none; }
+      body.is-recording .ctl.record .dot{ animation: none; }
+      .pad.active{ transform: translate(-50%, -50%); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="brand">
+        <h1>Virtual Drum Kit</h1>
+        <p class="tagline">Play a drum kit using your keyboard or taps. Record a take, then play it back—perfect for quick grooves on desktop or mobile.</p>
+      </div>
+    </header>
+
+    <main class="studio" aria-label="Virtual Drum Kit App">
+      <aside class="speaker left" aria-hidden="true">
+        <div class="grill"></div>
+        <div class="driver"></div>
+        <div class="driver small"></div>
+        <div class="logo">Studio</div>
+      </aside>
+
+      <div class="center">
+        <section id="mixer" class="panel" aria-label="Mixer and transport controls">
+          <div class="controls">
+            <button id="recordBtn" class="ctl record" type="button" aria-pressed="false" title="Record (shortcut: R)">
+              <span class="dot" aria-hidden="true"></span>
+              <span class="label">Record</span>
+            </button>
+
+            <button id="stopBtn" class="ctl ghost" type="button" disabled title="Stop (shortcut: Space)">
+              Stop
+            </button>
+
+            <button id="playBtn" class="ctl primary" type="button" disabled title="Play (shortcut: Space)">
+              Play
+            </button>
+
+            <label class="toggle ctl ghost" title="Loop playback">
+              <input id="loopToggle" type="checkbox" />
+              <span>Loop</span>
+            </label>
+
+            <button id="clearBtn" class="ctl ghost" type="button" disabled title="Clear the current take">
+              Clear Take
+            </button>
+
+            <div class="spacer"></div>
+
+            <label class="fader" title="Master volume">
+              <span class="fader-label">Volume</span>
+              <input id="volume" type="range" min="0" max="1" value="0.90" step="0.01" />
+            </label>
+
+            <div class="vumeter" aria-hidden="true">
+              <div class="bar"></div>
+            </div>
+          </div>
+
+          <div id="status" class="status" aria-live="polite">
+            <span>Ready • Tap pads or press keys to play.</span>
+            <small>Keys: Q W E / A S D F / Z X C</small>
+          </div>
+        </section>
+
+        <section class="kitWrap" aria-label="Drum pads">
+          <div id="kit" class="kit" aria-label="Drum kit">
+            <button type="button" class="pad cymbal" data-sound="crash" data-key="Q" aria-label="Crash cymbal (Q)" aria-keyshortcuts="Q" style="--x:18;--y:18;--size:clamp(96px,22vw,175px)">
+              <span class="pad-name">Crash</span>
+              <span class="pad-key"><kbd>Q</kbd></span>
+            </button>
+
+            <button type="button" class="pad tom" data-sound="tomHigh" data-key="W" aria-label="High tom (W)" aria-keyshortcuts="W" style="--x:50;--y:28;--size:clamp(92px,20vw,160px)">
+              <span class="pad-name">Tom High</span>
+              <span class="pad-key"><kbd>W</kbd></span>
+            </button>
+
+            <button type="button" class="pad cymbal" data-sound="ride" data-key="E" aria-label="Ride cymbal (E)" aria-keyshortcuts="E" style="--x:82;--y:18;--size:clamp(96px,22vw,175px)">
+              <span class="pad-name">Ride</span>
+              <span class="pad-key"><kbd>E</kbd></span>
+            </button>
+
+            <button type="button" class="pad hat" data-sound="hihatClosed" data-key="D" aria-label="Hi-hat closed (D)" aria-keyshortcuts="D" style="--x:23;--y:52;--size:clamp(92px,20vw,155px)">
+              <span class="pad-name">Hat Closed</span>
+              <span class="pad-key"><kbd>D</kbd></span>
+            </button>
+
+            <button type="button" class="pad snare" data-sound="snare" data-key="S" aria-label="Snare (S)" aria-keyshortcuts="S" style="--x:50;--y:50;--size:clamp(102px,22vw,175px)">
+              <span class="pad-name">Snare</span>
+              <span class="pad-key"><kbd>S</kbd></span>
+            </button>
+
+            <button type="button" class="pad hat" data-sound="hihatOpen" data-key="F" aria-label="Hi-hat open (F)" aria-keyshortcuts="F" style="--x:77;--y:52;--size:clamp(92px,20vw,155px)">
+              <span class="pad-name">Hat Open</span>
+              <span class="pad-key"><kbd>F</kbd></span>
+            </button>
+
+            <button type="button" class="pad tom" data-sound="tomLow" data-key="Z" aria-label="Low tom (Z)" aria-keyshortcuts="Z" style="--x:33;--y:34;--size:clamp(88px,19vw,150px)">
+              <span class="pad-name">Tom Low</span>
+              <span class="pad-key"><kbd>Z</kbd></span>
+            </button>
+
+            <button type="button" class="pad tom" data-sound="tomMid" data-key="X" aria-label="Mid tom (X)" aria-keyshortcuts="X" style="--x:67;--y:34;--size:clamp(88px,19vw,150px)">
+              <span class="pad-name">Tom Mid</span>
+              <span class="pad-key"><kbd>X</kbd></span>
+            </button>
+
+            <button type="button" class="pad kick" data-sound="kick" data-key="A" aria-label="Kick (A)" aria-keyshortcuts="A" style="--x:50;--y:78;--size:clamp(124px,28vw,200px)">
+              <span class="pad-name">Kick</span>
+              <span class="pad-key"><kbd>A</kbd></span>
+            </button>
+
+            <button type="button" class="pad aux" data-sound="clap" data-key="C" aria-label="Clap (C)" aria-keyshortcuts="C" style="--x:86;--y:78;--size:clamp(84px,18vw,132px)">
+              <span class="pad-name">Clap</span>
+              <span class="pad-key"><kbd>C</kbd></span>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel help" aria-label="Help and key mapping">
+          <div class="help-grid">
+            <div>
+              <h2>How to play</h2>
+              <ul>
+                <li>Tap/click pads (made large for mobile).</li>
+                <li>Keyboard: <strong>Q W E</strong> (top), <strong>A S D F</strong> (main), <strong>Z X C</strong> (extras).</li>
+                <li>Record your timing: press <strong>Record</strong>, play, then <strong>Stop</strong> and <strong>Play</strong>.</li>
+                <li>Shortcut: <strong>R</strong> toggles Record; <strong>Space</strong> plays/stops.</li>
+              </ul>
+            </div>
+
+            <div class="keymap" aria-label="Key map">
+              <div class="kmrow">
+                <span class="chip"><kbd>Q</kbd> Crash</span>
+                <span class="chip"><kbd>W</kbd> Tom High</span>
+                <span class="chip"><kbd>E</kbd> Ride</span>
+              </div>
+              <div class="kmrow">
+                <span class="chip"><kbd>A</kbd> Kick</span>
+                <span class="chip"><kbd>S</kbd> Snare</span>
+                <span class="chip"><kbd>D</kbd> Hat Closed</span>
+                <span class="chip"><kbd>F</kbd> Hat Open</span>
+              </div>
+              <div class="kmrow">
+                <span class="chip"><kbd>Z</kbd> Tom Low</span>
+                <span class="chip"><kbd>X</kbd> Tom Mid</span>
+                <span class="chip"><kbd>C</kbd> Clap</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="foot">
+          Tip: If you don’t hear sound immediately, tap any pad once to unlock audio (common on mobile).
+        </footer>
+      </div>
+
+      <aside class="speaker right" aria-hidden="true">
+        <div class="grill"></div>
+        <div class="driver"></div>
+        <div class="driver small"></div>
+        <div class="logo">Room</div>
+      </aside>
+    </main>
+
+    <div id="audioHint" class="audioHint" role="status" aria-live="polite">
+      <div class="msg">Sound is locked until your first tap/keypress (browser policy). Tap any pad to start.</div>
+      <button id="dismissHint" type="button">OK</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (sel, el = document) => el.querySelector(sel);
+      const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
+
+      const pads = $$(".pad");
+      const statusEl = $("#status");
+      const recordBtn = $("#recordBtn");
+      const stopBtn = $("#stopBtn");
+      const playBtn = $("#playBtn");
+      const clearBtn = $("#clearBtn");
+      const loopToggle = $("#loopToggle");
+      const volumeSlider = $("#volume");
+      const vuBar = $(".vumeter .bar");
+      const audioHint = $("#audioHint");
+      const dismissHint = $("#dismissHint");
+
+      const recordLabel = recordBtn.querySelector(".label");
+
+      const keyToSound = Object.create(null);
+      const soundToPad = Object.create(null);
+
+      for (const pad of pads) {
+        const key = (pad.dataset.key || "").toLowerCase();
+        const sound = pad.dataset.sound;
+        if (key) keyToSound[key] = sound;
+        if (sound) soundToPad[sound] = pad;
+      }
+
+      const state = {
+        recording: false,
+        playing: false,
+        loop: false,
+        events: [],
+        recordStartPerf: 0,
+        takeDurationMs: 0,
+        timers: [],
+        playToken: 0,
+        meterRAF: 0,
+      };
+
+      const audio = {
+        ctx: null,
+        comp: null,
+        master: null,
+        revIn: null,
+        reverb: null,
+        wet: null,
+        noiseBuf: null,
+        analyser: null,
+        meterGain: null,
+      };
+
+      function formatTime(ms) {
+        const s = Math.max(0, ms) / 1000;
+        const mm = Math.floor(s / 60);
+        const ss = Math.floor(s % 60);
+        const t = Math.floor((s - Math.floor(s)) * 10);
+        return `${mm}:${String(ss).padStart(2, "0")}.${t}`;
+      }
+
+      function setStatus(left, right) {
+        // statusEl contains two children: a span and a small
+        const span = statusEl.querySelector("span");
+        const small = statusEl.querySelector("small");
+        if (span) span.textContent = left;
+        if (small && right != null) small.textContent = right;
+      }
+
+      function updateUI() {
+        recordBtn.setAttribute("aria-pressed", state.recording ? "true" : "false");
+        document.body.classList.toggle("is-recording", state.recording);
+        document.body.classList.toggle("is-playing", state.playing);
+
+        stopBtn.disabled = !(state.recording || state.playing);
+        playBtn.disabled = state.recording || state.events.length === 0;
+        clearBtn.disabled = state.recording || state.playing || state.events.length === 0;
+
+        if (recordLabel) recordLabel.textContent = state.recording ? "Stop Rec" : "Record";
+
+        const hits = state.events.length;
+        const dur = state.recording ? (performance.now() - state.recordStartPerf) : state.takeDurationMs;
+
+        if (state.recording) {
+          setStatus(
+            `Recording • ${hits} hit${hits === 1 ? "" : "s"} • ${formatTime(dur)}`,
+            "Space stops • R toggles"
+          );
+        } else if (state.playing) {
+          setStatus(
+            `Playing • ${hits} hit${hits === 1 ? "" : "s"} • ${formatTime(state.takeDurationMs)}${state.loop ? " • Loop" : ""}`,
+            "Space stops"
+          );
+        } else if (hits > 0) {
+          setStatus(
+            `Take ready • ${hits} hit${hits === 1 ? "" : "s"} • ${formatTime(state.takeDurationMs)}${state.loop ? " • Loop" : ""}`,
+            "Space plays • R records"
+          );
+        } else {
+          setStatus("Ready • Tap pads or press keys to play.", "Keys: Q W E / A S D F / Z X C");
+        }
+      }
+
+      function hideHint() {
+        if (audioHint) audioHint.classList.add("hidden");
+      }
+
+      function makeNoise(ctx, seconds) {
+        const length = Math.max(1, Math.floor(ctx.sampleRate * seconds));
+        const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+        return buffer;
+      }
+
+      function makeImpulse(ctx, seconds, decay) {
+        const length = Math.max(1, Math.floor(ctx.sampleRate * seconds));
+        const buffer = ctx.createBuffer(2, length, ctx.sampleRate);
+        for (let ch = 0; ch < 2; ch++) {
+          const data = buffer.getChannelData(ch);
+          for (let i = 0; i < length; i++) {
+            const t = i / length;
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, decay);
+          }
+        }
+        return buffer;
+      }
+
+      function startMeter() {
+        if (!audio.analyser || !vuBar) return;
+        cancelAnimationFrame(state.meterRAF);
+
+        const data = new Uint8Array(audio.analyser.frequencyBinCount);
+
+        const tick = () => {
+          if (!audio.analyser) return;
+
+          audio.analyser.getByteTimeDomainData(data);
+
+          let sum = 0;
+          for (let i = 0; i < data.length; i++) {
+            const v = (data[i] - 128) / 128;
+            sum += v * v;
+          }
+          const rms = Math.sqrt(sum / data.length);
+          const level = Math.min(1, rms * 2.8);
+
+          vuBar.style.transform = `scaleX(${level})`;
+          state.meterRAF = requestAnimationFrame(tick);
+        };
+
+        state.meterRAF = requestAnimationFrame(tick);
+      }
+
+      function ensureAudio() {
+        if (!audio.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audio.ctx = new AudioContext();
+          const ctx = audio.ctx;
+
+          audio.comp = ctx.createDynamicsCompressor();
+          audio.comp.threshold.value = -20;
+          audio.comp.knee.value = 24;
+          audio.comp.ratio.value = 6;
+          audio.comp.attack.value = 0.003;
+          audio.comp.release.value = 0.18;
+
+          audio.master = ctx.createGain();
+          audio.master.gain.value = Number(volumeSlider.value || 0.9);
+
+          audio.comp.connect(audio.master);
+          audio.master.connect(ctx.destination);
+
+          // Reverb bus (simple impulse response)
+          audio.revIn = ctx.createGain();
+          audio.reverb = ctx.createConvolver();
+          audio.wet = ctx.createGain();
+          audio.wet.gain.value = 0.22;
+
+          audio.revIn.connect(audio.reverb);
+          audio.reverb.connect(audio.wet);
+          audio.wet.connect(audio.comp);
+
+          audio.reverb.buffer = makeImpulse(ctx, 1.05, 2.2);
+
+          // Shared noise buffer
+          audio.noiseBuf = makeNoise(ctx, 1);
+
+          // Meter (silent parallel path so analyser always processes)
+          audio.analyser = ctx.createAnalyser();
+          audio.analyser.fftSize = 2048;
+          audio.meterGain = ctx.createGain();
+          audio.meterGain.gain.value = 0;
+
+          audio.master.connect(audio.analyser);
+          audio.analyser.connect(audio.meterGain);
+          audio.meterGain.connect(ctx.destination);
+
+          startMeter();
+        }
+
+        if (audio.ctx.state === "suspended") {
+          audio.ctx.resume().catch(() => {});
+        }
+
+        hideHint();
+      }
+
+      function route(dryLevel, revSend) {
+        const ctx = audio.ctx;
+        const dry = ctx.createGain();
+        dry.gain.value = dryLevel;
+        dry.connect(audio.comp);
+
+        const send = ctx.createGain();
+        send.gain.value = revSend;
+        send.connect(audio.revIn);
+
+        return { dry, send };
+      }
+
+      function connectToRoute(node, r) {
+        node.connect(r.dry);
+        node.connect(r.send);
+      }
+
+      function soundKick(t) {
+        const ctx = audio.ctx;
+        const r = route(1.0, 0.06);
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.exponentialRampToValueAtTime(52, t + 0.09);
+
+        gain.gain.setValueAtTime(1.0, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+
+        osc.connect(gain);
+        connectToRoute(gain, r);
+
+        // click
+        const clickOsc = ctx.createOscillator();
+        const clickGain = ctx.createGain();
+        clickOsc.type = "square";
+        clickOsc.frequency.setValueAtTime(760, t);
+        clickGain.gain.setValueAtTime(0.22, t);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+        clickOsc.connect(clickGain);
+        connectToRoute(clickGain, route(0.5, 0.0));
+
+        osc.start(t);
+        osc.stop(t + 0.6);
+        clickOsc.start(t);
+        clickOsc.stop(t + 0.03);
+      }
+
+      function soundSnare(t) {
+        const ctx = audio.ctx;
+        const r = route(0.95, 0.14);
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = audio.noiseBuf;
+
+        const hp = ctx.createBiquadFilter();
+        hp.type = "highpass";
+        hp.frequency.value = 900;
+        hp.Q.value = 0.7;
+
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 1800;
+        bp.Q.value = 0.8;
+
+        const ng = ctx.createGain();
+        ng.gain.setValueAtTime(0.82, t);
+        ng.gain.exponentialRampToValueAtTime(0.001, t + 0.23);
+
+        noise.connect(hp);
+        hp.connect(bp);
+        bp.connect(ng);
+        connectToRoute(ng, r);
+
+        // tone body
+        const osc = ctx.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(210, t);
+        osc.frequency.exponentialRampToValueAtTime(140, t + 0.07);
+
+        const og = ctx.createGain();
+        og.gain.setValueAtTime(0.22, t);
+        og.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+
+        osc.connect(og);
+        connectToRoute(og, route(0.6, 0.05));
+
+        noise.start(t);
+        noise.stop(t + 0.25);
+        osc.start(t);
+        osc.stop(t + 0.14);
+      }
+
+      function soundHat(t, open) {
+        const ctx = audio.ctx;
+        const r = route(0.55, open ? 0.18 : 0.08);
+
+        const src = ctx.createBufferSource();
+        src.buffer = audio.noiseBuf;
+
+        const hp = ctx.createBiquadFilter();
+        hp.type = "highpass";
+        hp.frequency.value = open ? 5200 : 6500;
+        hp.Q.value = 0.8;
+
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = open ? 8600 : 9200;
+        bp.Q.value = 0.9;
+
+        const g = ctx.createGain();
+        const a = open ? 0.42 : 0.06;
+        const level = open ? 0.22 : 0.18;
+
+        g.gain.setValueAtTime(level, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + a);
+
+        src.connect(hp);
+        hp.connect(bp);
+        bp.connect(g);
+        connectToRoute(g, r);
+
+        src.start(t);
+        src.stop(t + a + 0.02);
+      }
+
+      function soundTom(t, baseFreq) {
+        const ctx = audio.ctx;
+        const r = route(0.9, 0.12);
+
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(baseFreq * 1.4, t);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq, t + 0.09);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.92, t + 0.22);
+
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.75, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.36);
+
+        const lp = ctx.createBiquadFilter();
+        lp.type = "lowpass";
+        lp.frequency.value = 2200;
+        lp.Q.value = 0.4;
+
+        osc.connect(g);
+        g.connect(lp);
+        connectToRoute(lp, r);
+
+        osc.start(t);
+        osc.stop(t + 0.38);
+      }
+
+      function soundCrash(t, ride) {
+        const ctx = audio.ctx;
+        const r = route(0.55, 0.45);
+
+        const src = ctx.createBufferSource();
+        src.buffer = audio.noiseBuf;
+
+        const hp = ctx.createBiquadFilter();
+        hp.type = "highpass";
+        hp.frequency.value = ride ? 4200 : 3600;
+        hp.Q.value = 0.6;
+
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = ride ? 7200 : 8200;
+        bp.Q.value = ride ? 0.7 : 0.9;
+
+        const g = ctx.createGain();
+        const decay = ride ? 1.35 : 1.65;
+        const level = ride ? 0.22 : 0.28;
+
+        g.gain.setValueAtTime(level, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + decay);
+
+        src.connect(hp);
+        hp.connect(bp);
+        bp.connect(g);
+        connectToRoute(g, r);
+
+        if (ride) {
+          const bell = ctx.createOscillator();
+          bell.type = "sine";
+          bell.frequency.setValueAtTime(520, t);
+          bell.frequency.exponentialRampToValueAtTime(480, t + 0.1);
+
+          const bg = ctx.createGain();
+          bg.gain.setValueAtTime(0.08, t);
+          bg.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+
+          bell.connect(bg);
+          connectToRoute(bg, route(0.65, 0.2));
+
+          bell.start(t);
+          bell.stop(t + 1.0);
+        }
+
+        src.start(t);
+        src.stop(t + decay + 0.05);
+      }
+
+      function soundClap(t) {
+        const ctx = audio.ctx;
+        const r = route(0.75, 0.22);
+
+        const src = ctx.createBufferSource();
+        src.buffer = audio.noiseBuf;
+
+        const hp = ctx.createBiquadFilter();
+        hp.type = "highpass";
+        hp.frequency.value = 900;
+        hp.Q.value = 0.7;
+
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 1600;
+        bp.Q.value = 0.9;
+
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+
+        src.connect(hp);
+        hp.connect(bp);
+        bp.connect(g);
+        connectToRoute(g, r);
+
+        const bursts = [
+          { dt: 0.0, a: 0.008, d: 0.045, level: 0.85 },
+          { dt: 0.018, a: 0.006, d: 0.05, level: 0.65 },
+          { dt: 0.036, a: 0.005, d: 0.065, level: 0.5 },
+        ];
+
+        for (const b of bursts) {
+          const tt = t + b.dt;
+          g.gain.setValueAtTime(0.0001, tt);
+          g.gain.exponentialRampToValueAtTime(b.level, tt + b.a);
+          g.gain.exponentialRampToValueAtTime(0.001, tt + b.d);
+        }
+
+        // tail
+        g.gain.setValueAtTime(0.24, t + 0.06);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+
+        src.start(t);
+        src.stop(t + 0.3);
+      }
+
+      function playSound(id, time) {
+        if (!audio.ctx) return;
+        const t = Math.max(audio.ctx.currentTime, time || audio.ctx.currentTime);
+
+        switch (id) {
+          case "kick": return soundKick(t);
+          case "snare": return soundSnare(t);
+          case "hihatClosed": return soundHat(t, false);
+          case "hihatOpen": return soundHat(t, true);
+          case "tomLow": return soundTom(t, 110);
+          case "tomMid": return soundTom(t, 155);
+          case "tomHigh": return soundTom(t, 215);
+          case "crash": return soundCrash(t, false);
+          case "ride": return soundCrash(t, true);
+          case "clap": return soundClap(t);
+        }
+      }
+
+      function flashPad(sound) {
+        const pad = soundToPad[sound];
+        if (!pad) return;
+        pad.classList.add("active");
+        window.setTimeout(() => pad.classList.remove("active"), 115);
+      }
+
+      function trigger(sound, opts = {}) {
+        ensureAudio();
+        const when = audio.ctx.currentTime + 0.005;
+
+        playSound(sound, when);
+        flashPad(sound);
+
+        if (state.recording && !opts.fromPlayback) {
+          const now = performance.now();
+          const t = now - state.recordStartPerf;
+          state.events.push({ sound, t });
+          state.takeDurationMs = t;
+          updateUI();
+        }
+      }
+
+      function getTakeDuration() {
+        if (state.takeDurationMs && state.takeDurationMs > 0) return state.takeDurationMs;
+        if (!state.events.length) return 0;
+        const lastT = state.events[state.events.length - 1].t;
+        return Math.max(450, lastT + 450);
+      }
+
+      function stopPlayback() {
+        state.playToken++;
+        for (const timer of state.timers) clearTimeout(timer);
+        state.timers = [];
+        state.playing = false;
+        updateUI();
+      }
+
+      function startPlayback() {
+        if (!state.events.length) return;
+        ensureAudio();
+        if (state.recording) stopRecording();
+
+        stopPlayback(); // clears timers, sets playing=false
+        state.playing = true;
+
+        state.playToken++;
+        const token = state.playToken;
+
+        const duration = getTakeDuration();
+        state.takeDurationMs = duration;
+
+        const startAt = audio.ctx.currentTime + 0.04;
+
+        for (const ev of state.events) {
+          playSound(ev.sound, startAt + ev.t / 1000);
+
+          const timer = setTimeout(() => {
+            if (state.playToken !== token) return;
+            flashPad(ev.sound);
+          }, ev.t);
+          state.timers.push(timer);
+        }
+
+        const endTimer = setTimeout(() => {
+          if (state.playToken !== token) return;
+          if (state.loop) startPlayback();
+          else {
+            state.playing = false;
+            updateUI();
+          }
+        }, duration);
+        state.timers.push(endTimer);
+
+        updateUI();
+      }
+
+      function startRecording() {
+        ensureAudio();
+        stopPlayback();
+        state.events = [];
+        state.takeDurationMs = 0;
+        state.recordStartPerf = performance.now();
+        state.recording = true;
+        updateUI();
+      }
+
+      function stopRecording() {
+        if (!state.recording) return;
+        state.recording = false;
+        state.takeDurationMs = getTakeDuration();
+        updateUI();
+      }
+
+      function clearTake() {
+        state.events = [];
+        state.takeDurationMs = 0;
+        updateUI();
+      }
+
+      function toggleRecord() {
+        if (state.recording) stopRecording();
+        else startRecording();
+      }
+
+      function handleStop() {
+        if (state.recording) stopRecording();
+        if (state.playing) stopPlayback();
+      }
+
+      function initPadInteractions() {
+        for (const pad of pads) {
+          pad.addEventListener("pointerdown", (e) => {
+            e.preventDefault();
+            const sound = pad.dataset.sound;
+            if (sound) trigger(sound);
+          }, { passive: false });
+        }
+      }
+
+      function initKeyboard() {
+        window.addEventListener("keydown", (e) => {
+          if (e.repeat) return;
+
+          const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+          if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+          const key = (e.key || "").toLowerCase();
+          if (!key) return;
+
+          // Transport shortcuts
+          if (key === " ") {
+            e.preventDefault();
+            if (state.playing || state.recording) handleStop();
+            else if (state.events.length) startPlayback();
+            return;
+          }
+          if (key === "r") {
+            e.preventDefault();
+            toggleRecord();
+            return;
+          }
+
+          const sound = keyToSound[key];
+          if (!sound) return;
+
+          e.preventDefault();
+          trigger(sound);
+        });
+      }
+
+      function initControls() {
+        recordBtn.addEventListener("click", () => toggleRecord());
+        stopBtn.addEventListener("click", () => handleStop());
+        playBtn.addEventListener("click", () => startPlayback());
+        clearBtn.addEventListener("click", () => clearTake());
+
+        loopToggle.addEventListener("change", () => {
+          state.loop = !!loopToggle.checked;
+          updateUI();
+        });
+
+        volumeSlider.addEventListener("input", () => {
+          if (audio.master) audio.master.gain.value = Number(volumeSlider.value || 0.9);
+        });
+
+        dismissHint.addEventListener("click", () => hideHint());
+
+        // Unlock audio on first interaction (helps mobile)
+        window.addEventListener("pointerdown", () => ensureAudio(), { once: true, passive: true });
+        window.addEventListener("keydown", () => ensureAudio(), { once: true });
+      }
+
+      function init() {
+        initPadInteractions();
+        initKeyboard();
+        initControls();
+        updateUI();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1736 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Weather Theatre</title>
+  <style>
+    :root{
+      --bg0: #070914;
+      --bg1: #0b1025;
+      --panel: rgba(255,255,255,0.07);
+      --panel2: rgba(255,255,255,0.05);
+      --stroke: rgba(255,255,255,0.12);
+      --stroke2: rgba(255,255,255,0.08);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --muted2: rgba(255,255,255,0.55);
+      --shadow: rgba(0,0,0,0.55);
+      --accentA: #ffb36c;
+      --accentB: #8ad7ff;
+      --accentC: #b9ffa3;
+      --good: #a6ffd6;
+      --warn: #ffd59c;
+    }
+
+    *{ box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 20%, rgba(93,124,255,0.18), transparent 55%),
+        radial-gradient(900px 700px at 80% 25%, rgba(255,174,102,0.16), transparent 55%),
+        radial-gradient(1000px 800px at 55% 85%, rgba(112,255,209,0.10), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      overflow-x: hidden;
+    }
+
+    .page{
+      width: min(1200px, 96vw);
+      margin: 0 auto;
+      padding: 18px 0 28px;
+    }
+
+    .topbar{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 6px 16px;
+    }
+
+    .brand{
+      display: grid;
+      gap: 6px;
+    }
+
+    .title{
+      font-size: 22px;
+      letter-spacing: 0.2px;
+      line-height: 1.08;
+      margin: 0;
+      font-weight: 720;
+    }
+
+    .kicker{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      max-width: 66ch;
+    }
+
+    .layout{
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+      .topbar{ flex-direction: column; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.04));
+      border: 1px solid var(--stroke);
+      border-radius: 18px;
+      box-shadow:
+        0 18px 55px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.10);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .stageCard{
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stageHead{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 4px 10px;
+    }
+
+    .stageLabel{
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+    .stageLabel h2{
+      margin: 0;
+      font-size: 14px;
+      color: rgba(255,255,255,0.86);
+      font-weight: 700;
+      letter-spacing: 0.22px;
+    }
+    .stageLabel .hint{
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stageWrap{
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--stroke2);
+      background: radial-gradient(1200px 600px at 50% 30%, rgba(255,255,255,0.07), transparent 50%),
+                  linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.35));
+      box-shadow:
+        0 16px 45px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.10);
+      aspect-ratio: 16/9;
+      min-height: 300px;
+    }
+
+    canvas.stage{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .stageOverlay{
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(900px 500px at 50% 110%, rgba(0,0,0,0.35), transparent 60%),
+        radial-gradient(700px 450px at 50% -10%, rgba(255,255,255,0.05), transparent 55%);
+      mix-blend-mode: overlay;
+      opacity: 0.9;
+    }
+
+    .subtitle{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke2);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      display: grid;
+      gap: 6px;
+      min-height: 62px;
+    }
+
+    .subtitleLabel{
+      font-size: 12px;
+      color: var(--muted2);
+      letter-spacing: 0.18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .typedLine{
+      font-size: 14px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.92);
+      letter-spacing: 0.1px;
+      font-weight: 520;
+    }
+
+    .cursor{
+      display: inline-block;
+      width: 10px;
+      color: rgba(255,255,255,0.72);
+      animation: blink 0.95s step-end infinite;
+    }
+    @keyframes blink{
+      50%{ opacity: 0; }
+    }
+
+    .side{
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .sectionTitle{
+      margin: 0;
+      font-size: 12px;
+      color: rgba(255,255,255,0.78);
+      letter-spacing: 0.2px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .controls{
+      display: grid;
+      gap: 10px;
+    }
+
+    .sliderRow{
+      border: 1px solid var(--stroke2);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      border-radius: 14px;
+      padding: 10px 10px 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .sliderTop{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sliderTop .name{
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .chip{
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      color: rgba(255,255,255,0.82);
+      letter-spacing: 0.16px;
+      white-space: nowrap;
+    }
+
+    .name strong{
+      font-size: 13px;
+      letter-spacing: 0.15px;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+
+    .name span{
+      font-size: 12px;
+      color: var(--muted2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    input[type="range"]{
+      width: 100%;
+      accent-color: #9fe7ff;
+    }
+
+    .value{
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      color: rgba(255,255,255,0.80);
+    }
+
+    .toggleRow{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke2);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+    }
+
+    .toggleText{
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .toggleText strong{
+      font-size: 13px;
+      letter-spacing: 0.14px;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+
+    .toggleText span{
+      font-size: 12px;
+      color: var(--muted2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .switch{
+      position: relative;
+      width: 58px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.25);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+      cursor: pointer;
+      flex: 0 0 auto;
+      user-select: none;
+    }
+    .switch::before{
+      content:"";
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 26px; height: 26px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.72));
+      box-shadow:
+        0 10px 20px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.65);
+      transform: translateX(0);
+      transition: transform 200ms ease;
+    }
+    .switch.on{
+      background: rgba(138,215,255,0.18);
+      border-color: rgba(138,215,255,0.35);
+    }
+    .switch.on::before{
+      transform: translateX(26px);
+      background: linear-gradient(180deg, rgba(255,208,146,0.95), rgba(255,165,96,0.80));
+    }
+
+    .btnRow{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button{
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+      color: rgba(255,255,255,0.92);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 700;
+      letter-spacing: 0.15px;
+      cursor: pointer;
+      box-shadow:
+        0 14px 30px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+    button:hover{
+      border-color: rgba(255,255,255,0.22);
+      background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.07));
+    }
+    button:active{
+      transform: translateY(1px);
+    }
+
+    .btnPrimary{
+      border-color: rgba(255,179,108,0.30);
+      background: linear-gradient(180deg, rgba(255,179,108,0.20), rgba(255,179,108,0.09));
+    }
+
+    .forecast{
+      border: 1px solid var(--stroke2);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .forecastTop{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .forecastTop .place{
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .forecastTop .place strong{
+      font-size: 13px;
+      letter-spacing: 0.14px;
+      font-weight: 750;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .forecastTop .place span{
+      font-size: 12px;
+      color: var(--muted2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge{
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.82);
+      background: rgba(0,0,0,0.18);
+      white-space: nowrap;
+    }
+
+    .grid2{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat{
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      border-radius: 12px;
+      padding: 8px 10px;
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .stat span{
+      font-size: 11px;
+      color: var(--muted2);
+      letter-spacing: 0.12px;
+    }
+
+    .stat strong{
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fineprint{
+      font-size: 12px;
+      color: var(--muted2);
+      line-height: 1.45;
+      padding: 0 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .cursor{ animation: none; opacity: 0.6; }
+      button:active{ transform: none; }
+      .switch::before{ transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const {useEffect, useMemo, useRef, useState, useCallback} = React;
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const clamp01 = (v) => clamp(v, 0, 1);
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    const mixColor = (c1, c2, t) => ([
+      lerp(c1[0], c2[0], t),
+      lerp(c1[1], c2[1], t),
+      lerp(c1[2], c2[2], t),
+    ]);
+    const mulColor = (c, m) => ([c[0]*m, c[1]*m, c[2]*m]);
+    const rgba = (c, a=1) => `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${a})`;
+
+    function seedFromString(str){
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < str.length; i++){
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+    function mulberry32(seed){
+      let t = seed >>> 0;
+      return function(){
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      }
+    }
+
+    const FORECAST = Object.freeze({
+      location: "Harbor Quarter",
+      day: "Today",
+      tempC: 12,
+      feelsLikeC: 10,
+      condition: "Patchy rain, breaks of cloud",
+      windKph: 26,
+      humidity: 78,
+      pressureHpa: 1009,
+    });
+
+    function dominantVibe(m){
+      const a = [
+        {k: "cosy", v: m.cosy},
+        {k: "eerie", v: m.eerie},
+        {k: "heroic", v: m.heroic},
+      ].sort((x,y)=>y.v-x.v);
+
+      const top = a[0], second = a[1];
+      const close = (top.v - second.v) <= 12;
+      if (close) return `${top.k} + ${second.k}`;
+      return top.k;
+    }
+
+    function buildSceneText(forecast, moods, timeMode){
+      const c = moods.cosy / 100;
+      const e = moods.eerie / 100;
+      const h = moods.heroic / 100;
+      const night = timeMode === "night";
+
+      const vibe = dominantVibe(moods);
+      const lead = night ? "Night performance" : "Matinée";
+
+      const warmth = clamp01(c*0.95 + h*0.25 - e*0.70);
+      const spook = clamp01(e*1.05 - c*0.25);
+      const drama = clamp01(h*1.00 + e*0.18);
+
+      let line;
+      if (vibe.includes("cosy") && vibe.includes("heroic")){
+        line = night
+          ? "Warmth meets bravado; spotlights turn the drizzle into glittered applause."
+          : "Brisk gusts, bright air—yet everything feels warmly rehearsed."
+      } else if (vibe.includes("cosy") && vibe.includes("eerie")){
+        line = night
+          ? "Lanterns glow through fog; the rain sounds like secrets landing in velvet."
+          : "Soft light, strange shadows—like a comfy story with an unsettling chapter."
+      } else if (vibe.includes("eerie") && vibe.includes("heroic")){
+        line = night
+          ? "A bold sweep of light fights the mist; thunder threatens an encore."
+          : "Dramatic contrast: cloud-scrim above, a determined march of wind below."
+      } else if (vibe === "cosy"){
+        line = night
+          ? "Lanternlight stitches the clouds into a snug ceiling; the rain keeps time softly."
+          : "Sun breaks through like warm cues; showers hush into a gentle rhythm."
+      } else if (vibe === "eerie"){
+        line = night
+          ? "Fog steals in; each drop becomes a whisper under a greenish wash."
+          : "Low cloud hangs like theatre scrim; everything looks a shade too quiet."
+      } else {
+        line = night
+          ? "Spotlights carve the sky; the wind turns into a drumline and the rain follows."
+          : "High contrast and clean edges: wind, cloud, and sun playing in bold strokes."
+      }
+
+      const tag = (() => {
+        if (night){
+          if (spook > 0.55) return "Keep your eyes on the wings.";
+          if (warmth > 0.55) return "Stay for the glow.";
+          if (drama > 0.55) return "Stand where the beam hits.";
+          return "Front row recommended.";
+        }
+        if (drama > 0.55) return "Best seats: center stage.";
+        if (warmth > 0.55) return "A comfortable show, rain or shine.";
+        if (spook > 0.45) return "Shadows included at no extra charge.";
+        return "A light rehearsal in shifting weather.";
+      })();
+
+      return `${lead}: ${forecast.condition}. ${forecast.tempC}°C (feels ${forecast.feelsLikeC}°C), wind ${forecast.windKph} km/h, humidity ${forecast.humidity}% — ${line} ${tag}`;
+    }
+
+    function StageCanvas({moods, timeMode, cue}){
+      const canvasRef = useRef(null);
+      const wrapRef = useRef(null);
+
+      const paramsRef = useRef({moods, timeMode});
+      useEffect(() => { paramsRef.current = {moods, timeMode}; }, [moods, timeMode]);
+
+      const pointerRef = useRef({
+        tx: 0, ty: 0,
+        x: 0, y: 0,
+        inside: false,
+      });
+
+      const stateRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        const wrap = wrapRef.current;
+        if (!canvas || !wrap) return;
+
+        const ctx = canvas.getContext("2d", {alpha: true});
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        const seed = seedFromString(`${FORECAST.location}|${FORECAST.condition}|v1`);
+        const rng = mulberry32(seed);
+
+        const stars = Array.from({length: 220}, () => ({
+          x: rng(),
+          y: rng() * 0.68,
+          r: 0.35 + rng() * 1.25,
+          a: 0.25 + rng() * 0.75,
+          s: 0.35 + rng() * 1.7,
+          p: rng() * Math.PI * 2,
+        }));
+
+        const ridge = (count, baseY, amp, f1, f2, jitter) => {
+          const ph1 = rng() * Math.PI * 2;
+          const ph2 = rng() * Math.PI * 2;
+          const arr = new Array(count);
+          for (let i=0;i<count;i++){
+            const t = i/(count-1);
+            const n = Math.sin((t*f1*2*Math.PI)+ph1) * 0.55 + Math.sin((t*f2*2*Math.PI)+ph2) * 0.45;
+            const j = (rng()*2-1) * jitter;
+            arr[i] = baseY + (n * amp) + j;
+          }
+          return arr;
+        };
+
+        const ridges = {
+          far: ridge(90, 0.58, 0.05, 1.1, 2.3, 0.006),
+          mid: ridge(100, 0.66, 0.075, 0.9, 2.0, 0.008),
+          near: ridge(110, 0.74, 0.10, 0.8, 1.7, 0.010),
+        };
+
+        const buildings = Array.from({length: 38}, (_, i) => {
+          const x = (i / 38);
+          const w = 0.015 + rng() * 0.02;
+          const h = 0.08 + rng() * 0.18;
+          const windows = Array.from({length: 22}, () => ({
+            x: rng(),
+            y: rng(),
+            on: rng() > 0.42,
+            tw: 0.3 + rng() * 1.7,
+            ph: rng() * Math.PI * 2,
+          }));
+          return {x, w, h, windows};
+        });
+
+        const clouds = Array.from({length: 10}, () => ({
+          x: rng(),
+          y: 0.06 + rng() * 0.33,
+          z: 0.35 + rng() * 1.15,
+          s: 0.6 + rng() * 1.7,
+          p: rng() * Math.PI * 2,
+          wobble: 0.2 + rng() * 0.9,
+        }));
+
+        const drops = Array.from({length: 260}, () => ({
+          x: rng(),
+          y: rng(),
+          z: 0.25 + rng() * 1.35,
+          p: rng() * Math.PI * 2,
+        }));
+
+        const fireflies = Array.from({length: 86}, () => ({
+          x: rng(),
+          y: 0.12 + rng() * 0.75,
+          z: 0.4 + rng() * 1.2,
+          p: rng() * Math.PI * 2,
+          s: 0.5 + rng() * 1.7,
+        }));
+
+        const fog = Array.from({length: 32}, () => ({
+          x: rng(),
+          y: 0.78 + rng() * 0.22,
+          r: 0.04 + rng() * 0.09,
+          z: 0.35 + rng() * 1.25,
+          p: rng() * Math.PI * 2,
+        }));
+
+        stateRef.current = {
+          startedAt: performance.now(),
+          lastT: performance.now(),
+          t: 0,
+          w: 0, h: 0,
+          parX: 0, parY: 0,
+          lightning: 0,
+          nextLightningAt: 3.5 + rng() * 6.0,
+          spotlightPhase: rng() * Math.PI * 2,
+          curtainP: 0,
+          raf: 0,
+        };
+
+        const onMove = (e) => {
+          const rect = wrap.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width;
+          const y = (e.clientY - rect.top) / rect.height;
+          pointerRef.current.tx = clamp((x * 2 - 1), -1, 1);
+          pointerRef.current.ty = clamp((y * 2 - 1), -1, 1);
+          pointerRef.current.inside = true;
+        };
+        const onLeave = () => {
+          pointerRef.current.inside = false;
+          pointerRef.current.tx = 0;
+          pointerRef.current.ty = 0;
+        };
+        wrap.addEventListener("pointermove", onMove, {passive: true});
+        wrap.addEventListener("pointerleave", onLeave, {passive: true});
+
+        const resizeIfNeeded = () => {
+          const rect = canvas.getBoundingClientRect();
+          const dpr = Math.max(1, window.devicePixelRatio || 1);
+          const bw = Math.max(2, Math.floor(rect.width * dpr));
+          const bh = Math.max(2, Math.floor(rect.height * dpr));
+          if (canvas.width !== bw || canvas.height !== bh){
+            canvas.width = bw;
+            canvas.height = bh;
+          }
+          const sx = canvas.width / Math.max(1, rect.width);
+          const sy = canvas.height / Math.max(1, rect.height);
+          ctx.setTransform(sx, 0, 0, sy, 0, 0);
+
+          stateRef.current.w = rect.width;
+          stateRef.current.h = rect.height;
+        };
+
+        const drawCloud = (ctx, x, y, s, color, alpha) => {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(s, s);
+          ctx.globalAlpha = alpha;
+
+          ctx.fillStyle = rgba(color, 1);
+          ctx.beginPath();
+          ctx.arc(-42, 2, 22, 0, Math.PI*2);
+          ctx.arc(-18, -10, 28, 0, Math.PI*2);
+          ctx.arc(14, -8, 24, 0, Math.PI*2);
+          ctx.arc(38, 2, 20, 0, Math.PI*2);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.restore();
+        };
+
+        const drawSpotlight = (ctx, srcX, srcY, dstX, dstY, widthAtDst, color, intensity) => {
+          if (intensity <= 0.001) return;
+
+          const dx = dstX - srcX;
+          const dy = dstY - srcY;
+          const len = Math.max(1e-6, Math.hypot(dx, dy));
+          const nx = -dy / len;
+          const ny = dx / len;
+
+          const wx = nx * widthAtDst * 0.5;
+          const wy = ny * widthAtDst * 0.5;
+
+          ctx.save();
+          ctx.globalCompositeOperation = "screen";
+          ctx.globalAlpha = intensity;
+
+          ctx.beginPath();
+          ctx.moveTo(srcX, srcY);
+          ctx.lineTo(dstX + wx, dstY + wy);
+          ctx.lineTo(dstX - wx, dstY - wy);
+          ctx.closePath();
+          ctx.clip();
+
+          const g = ctx.createLinearGradient(srcX, srcY, dstX, dstY);
+          g.addColorStop(0, rgba(mulColor(color, 1.1), 0.0));
+          g.addColorStop(0.12, rgba(color, 0.55));
+          g.addColorStop(0.65, rgba(color, 0.18));
+          g.addColorStop(1, rgba(color, 0.0));
+
+          ctx.fillStyle = g;
+          ctx.fillRect(Math.min(srcX, dstX) - widthAtDst, Math.min(srcY, dstY) - widthAtDst,
+                       Math.abs(dx) + widthAtDst*2, Math.abs(dy) + widthAtDst*2);
+
+          ctx.restore();
+        };
+
+        const drawCurtains = (ctx, w, h, p, timeMode, t) => {
+          const open = easeOutCubic(clamp01(p));
+          const panelW = w * 0.56;
+          const reveal = 0.92;
+          const leftX = -panelW * reveal * open;
+          const rightX = w - panelW + panelW * reveal * open;
+
+          const base = timeMode === "night" ? [150, 26, 46] : [168, 34, 52];
+          const hi = mixColor(base, [255, 220, 170], 0.12);
+          const shadow = mixColor(base, [0,0,0], 0.45);
+
+          const drawPanel = (x, side) => {
+            ctx.save();
+            ctx.translate(x, 0);
+
+            ctx.beginPath();
+            ctx.rect(0, 0, panelW, h);
+            ctx.clip();
+
+            const g = ctx.createLinearGradient(0, 0, panelW, 0);
+            g.addColorStop(0.0, rgba(shadow, 0.98));
+            g.addColorStop(0.28, rgba(base, 0.96));
+            g.addColorStop(0.52, rgba(hi, 0.98));
+            g.addColorStop(0.80, rgba(base, 0.96));
+            g.addColorStop(1.0, rgba(shadow, 0.98));
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, panelW, h);
+
+            // folds
+            const folds = 18;
+            for (let i=0;i<folds;i++){
+              const tt = i/(folds-1);
+              const fx = tt * panelW;
+              const wave = 0.5 + 0.5*Math.sin(tt * 8*Math.PI + t*0.6 + (side === "left" ? 0.0 : 1.2));
+              const a = 0.04 + 0.09 * wave;
+              ctx.fillStyle = `rgba(0,0,0,${a})`;
+              ctx.fillRect(fx, 0, panelW/(folds*1.25), h);
+
+              const a2 = 0.02 + 0.05*(1-wave);
+              ctx.fillStyle = `rgba(255,255,255,${a2})`;
+              ctx.fillRect(fx + panelW/(folds*3.0), 0, panelW/(folds*2.6), h);
+            }
+
+            // subtle vertical sheen
+            ctx.globalCompositeOperation = "overlay";
+            ctx.globalAlpha = 0.18;
+            const sheen = ctx.createLinearGradient(0, 0, 0, h);
+            sheen.addColorStop(0, "rgba(255,255,255,0.0)");
+            sheen.addColorStop(0.2, "rgba(255,255,255,0.2)");
+            sheen.addColorStop(0.6, "rgba(255,255,255,0.0)");
+            ctx.fillStyle = sheen;
+            ctx.fillRect(0, 0, panelW, h);
+
+            ctx.restore();
+          };
+
+          drawPanel(leftX, "left");
+          drawPanel(rightX, "right");
+
+          // valance / top ruffle
+          ctx.save();
+          const valH = Math.max(34, h * 0.09);
+          const vg = ctx.createLinearGradient(0, 0, 0, valH);
+          vg.addColorStop(0, rgba(mixColor(base,[255,255,255],0.10), 0.95));
+          vg.addColorStop(1, rgba(shadow, 0.98));
+          ctx.fillStyle = vg;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(w, 0);
+          ctx.lineTo(w, valH*0.72);
+          const scallops = 10;
+          for (let i=scallops; i>=0; i--){
+            const tt = i/scallops;
+            const sx = tt*w;
+            const sy = valH*0.72 + Math.sin(tt*Math.PI*scallops)*valH*0.15;
+            ctx.lineTo(sx, sy);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // rope line
+          ctx.strokeStyle = "rgba(255,255,255,0.18)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, valH*0.64);
+          ctx.lineTo(w, valH*0.64);
+          ctx.stroke();
+          ctx.restore();
+        };
+
+        const frame = (now) => {
+          const st = stateRef.current;
+          st.raf = requestAnimationFrame(frame);
+          resizeIfNeeded();
+
+          const dt = Math.min(0.05, (now - st.lastT) / 1000);
+          st.lastT = now;
+          st.t += dt;
+
+          const {w, h} = st;
+          const p = pointerRef.current;
+
+          // smooth parallax
+          const targetX = reduceMotion ? 0 : (p.tx || 0);
+          const targetY = reduceMotion ? 0 : (p.ty || 0);
+          const snap = 1 - Math.exp(-dt * 7.5);
+          st.parX = lerp(st.parX, targetX, snap);
+          st.parY = lerp(st.parY, targetY, snap);
+
+          const moodsNow = paramsRef.current.moods;
+          const mode = paramsRef.current.timeMode;
+
+          const cosy = clamp01(moodsNow.cosy / 100);
+          const eerie = clamp01(moodsNow.eerie / 100);
+          const heroic = clamp01(moodsNow.heroic / 100);
+          const night = mode === "night" ? 1 : 0;
+
+          const warmth = clamp01(cosy*0.95 + heroic*0.25 - eerie*0.70);
+          const spook = clamp01(eerie*1.05 - cosy*0.25);
+          const drama = clamp01(heroic*1.00 + eerie*0.16);
+
+          // curtain progress
+          const curtainSpeed = reduceMotion ? 1.8 : 0.42;
+          st.curtainP = clamp01(st.curtainP + dt * curtainSpeed);
+
+          // lightning / flash
+          const canLightning = night > 0.5 && spook > 0.33;
+          if (canLightning && st.t > st.nextLightningAt){
+            st.lightning = 1.0;
+            const cadence = (4.0 + rng()*10.0) / (0.25 + spook);
+            st.nextLightningAt = st.t + cadence;
+          }
+          st.lightning = Math.max(0, st.lightning - dt * (reduceMotion ? 1.8 : 2.6));
+          const flash = st.lightning * (0.35 + 0.35*spook);
+
+          // palettes
+          const baseTop = night ? [12, 16, 38] : [125, 190, 242];
+          const baseBot = night ? [36, 42, 76] : [246, 248, 252];
+
+          let skyTop = baseTop;
+          let skyBot = baseBot;
+
+          skyTop = mixColor(skyTop, [255, 168, 98], warmth * (night?0.22:0.38));
+          skyBot = mixColor(skyBot, [255, 225, 180], warmth * (night?0.16:0.30));
+
+          skyTop = mixColor(skyTop, [72, 92, 126], spook * 0.55);
+          skyBot = mixColor(skyBot, [34, 44, 78], spook * 0.45);
+
+          // draw
+          ctx.clearRect(0, 0, w, h);
+
+          // sky gradient
+          {
+            const g = ctx.createLinearGradient(0, 0, 0, h);
+            g.addColorStop(0, rgba(skyTop, 1));
+            g.addColorStop(0.62, rgba(skyBot, 1));
+            g.addColorStop(1, rgba(mixColor(skyBot, [0,0,0], 0.22 + 0.25*night), 1));
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, w, h);
+          }
+
+          // distant shimmer / haze
+          {
+            const hzY = h * (0.58 + 0.06*spook);
+            const g = ctx.createLinearGradient(0, hzY, 0, h);
+            const warmGlow = mixColor([255, 214, 170], [180, 220, 255], 0.5);
+            const hazeColor = mixColor(warmGlow, [160, 220, 255], 0.4*(1-spook));
+            const hazeA = (0.18 + 0.20*cosy) * (night?0.55:1);
+            g.addColorStop(0, rgba(hazeColor, 0));
+            g.addColorStop(0.2, rgba(hazeColor, hazeA));
+            g.addColorStop(1, rgba([0,0,0], 0));
+            ctx.fillStyle = g;
+            ctx.fillRect(0, hzY, w, h - hzY);
+          }
+
+          // stars
+          if (night > 0.5){
+            const starA = (0.55 + 0.25*cosy) * (1 - 0.25*spook);
+            ctx.save();
+            ctx.globalCompositeOperation = "screen";
+            for (const s of stars){
+              const tw = 0.55 + 0.45*Math.sin(st.t * s.s + s.p);
+              ctx.globalAlpha = s.a * tw * starA;
+              ctx.fillStyle = "rgba(255,255,255,1)";
+              ctx.beginPath();
+              ctx.arc(s.x*w, s.y*h, s.r, 0, Math.PI*2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+
+          // sun/moon
+          {
+            const cx = w * (0.18 + 0.06*st.parX);
+            const cy = h * (night? 0.22 : 0.20) + h*0.03*st.parY;
+            const r = Math.min(w,h) * (night? 0.06 : 0.07);
+            const sunC = mixColor([255, 231, 184], [255, 198, 120], 0.55 + 0.35*warmth);
+            const moonC = mixColor([220, 240, 255], [210, 230, 255], 0.6);
+
+            ctx.save();
+            ctx.globalCompositeOperation = "screen";
+            const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r*3.4);
+            if (night){
+              g.addColorStop(0, rgba(moonC, 0.22));
+              g.addColorStop(0.28, rgba(moonC, 0.12));
+              g.addColorStop(1, rgba(moonC, 0));
+            } else {
+              g.addColorStop(0, rgba(sunC, 0.24));
+              g.addColorStop(0.25, rgba(sunC, 0.12));
+              g.addColorStop(1, rgba(sunC, 0));
+            }
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r*3.4, 0, Math.PI*2);
+            ctx.fill();
+
+            ctx.globalAlpha = night ? 0.9 : 0.88;
+            ctx.fillStyle = night ? rgba(moonC, 1) : rgba(sunC, 1);
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI*2);
+            ctx.fill();
+
+            // moon cut
+            if (night){
+              ctx.globalCompositeOperation = "destination-out";
+              ctx.globalAlpha = 0.82;
+              ctx.beginPath();
+              ctx.arc(cx + r*0.35, cy - r*0.15, r*0.92, 0, Math.PI*2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+
+          // heroic rays (behind ridges)
+          {
+            const rayI = (0.10 + 0.55*drama) * (night?0.95:0.40) * (1 - 0.25*spook);
+            if (rayI > 0.01){
+              const originX = w * (0.22 + 0.04*st.parX);
+              const originY = h * 0.18 + h*0.02*st.parY;
+              const rays = 7 + Math.floor(5*drama);
+              const maxLen = h*0.9;
+              const baseCol = mixColor([255, 240, 210], [210, 245, 255], 0.55);
+              const rayCol = mixColor(baseCol, [160, 255, 210], 0.25*cosy);
+
+              ctx.save();
+              ctx.globalCompositeOperation = "screen";
+              for (let i=0;i<rays;i++){
+                const tt = i/(rays-1);
+                const a0 = (-0.7 + tt*1.25) + 0.15*Math.sin(st.t*0.35 + i*1.7);
+                const spread = 0.07 + 0.06*drama;
+                const a1 = a0 + spread;
+
+                const x0 = originX + Math.cos(a0)*maxLen;
+                const y0 = originY + Math.sin(a0)*maxLen;
+                const x1 = originX + Math.cos(a1)*maxLen;
+                const y1 = originY + Math.sin(a1)*maxLen;
+
+                ctx.globalAlpha = rayI * (0.14 + 0.10*Math.sin(i*1.8 + st.t*0.7));
+                ctx.beginPath();
+                ctx.moveTo(originX, originY);
+                ctx.lineTo(x0, y0);
+                ctx.lineTo(x1, y1);
+                ctx.closePath();
+                ctx.fillStyle = rgba(rayCol, 1);
+                ctx.fill();
+              }
+              ctx.restore();
+            }
+          }
+
+          const drift = Math.sin(st.t*0.18) * 0.012;
+
+          const drawRidge = (arr, color, alpha, parFactor, yShift=0) => {
+            ctx.save();
+            const ox = (st.parX * parFactor + drift*parFactor*6) * w;
+            const oy = (st.parY * parFactor) * h + yShift*h;
+
+            ctx.translate(ox, oy);
+            ctx.beginPath();
+            ctx.moveTo(0, h);
+            for (let i=0;i<arr.length;i++){
+              const t0 = i/(arr.length-1);
+              const x = t0*w;
+              const y = arr[i]*h;
+              ctx.lineTo(x, y);
+            }
+            ctx.lineTo(w, h);
+            ctx.closePath();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = rgba(color, 1);
+            ctx.fill();
+            ctx.restore();
+          };
+
+          // ridges
+          {
+            const farCol = mixColor(mixColor(skyBot, [20,25,40], 0.55), [255,190,140], warmth*0.10);
+            const midCol = mixColor([34, 40, 58], [255, 190, 130], warmth*0.12);
+            const nearCol = mixColor([18, 20, 30], [90, 120, 140], 0.12*(1-warmth));
+            drawRidge(ridges.far, farCol, 0.78*(1-0.10*spook), 0.03);
+            drawRidge(ridges.mid, midCol, 0.86, 0.06);
+            drawRidge(ridges.near, nearCol, 0.96, 0.10);
+          }
+
+          // city silhouette
+          {
+            const base = night ? [10, 12, 18] : [18, 20, 30];
+            const cityCol = mixColor(base, [35, 45, 55], 0.22*(1-night));
+            const yBase = h * 0.76;
+            const par = 0.14;
+            ctx.save();
+            ctx.translate(st.parX*w*par, st.parY*h*par);
+
+            ctx.globalAlpha = 0.95;
+            ctx.fillStyle = rgba(cityCol, 1);
+            for (const b of buildings){
+              const bx = b.x*w;
+              const bw = b.w*w*1.5;
+              const bh = b.h*h;
+              ctx.fillRect(bx, yBase - bh, bw, bh + h*0.25);
+            }
+
+            const winA = night ? (0.06 + 0.22*cosy) : (0.02 + 0.05*cosy);
+            if (winA > 0.005){
+              ctx.save();
+              ctx.globalCompositeOperation = "screen";
+              for (const b of buildings){
+                const bx = b.x*w;
+                const bw = b.w*w*1.5;
+                const bh = b.h*h;
+                const wx0 = bx + bw*0.12;
+                const wy0 = yBase - bh + bh*0.14;
+                for (const ww of b.windows){
+                  if (!ww.on) continue;
+                  const tw = 0.55 + 0.45*Math.sin(st.t*ww.tw + ww.ph);
+                  const a = winA * (0.35 + 0.65*tw);
+                  ctx.globalAlpha = a;
+                  const cx = wx0 + ww.x*bw*0.76;
+                  const cy = wy0 + ww.y*bh*0.76;
+                  const col = mixColor([255, 220, 160], [180, 235, 255], 0.45 + 0.40*spook);
+                  ctx.fillStyle = rgba(col, 1);
+                  ctx.fillRect(cx, cy, 1.6, 1.6);
+                }
+              }
+              ctx.restore();
+            }
+
+            ctx.restore();
+          }
+
+          // clouds (parallax)
+          {
+            const wind = FORECAST.windKph;
+            const speed = (0.01 + wind/4200) * (reduceMotion ? 0.15 : 1);
+            const alphaBase = 0.18 + 0.22*(1-night) + 0.10*spook;
+            const cloudCol = mixColor(mixColor(skyBot, [180, 190, 205], 0.55), [120, 140, 180], spook*0.55);
+            for (const c of clouds){
+              c.x = (c.x + dt * speed * (0.40 + c.z*0.9)) % 1.08;
+              const x = (c.x - 0.04) * w + st.parX*w*0.05*c.z;
+              const y = (c.y * h) + st.parY*h*0.03*c.z + Math.sin(st.t*0.6 + c.p)*c.wobble*6;
+              const s = (0.65 + 0.35*c.z) * c.s * (w/900);
+              drawCloud(ctx, x, y, s, cloudCol, alphaBase * (0.55 + 0.45*c.z));
+            }
+          }
+
+          // string lights (cosy)
+          {
+            const lightI = (0.05 + 0.55*cosy) * (night?1.0:0.65);
+            if (lightI > 0.01){
+              const y0 = h * 0.12;
+              const xL = w * 0.12;
+              const xR = w * 0.88;
+              const sag = h * (0.045 + 0.015*cosy);
+              ctx.save();
+              ctx.globalAlpha = 0.55*lightI;
+              ctx.strokeStyle = "rgba(255,255,255,0.28)";
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              for (let i=0;i<=32;i++){
+                const t0 = i/32;
+                const x = lerp(xL, xR, t0);
+                const y = y0 + Math.sin(Math.PI*t0) * sag;
+                if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+              }
+              ctx.stroke();
+
+              const bulbs = 22;
+              for (let i=0;i<bulbs;i++){
+                const t0 = i/(bulbs-1);
+                const x = lerp(xL, xR, t0);
+                const y = y0 + Math.sin(Math.PI*t0)*sag;
+                const tw = 0.6 + 0.4*Math.sin(st.t*2.2 + i*1.7);
+                const col = mixColor([255, 200, 140], [255, 245, 220], 0.35 + 0.35*tw);
+                const g = ctx.createRadialGradient(x, y, 0, x, y, 18);
+                g.addColorStop(0, rgba(col, 0.22*lightI*tw));
+                g.addColorStop(0.45, rgba(col, 0.09*lightI));
+                g.addColorStop(1, rgba(col, 0));
+                ctx.globalCompositeOperation = "screen";
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(x, y, 18, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.globalCompositeOperation = "source-over";
+                ctx.globalAlpha = 0.85*lightI;
+                ctx.fillStyle = rgba(col, 1);
+                ctx.beginPath();
+                ctx.arc(x, y, 2.1, 0, Math.PI*2);
+                ctx.fill();
+              }
+              ctx.restore();
+            }
+          }
+
+          // stage floor
+          {
+            const floorTopY = h * 0.74;
+            const floorBotY = h * 1.03;
+            const leftTopX = w * (0.18 - 0.02*st.parX);
+            const rightTopX = w * (0.82 - 0.02*st.parX);
+            const leftBotX = -w * 0.06;
+            const rightBotX = w * 1.06;
+
+            const woodBase = night ? [18, 16, 20] : [26, 24, 28];
+            const woodWarm = mixColor(woodBase, [60, 40, 30], warmth*0.45);
+            const woodCool = mixColor(woodWarm, [20, 30, 40], spook*0.30);
+
+            ctx.save();
+            const g = ctx.createLinearGradient(0, floorTopY, 0, floorBotY);
+            g.addColorStop(0, rgba(mixColor(woodCool, [255,255,255], 0.03), 0.95));
+            g.addColorStop(1, rgba(mixColor(woodCool, [0,0,0], 0.35), 0.98));
+
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.moveTo(leftTopX, floorTopY);
+            ctx.lineTo(rightTopX, floorTopY);
+            ctx.lineTo(rightBotX, floorBotY);
+            ctx.lineTo(leftBotX, floorBotY);
+            ctx.closePath();
+            ctx.fill();
+
+            // planks
+            ctx.globalAlpha = 0.22 + 0.20*drama;
+            ctx.strokeStyle = "rgba(255,255,255,0.18)";
+            ctx.lineWidth = 1;
+            const centerX = w * 0.5;
+            const vanY = floorTopY - h*0.12;
+            for (let i=-7;i<=7;i++){
+              const t0 = i/7;
+              const bx = lerp(centerX, (t0<0 ? leftBotX : rightBotX), Math.abs(t0));
+              ctx.beginPath();
+              ctx.moveTo(centerX, vanY);
+              ctx.lineTo(bx, floorBotY);
+              ctx.stroke();
+            }
+
+            // reflection sheen
+            const sheenA = (0.06 + 0.12*night + 0.08*spook) * (0.7 + 0.3*drama);
+            ctx.globalAlpha = sheenA;
+            ctx.globalCompositeOperation = "screen";
+            const sg = ctx.createRadialGradient(centerX, floorTopY + h*0.05, 0, centerX, floorTopY + h*0.05, w*0.6);
+            const sc = mixColor([140, 220, 255], [255, 200, 150], 0.55*warmth + 0.25*cosy);
+            sg.addColorStop(0, rgba(sc, 0.18));
+            sg.addColorStop(0.5, rgba(sc, 0.06));
+            sg.addColorStop(1, rgba(sc, 0));
+            ctx.fillStyle = sg;
+            ctx.fillRect(0, floorTopY-10, w, h - floorTopY + 10);
+
+            ctx.restore();
+          }
+
+          // banners (heroic)
+          {
+            const bI = (0.06 + 0.62*heroic) * (1 - 0.25*spook);
+            if (bI > 0.01){
+              const floorTopY = h * 0.74;
+              ctx.save();
+              ctx.globalAlpha = bI;
+              const poleCol = "rgba(255,255,255,0.22)";
+              ctx.strokeStyle = poleCol;
+              ctx.lineWidth = 2;
+
+              const drawBanner = (x, flip) => {
+                const poleTop = h*0.18;
+                ctx.beginPath();
+                ctx.moveTo(x, poleTop);
+                ctx.lineTo(x, floorTopY + h*0.05);
+                ctx.stroke();
+
+                const flagW = w*0.12;
+                const flagH = h*0.12;
+                const y = h*0.26;
+                const wave = 0.18*Math.sin(st.t*2.1 + (flip?1.3:0) ) + 0.08*Math.sin(st.t*4.2 + (flip?0.2:1.1));
+                const dir = flip ? -1 : 1;
+
+                const base = mixColor([255, 185, 120], [140, 220, 255], 0.55*spook);
+                const colA = mixColor(base, [255,255,255], 0.10);
+                const colB = mixColor(base, [0,0,0], 0.18);
+
+                const g = ctx.createLinearGradient(x, y, x + dir*flagW, y);
+                g.addColorStop(0, rgba(colA, 0.95));
+                g.addColorStop(1, rgba(colB, 0.95));
+
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + dir*flagW*0.85, y + flagH*(0.10 + wave));
+                ctx.lineTo(x + dir*flagW, y + flagH*0.55);
+                ctx.lineTo(x + dir*flagW*0.82, y + flagH*(0.92 - wave));
+                ctx.lineTo(x, y + flagH);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.globalAlpha *= 0.9;
+                ctx.strokeStyle = "rgba(0,0,0,0.25)";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.globalAlpha /= 0.9;
+              };
+
+              drawBanner(w*0.12, false);
+              drawBanner(w*0.88, true);
+
+              ctx.restore();
+            }
+          }
+
+          // spotlights (sweeps)
+          {
+            const sweepI = (0.08 + 0.75*drama) * (night?1.0:0.35) * (1 - 0.10*cosy);
+            if (sweepI > 0.01){
+              const floorY = h * 0.84;
+              const srcY = h * 0.02;
+              const t0 = st.t * (reduceMotion ? 0.22 : 0.70) + st.spotlightPhase;
+
+              const colA = mixColor([200, 240, 255], [255, 210, 160], 0.22 + 0.55*warmth);
+              const colB = mixColor([160, 255, 210], [170, 210, 255], 0.35 + 0.45*spook);
+
+              const x1 = w * (0.18 + 0.10*Math.sin(t0*0.85));
+              const x2 = w * (0.82 + 0.12*Math.sin(t0*0.75 + 2.1));
+              const d1 = w * (0.44 + 0.16*Math.sin(t0*1.1 + 0.9));
+              const d2 = w * (0.56 + 0.18*Math.sin(t0*0.95 + 2.8));
+
+              const wdst = w * (0.18 + 0.18*drama);
+
+              drawSpotlight(ctx, x1, srcY, d1, floorY, wdst, mixColor(colA, colB, 0.35*spook), sweepI*0.75);
+              drawSpotlight(ctx, x2, srcY, d2, floorY, wdst*0.92, mixColor(colA, colB, 0.55*spook), sweepI*0.62);
+
+              // gobo stripes (subtle)
+              ctx.save();
+              ctx.globalCompositeOperation = "screen";
+              ctx.globalAlpha = sweepI*0.14;
+              ctx.strokeStyle = "rgba(255,255,255,0.35)";
+              ctx.lineWidth = 1;
+              for (let i=0;i<9;i++){
+                const yy = h*(0.20 + i*0.07);
+                ctx.beginPath();
+                ctx.moveTo(0, yy);
+                ctx.lineTo(w, yy + Math.sin(t0 + i)*10);
+                ctx.stroke();
+              }
+              ctx.restore();
+            }
+          }
+
+          // precipitation (rain) + mood particles
+          {
+            const isRain = /rain|shower/i.test(FORECAST.condition);
+            const rainI = isRain ? (0.22 + 0.45*spook + 0.22*heroic) : 0.0;
+            const wind = FORECAST.windKph;
+
+            if (rainI > 0.01){
+              ctx.save();
+              ctx.globalCompositeOperation = "screen";
+              const windX = (wind/50) * (14 + 18*heroic) * (reduceMotion ? 0.35 : 1);
+              const fall = (380 + 260*spook) * (reduceMotion ? 0.35 : 1);
+
+              const rainCol = mixColor([180, 220, 255], [140, 255, 200], 0.35*spook);
+              const rainCol2 = mixColor(rainCol, [255, 210, 160], 0.18*warmth);
+
+              ctx.globalAlpha = 0.85 * rainI;
+              for (const d of drops){
+                d.y += dt * (fall/Math.max(1,h)) * (0.35 + d.z*0.85);
+                d.x += dt * (windX/Math.max(1,w)) * (0.45 + d.z*0.75);
+                if (d.y > 1.08){ d.y = -0.08; d.x = rng(); }
+
+                const x = d.x * w;
+                const y = d.y * h;
+
+                const len = (10 + 22*d.z) * (0.65 + 0.55*spook);
+                const ex = x + windX * (0.22 + 0.12*d.z);
+                const ey = y + len;
+
+                ctx.strokeStyle = rgba(mixColor(rainCol2, [255,255,255], 0.25), 0.75);
+                ctx.lineWidth = 1 + 0.6*(d.z);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(ex, ey);
+                ctx.stroke();
+              }
+              ctx.restore();
+            }
+
+            // fog layer
+            const fogI = (0.05 + 0.70*spook) * (night?1:0.70);
+            if (fogI > 0.01){
+              ctx.save();
+              ctx.globalCompositeOperation = "screen";
+              const fogCol = mixColor([140, 220, 255], [160, 255, 210], 0.45) ;
+              ctx.globalAlpha = fogI * 0.22;
+              for (const f of fog){
+                f.x = (f.x + dt*(0.01 + 0.02*f.z)) % 1.2;
+                const x = (f.x - 0.10) * w + st.parX*w*0.08*f.z;
+                const y = f.y * h + Math.sin(st.t*0.5 + f.p)*10;
+                const r = f.r * Math.min(w,h) * (0.85 + 0.25*f.z);
+                const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+                g.addColorStop(0, rgba(fogCol, 0.22));
+                g.addColorStop(0.55, rgba(fogCol, 0.08));
+                g.addColorStop(1, rgba(fogCol, 0));
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI*2);
+                ctx.fill();
+              }
+              ctx.restore();
+            }
+
+            // fireflies (cosy night)
+            const flyI = (0.02 + 0.55*cosy) * night * (1 - 0.35*spook);
+            if (flyI > 0.01){
+              ctx.save();
+              ctx.globalCompositeOperation = "screen";
+              for (const ff of fireflies){
+                ff.p += dt * ff.s * (reduceMotion ? 0.35 : 1);
+                const tw = 0.45 + 0.55*Math.sin(ff.p);
+                const x = (ff.x + 0.01*Math.sin(ff.p*0.7))*w + st.parX*w*0.06*ff.z;
+                const y = (ff.y + 0.015*Math.cos(ff.p*0.9))*h + st.parY*h*0.05*ff.z;
+                const r = (1.4 + 2.6*tw) * (0.65 + 0.55*ff.z);
+                const col = mixColor([255, 220, 160], [160, 255, 210], 0.45);
+                const g = ctx.createRadialGradient(x, y, 0, x, y, 20);
+                g.addColorStop(0, rgba(col, 0.20*flyI*tw));
+                g.addColorStop(0.2, rgba(col, 0.10*flyI));
+                g.addColorStop(1, rgba(col, 0));
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.globalAlpha = flyI * (0.35 + 0.65*tw);
+                ctx.fillStyle = rgba([255,255,255], 1);
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+              }
+              ctx.restore();
+            }
+          }
+
+          // vignette
+          {
+            const g = ctx.createRadialGradient(w*0.5, h*0.55, Math.min(w,h)*0.25, w*0.5, h*0.55, Math.max(w,h)*0.85);
+            g.addColorStop(0, "rgba(0,0,0,0)");
+            g.addColorStop(1, `rgba(0,0,0,${0.42 + 0.20*night + 0.12*spook})`);
+            ctx.fillStyle = g;
+            ctx.fillRect(0,0,w,h);
+          }
+
+          // lightning flash overlay
+          if (flash > 0.001){
+            ctx.save();
+            ctx.globalCompositeOperation = "screen";
+            ctx.globalAlpha = flash;
+            ctx.fillStyle = "rgba(255,255,255,0.9)";
+            ctx.fillRect(0,0,w,h);
+            ctx.restore();
+          }
+
+          // curtains on top
+          drawCurtains(ctx, w, h, st.curtainP, mode, st.t);
+        };
+
+        stateRef.current.raf = requestAnimationFrame(frame);
+
+        return () => {
+          wrap.removeEventListener("pointermove", onMove);
+          wrap.removeEventListener("pointerleave", onLeave);
+          if (stateRef.current?.raf) cancelAnimationFrame(stateRef.current.raf);
+        };
+      }, []);
+
+      useEffect(() => {
+        // cue: close & reveal again (a quick reset)
+        const st = stateRef.current;
+        if (!st) return;
+        st.curtainP = 0;
+        st.lightning = 0;
+        st.nextLightningAt = st.t + 1.2;
+      }, [cue]);
+
+      return (
+        <div ref={wrapRef} className="stageWrap" role="img" aria-label="Animated canvas theatre scene remixed by mood sliders">
+          <canvas className="stage" ref={canvasRef} />
+          <div className="stageOverlay" />
+        </div>
+      );
+    }
+
+    function Slider({name, tag, detail, value, onChange, accent}){
+      const style = useMemo(() => ({ accentColor: accent }), [accent]);
+      return (
+        <div className="sliderRow">
+          <div className="sliderTop">
+            <div className="name">
+              <strong>{name}</strong>
+              <span>{detail}</span>
+            </div>
+            <span className="chip">{tag}</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={value}
+            onChange={(e) => onChange(parseInt(e.target.value, 10))}
+            style={style}
+            aria-label={name}
+          />
+          <div className="sliderTop" style={{marginTop: -2}}>
+            <span className="value">Intensity</span>
+            <span className="value">{value}</span>
+          </div>
+        </div>
+      );
+    }
+
+    function App(){
+      const [cosy, setCosy] = useState(62);
+      const [eerie, setEerie] = useState(24);
+      const [heroic, setHeroic] = useState(40);
+      const [timeMode, setTimeMode] = useState("matinee");
+      const [cue, setCue] = useState(1);
+
+      const moods = useMemo(() => ({cosy, eerie, heroic}), [cosy, eerie, heroic]);
+
+      const fullSubtitle = useMemo(() => buildSceneText(FORECAST, moods, timeMode), [moods, timeMode]);
+      const [typed, setTyped] = useState("");
+
+      useEffect(() => {
+        const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduce){
+          setTyped(fullSubtitle);
+          return;
+        }
+        setTyped("");
+        let i = 0;
+        let alive = true;
+
+        const tick = () => {
+          if (!alive) return;
+          i = Math.min(fullSubtitle.length, i + 1);
+          setTyped(fullSubtitle.slice(0, i));
+          if (i >= fullSubtitle.length) return;
+          const ch = fullSubtitle[i] || "";
+          const base = (ch === "," || ch === "." || ch === "—") ? 110 : 18;
+          const jitter = 18 + Math.random()*30;
+          setTimeout(tick, base + jitter);
+        };
+
+        const startDelay = 220;
+        const id = setTimeout(tick, startDelay);
+
+        return () => {
+          alive = false;
+          clearTimeout(id);
+        };
+      }, [fullSubtitle, cue]);
+
+      const toggleTime = useCallback(() => {
+        setTimeMode((m) => (m === "matinee" ? "night" : "matinee"));
+        setCue((c) => c + 1);
+      }, []);
+
+      const encore = useCallback(() => setCue((c) => c + 1), []);
+
+      const preset = useCallback((which) => {
+        if (which === "cosy"){
+          setCosy(78); setEerie(16); setHeroic(32);
+        } else if (which === "eerie"){
+          setCosy(18); setEerie(78); setHeroic(34);
+        } else if (which === "heroic"){
+          setCosy(28); setEerie(22); setHeroic(82);
+        }
+        setCue((c) => c + 1);
+      }, []);
+
+      const vibe = useMemo(() => dominantVibe(moods), [moods]);
+
+      return (
+        <div className="page">
+          <div className="topbar">
+            <div className="brand">
+              <h1 className="title">Weather Theatre</h1>
+              <p className="kicker">
+                One forecast, three moods. Use the sliders to remix the same sky into different stage sets—parallax backdrops, sweeping spotlights, and a curtain reveal.
+              </p>
+            </div>
+
+            <div className="btnRow" aria-label="Quick actions">
+              <button className="btnPrimary" onClick={encore} title="Re-run the curtain reveal & subtitle">
+                Curtain Call
+              </button>
+              <button onClick={() => preset("cosy")} title="Cosy preset">Cosy</button>
+              <button onClick={() => preset("eerie")} title="Eerie preset">Eerie</button>
+              <button onClick={() => preset("heroic")} title="Heroic preset">Heroic</button>
+            </div>
+          </div>
+
+          <div className="layout">
+            <div className="card stageCard">
+              <div className="stageHead">
+                <div className="stageLabel">
+                  <h2>Stage</h2>
+                  <p className="hint">Move your pointer over the scene for parallax. Current mix: <span className="chip" style={{marginLeft: 8}}>{vibe}</span></p>
+                </div>
+
+                <div className="toggleRow" style={{padding:"8px 10px", borderRadius: 14}}>
+                  <div className="toggleText">
+                    <strong>{timeMode === "night" ? "Night" : "Matinée"}</strong>
+                    <span>Lighting + palette swap</span>
+                  </div>
+                  <div
+                    className={"switch" + (timeMode === "night" ? " on" : "")}
+                    role="switch"
+                    aria-checked={timeMode === "night"}
+                    tabIndex={0}
+                    onClick={toggleTime}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") toggleTime(); }}
+                    title="Toggle Matinée / Night"
+                  />
+                </div>
+              </div>
+
+              <StageCanvas moods={moods} timeMode={timeMode} cue={cue} />
+
+              <div className="subtitle" aria-live="polite" aria-atomic="true">
+                <div className="subtitleLabel">
+                  <span>Subtitle (typewriter)</span>
+                  <span style={{color:"rgba(255,255,255,0.62)"}}>No external APIs</span>
+                </div>
+                <div className="typedLine">
+                  {typed}<span className="cursor" aria-hidden="true">▍</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="card side">
+              <div>
+                <p className="sectionTitle" style={{marginBottom: 8}}>Mood sliders</p>
+                <div className="controls">
+                  <Slider
+                    name="Cosy"
+                    tag="Warmth / glow"
+                    detail="Lanterns, honeyed haze, gentle spark"
+                    value={cosy}
+                    onChange={(v) => { setCosy(v); }}
+                    accent="#ffb36c"
+                  />
+                  <Slider
+                    name="Eerie"
+                    tag="Fog / uncanny"
+                    detail="Mist, hush, greenish wash, thunder risk"
+                    value={eerie}
+                    onChange={(v) => { setEerie(v); }}
+                    accent="#8ad7ff"
+                  />
+                  <Slider
+                    name="Heroic"
+                    tag="Drama / contrast"
+                    detail="Bold rays, banners, sharper light sweeps"
+                    value={heroic}
+                    onChange={(v) => { setHeroic(v); }}
+                    accent="#b9ffa3"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="sectionTitle" style={{marginBottom: 8}}>Mock forecast (unchanged)</p>
+                <div className="forecast">
+                  <div className="forecastTop">
+                    <div className="place">
+                      <strong>{FORECAST.location}</strong>
+                      <span>{FORECAST.day} — {FORECAST.condition}</span>
+                    </div>
+                    <span className="badge">{timeMode === "night" ? "Night show" : "Matinée"}</span>
+                  </div>
+
+                  <div className="grid2">
+                    <div className="stat">
+                      <span>Temperature</span>
+                      <strong>{FORECAST.tempC}°C <span style={{color:"rgba(255,255,255,0.62)", fontWeight: 650}}>(feels {FORECAST.feelsLikeC}°C)</span></strong>
+                    </div>
+                    <div className="stat">
+                      <span>Wind</span>
+                      <strong>{FORECAST.windKph} km/h</strong>
+                    </div>
+                    <div className="stat">
+                      <span>Humidity</span>
+                      <strong>{FORECAST.humidity}%</strong>
+                    </div>
+                    <div className="stat">
+                      <span>Pressure</span>
+                      <strong>{FORECAST.pressureHpa} hPa</strong>
+                    </div>
+                  </div>
+
+                  <div className="fineprint">
+                    The “set” changes, not the forecast: all visuals are generated locally on a canvas. Try extreme mixes (e.g., high Eerie at Night) for mist + lightning.
+                  </div>
+                </div>
+              </div>
+
+              <div className="fineprint">
+                Tip: If motion feels too lively, enable “Reduce motion” in your OS settings—spotlight sweeps and parallax will calm down automatically.
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
