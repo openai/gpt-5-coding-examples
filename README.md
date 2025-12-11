@@ -1,4 +1,4 @@
-# GPT-5 Coding Examples
+# GPT-5* Coding Examples
 
 This repository contains a curated collection of demo applications **generated entirely in a single [GPT-5](https://platform.openai.com/docs/models/gpt-5) or [GPT-5.2](https://platform.openai.com/docs/models/gpt-5.2) prompt**, without writing any code by hand.
 
