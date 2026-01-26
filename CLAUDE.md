@@ -42,3 +42,8 @@ The `copy-docs.mjs` script (runs via `prebuild` and `dev`) copies `/apps/*` subd
 - Next.js 15 with App Router and Turbopack
 - React 19, TypeScript, Tailwind CSS v4
 - shadcn/ui components (Radix primitives)
+
+### 守ってほしいこと
+- ソースコード内のコメントは日本語で記述すること
+- TypeScriptにおいて、必要以上にクラスを利用しないこと
+- 既存のディレクトリ構成・命名・状態管理の流儀にそろえること

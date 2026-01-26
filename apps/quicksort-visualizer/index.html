@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quicksort Visualizer</title>
+  <style>
+    :root {
+      --bg1: #0f1126;
+      --bg2: #1a1d3a;
+      --accent: #ffd166;
+      --accent2: #06d6a0;
+      --accent3: #ef476f;
+      --text: #f2f3fb;
+      --btn: #2b2e57;
+      --btn-hover: #3a3e75;
+      --panel-bg: rgba(255, 255, 255, 0.06);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      /* ソートの状態を表す色 */
+      --color-default: #4facfe;
+      --color-pivot: #ffd166;
+      --color-comparing: #ef476f;
+      --color-swapping: #a855f7;
+      --color-sorted: #06d6a0;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 10% -10%, #22275c 0%, transparent 60%),
+                  radial-gradient(1200px 600px at 120% 20%, #2c2f69 0%, transparent 60%),
+                  linear-gradient(160deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
+      backdrop-filter: saturate(1.2) blur(6px);
+      padding: 18px 16px 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(from 180deg, var(--color-default), var(--accent), var(--accent2), var(--accent3), var(--color-default));
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35) inset, 0 4px 14px rgba(0, 0, 0, 0.25);
+      color: #fff;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 3.2vw, 34px);
+    }
+
+    .subtitle {
+      opacity: 0.8;
+      font-size: 12px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 8px 16px 40px;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 14px 14px 18px;
+      margin: 16px 0;
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .panel h2 {
+      margin: 8px 6px 10px;
+      font-size: 18px;
+    }
+
+    /* 棒グラフ表示エリア */
+    .visualizer {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+      height: clamp(200px, 40vh, 350px);
+      padding: 16px 8px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .bar {
+      flex: 1;
+      max-width: 40px;
+      min-width: 4px;
+      background: var(--color-default);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+      position: relative;
+    }
+
+    .bar.pivot {
+      background: var(--color-pivot);
+      box-shadow: 0 0 12px var(--color-pivot);
+    }
+
+    .bar.comparing {
+      background: var(--color-comparing);
+      box-shadow: 0 0 8px var(--color-comparing);
+    }
+
+    .bar.swapping {
+      background: var(--color-swapping);
+      box-shadow: 0 0 12px var(--color-swapping);
+      transform: scaleY(1.05);
+    }
+
+    .bar.sorted {
+      background: var(--color-sorted);
+    }
+
+    /* コントロール */
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .btn {
+      background: var(--btn);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--btn-hover);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn.primary {
+      background: linear-gradient(180deg, var(--accent), #f0b74c);
+      color: #1a1a1a;
+      border: 0;
+      font-weight: 700;
+    }
+
+    .btn.primary:hover {
+      background: linear-gradient(180deg, #ffe08a, var(--accent));
+    }
+
+    .btn.success {
+      background: linear-gradient(180deg, var(--accent2), #05c696);
+      color: #0b1b19;
+      border: 0;
+      font-weight: 700;
+    }
+
+    .btn.danger {
+      background: linear-gradient(180deg, var(--accent3), #c93555);
+      color: #fff;
+      border: 0;
+      font-weight: 700;
+    }
+
+    /* スライダー */
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slider-group label {
+      font-size: 13px;
+      opacity: 0.85;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      height: 6px;
+      width: 100px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* 凡例 */
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+
+    /* 統計情報パネル */
+    .stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    /* ステップ説明 */
+    .step-info {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid var(--accent);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 40px;
+    }
+
+    .step-info code {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "Fira Code", "Consolas", monospace;
+    }
+
+    .footer {
+      opacity: 0.7;
+      text-align: center;
+      margin-top: 28px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        justify-content: center;
+      }
+      .stats {
+        justify-content: center;
+      }
+      input[type="range"] {
+        width: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">QS</div>
+    <div>
+      <h1>Quicksort Visualizer</h1>
+      <div class="subtitle">クイックソートアルゴリズムを視覚的に学ぶ</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="panel">
+      <h2>配列の可視化</h2>
+      <div class="visualizer" id="visualizer"></div>
+
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--color-default)"></div>
+          <span>未ソート</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--color-pivot)"></div>
+          <span>ピボット</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--color-comparing)"></div>
+          <span>比較中</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--color-swapping)"></div>
+          <span>スワップ</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--color-sorted)"></div>
+          <span>ソート済み</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>コントロール</h2>
+      <div class="controls">
+        <button class="btn primary" id="generateBtn">新規配列</button>
+        <button class="btn" id="stepBtn">ステップ実行</button>
+        <button class="btn success" id="playBtn">再生</button>
+        <button class="btn danger" id="resetBtn">リセット</button>
+      </div>
+
+      <div class="controls" style="margin-top: 12px;">
+        <div class="slider-group">
+          <label>配列サイズ:</label>
+          <input type="range" id="sizeSlider" min="5" max="50" value="20" />
+          <span id="sizeValue">20</span>
+        </div>
+        <div class="slider-group">
+          <label>速度:</label>
+          <input type="range" id="speedSlider" min="1" max="10" value="5" />
+          <span id="speedValue">5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>統計情報</h2>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-value" id="comparisons">0</div>
+          <div class="stat-label">比較回数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="swaps">0</div>
+          <div class="stat-label">スワップ回数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stepCount">0</div>
+          <div class="stat-label">ステップ数</div>
+        </div>
+      </div>
+
+      <div class="step-info" id="stepInfo">
+        「新規配列」ボタンをクリックして開始してください。
+      </div>
+    </div>
+
+    <div class="footer">
+      クイックソートは平均計算量 O(n log n) の高速なソートアルゴリズムです。
+    </div>
+  </div>
+
+  <script>
+    // DOM要素の参照
+    const visualizer = document.getElementById('visualizer');
+    const generateBtn = document.getElementById('generateBtn');
+    const stepBtn = document.getElementById('stepBtn');
+    const playBtn = document.getElementById('playBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sizeSlider = document.getElementById('sizeSlider');
+    const sizeValue = document.getElementById('sizeValue');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValue = document.getElementById('speedValue');
+    const comparisonsEl = document.getElementById('comparisons');
+    const swapsEl = document.getElementById('swaps');
+    const stepCountEl = document.getElementById('stepCount');
+    const stepInfo = document.getElementById('stepInfo');
+
+    // アプリケーションの状態
+    let array = [];
+    let sortedIndices = new Set();
+    let generator = null;
+    let isPlaying = false;
+    let playInterval = null;
+    let comparisons = 0;
+    let swapCount = 0;
+    let stepCount = 0;
+    let currentState = null;
+
+    // ランダムな配列を生成
+    const generateArray = (size) => {
+      const arr = [];
+      for (let i = 0; i < size; i++) {
+        arr.push(Math.floor(Math.random() * 100) + 1);
+      }
+      return arr;
+    };
+
+    // 配列を描画
+    const renderArray = (highlights = {}) => {
+      visualizer.innerHTML = '';
+      const maxVal = Math.max(...array, 1);
+
+      array.forEach((value, index) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = `${(value / maxVal) * 100}%`;
+
+        // 状態に応じてクラスを付与
+        if (sortedIndices.has(index)) {
+          bar.classList.add('sorted');
+        }
+        if (highlights.pivot === index) {
+          bar.classList.add('pivot');
+        }
+        if (highlights.comparing && highlights.comparing.includes(index)) {
+          bar.classList.add('comparing');
+        }
+        if (highlights.swapping && highlights.swapping.includes(index)) {
+          bar.classList.add('swapping');
+        }
+
+        visualizer.appendChild(bar);
+      });
+    };
+
+    // 統計情報を更新
+    const updateStats = () => {
+      comparisonsEl.textContent = comparisons;
+      swapsEl.textContent = swapCount;
+      stepCountEl.textContent = stepCount;
+    };
+
+    // クイックソートのジェネレータ関数
+    function* quicksortGenerator(arr, low, high, depth = 0) {
+      if (low < high) {
+        // パーティションの開始を示す
+        yield {
+          type: 'partition_start',
+          message: `パーティション開始: 範囲 [${low}, ${high}]`,
+          low,
+          high
+        };
+
+        // パーティション処理
+        const pivotIndex = high;
+        const pivotValue = arr[pivotIndex];
+
+        yield {
+          type: 'pivot_select',
+          message: `ピボット選択: arr[${pivotIndex}] = ${pivotValue}`,
+          pivot: pivotIndex
+        };
+
+        let i = low - 1;
+
+        for (let j = low; j < high; j++) {
+          // 比較
+          comparisons++;
+          yield {
+            type: 'compare',
+            message: `比較: arr[${j}] = ${arr[j]} ${arr[j] <= pivotValue ? '≤' : '>'} ${pivotValue} (ピボット)`,
+            pivot: pivotIndex,
+            comparing: [j]
+          };
+
+          if (arr[j] <= pivotValue) {
+            i++;
+            if (i !== j) {
+              // スワップ
+              swapCount++;
+              yield {
+                type: 'swap',
+                message: `スワップ: arr[${i}] (${arr[i]}) と arr[${j}] (${arr[j]})`,
+                pivot: pivotIndex,
+                swapping: [i, j]
+              };
+              [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+          }
+        }
+
+        // ピボットを正しい位置に移動
+        const finalPivotPos = i + 1;
+        if (finalPivotPos !== pivotIndex) {
+          swapCount++;
+          yield {
+            type: 'swap_pivot',
+            message: `ピボットを移動: arr[${finalPivotPos}] (${arr[finalPivotPos]}) と arr[${pivotIndex}] (${pivotValue})`,
+            swapping: [finalPivotPos, pivotIndex]
+          };
+          [arr[finalPivotPos], arr[pivotIndex]] = [arr[pivotIndex], arr[finalPivotPos]];
+        }
+
+        // ピボットはソート済みとしてマーク
+        sortedIndices.add(finalPivotPos);
+        yield {
+          type: 'pivot_placed',
+          message: `ピボット ${pivotValue} が位置 ${finalPivotPos} に確定`,
+          sorted: finalPivotPos
+        };
+
+        // 左側の再帰
+        yield* quicksortGenerator(arr, low, finalPivotPos - 1, depth + 1);
+
+        // 右側の再帰
+        yield* quicksortGenerator(arr, finalPivotPos + 1, high, depth + 1);
+      } else if (low === high) {
+        // 単一要素はソート済み
+        sortedIndices.add(low);
+        yield {
+          type: 'single_element',
+          message: `単一要素: arr[${low}] = ${arr[low]} はソート済み`,
+          sorted: low
+        };
+      }
+    }
+
+    // 1ステップ実行
+    const executeStep = () => {
+      if (!generator) return false;
+
+      const result = generator.next();
+      if (result.done) {
+        // ソート完了
+        stepInfo.innerHTML = '<strong>ソート完了!</strong> 配列が正しくソートされました。';
+        // 全要素をソート済みとしてマーク
+        array.forEach((_, i) => sortedIndices.add(i));
+        renderArray();
+        stopPlaying();
+        setButtonStates(true);
+        return false;
+      }
+
+      stepCount++;
+      currentState = result.value;
+      stepInfo.innerHTML = `<strong>ステップ ${stepCount}:</strong> ${currentState.message}`;
+
+      // ハイライト情報を構築
+      const highlights = {};
+      if (currentState.pivot !== undefined) {
+        highlights.pivot = currentState.pivot;
+      }
+      if (currentState.comparing) {
+        highlights.comparing = currentState.comparing;
+      }
+      if (currentState.swapping) {
+        highlights.swapping = currentState.swapping;
+      }
+
+      renderArray(highlights);
+      updateStats();
+      return true;
+    };
+
+    // 再生開始
+    const startPlaying = () => {
+      if (isPlaying) return;
+      isPlaying = true;
+      playBtn.textContent = '一時停止';
+      playBtn.classList.remove('success');
+      playBtn.classList.add('danger');
+
+      const speed = 11 - speedSlider.value; // 速度を反転（高い値 = 高速）
+      const interval = speed * 100;
+
+      playInterval = setInterval(() => {
+        if (!executeStep()) {
+          stopPlaying();
+        }
+      }, interval);
+    };
+
+    // 再生停止
+    const stopPlaying = () => {
+      isPlaying = false;
+      playBtn.textContent = '再生';
+      playBtn.classList.remove('danger');
+      playBtn.classList.add('success');
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+      }
+    };
+
+    // ボタンの状態を設定
+    const setButtonStates = (sortComplete) => {
+      stepBtn.disabled = sortComplete;
+      playBtn.disabled = sortComplete;
+    };
+
+    // 初期化
+    const initialize = () => {
+      const size = parseInt(sizeSlider.value);
+      array = generateArray(size);
+      sortedIndices = new Set();
+      generator = quicksortGenerator(array, 0, array.length - 1);
+      comparisons = 0;
+      swapCount = 0;
+      stepCount = 0;
+      currentState = null;
+      stopPlaying();
+      renderArray();
+      updateStats();
+      stepInfo.innerHTML = '「ステップ実行」または「再生」で開始してください。';
+      setButtonStates(false);
+    };
+
+    // リセット（同じ配列でやり直し）
+    const reset = () => {
+      // 配列を再生成せずにソート状態だけリセット
+      const size = parseInt(sizeSlider.value);
+      // 既存の配列がサイズと異なる場合は新規生成
+      if (array.length !== size) {
+        array = generateArray(size);
+      } else {
+        // シャッフル
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      }
+      sortedIndices = new Set();
+      generator = quicksortGenerator(array, 0, array.length - 1);
+      comparisons = 0;
+      swapCount = 0;
+      stepCount = 0;
+      currentState = null;
+      stopPlaying();
+      renderArray();
+      updateStats();
+      stepInfo.innerHTML = '「ステップ実行」または「再生」で開始してください。';
+      setButtonStates(false);
+    };
+
+    // イベントリスナー
+    generateBtn.addEventListener('click', initialize);
+
+    stepBtn.addEventListener('click', () => {
+      executeStep();
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        stopPlaying();
+      } else {
+        startPlaying();
+      }
+    });
+
+    resetBtn.addEventListener('click', reset);
+
+    sizeSlider.addEventListener('input', () => {
+      sizeValue.textContent = sizeSlider.value;
+    });
+
+    speedSlider.addEventListener('input', () => {
+      speedValue.textContent = speedSlider.value;
+      // 再生中なら速度を更新
+      if (isPlaying) {
+        stopPlaying();
+        startPlaying();
+      }
+    });
+
+    // 初期化実行
+    initialize();
+  </script>
+</body>
+</html>

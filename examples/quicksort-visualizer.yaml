@@ -1,0 +1,12 @@
+id: quicksort-visualizer
+title: Quicksort Visualizer
+prompt: |
+  Create a single-page app that visualizes the quicksort algorithm step by step.
+  Features: random array generation, step-through controls, auto-play with speed adjustment,
+  visual highlighting of pivot/comparisons/swaps, statistics display (comparisons, swaps, steps).
+  Dark theme with smooth animations.
+screenshot_url: https://cdn.openai.com/devhub/gpt5prompts/quicksort-visualizer.png
+tags:
+  - algorithm
+  - educational
+  - interactive
