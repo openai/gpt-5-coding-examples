@@ -48,6 +48,10 @@ npm run lint         # ESLint
 
 shadcn/ui (New York スタイル)、Radix UI プリミティブ、Tailwind CSS v4、Lucide アイコン、CDN から読み込むカスタム OpenAI Sans フォント。
 
+## コーディング規約
+
+- ドキュメントやコードコメントは日本語で記述すること
+
 ## 備考
 
 - 外部からのコントリビューションは受け付けていない (参考・インスピレーション用リポジトリ)
