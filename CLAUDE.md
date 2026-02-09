@@ -1,55 +1,55 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、Claude Code (claude.ai/code) がこのリポジトリで作業する際のガイダンスを提供します。
 
-## Project Overview
+## プロジェクト概要
 
-A showcase website for 64+ demo applications generated entirely by GPT-5/GPT-5.2 from single prompts. The front-end is a Next.js static export that displays these demos in an auto-scrolling grid with iframe previews and prompt metadata.
+GPT-5/GPT-5.2 の単一プロンプトから生成された64以上のデモアプリケーションを紹介するショーケースサイト。フロントエンドは Next.js の静的エクスポートで、自動スクロールするグリッド上に iframe プレビューとプロンプトのメタデータを表示します。
 
-## Development Commands
+## 開発コマンド
 
-All commands run from the `/front-end` directory:
+すべてのコマンドは `/front-end` ディレクトリから実行します:
 
 ```bash
-npm install          # Install dependencies
-npm run dev          # Dev server with Turbopack at localhost:3000
-npm run build        # Production build (auto-copies /apps to /public first)
+npm install          # 依存関係のインストール
+npm run dev          # Turbopack による開発サーバー (localhost:3000)
+npm run build        # 本番ビルド (事前に /apps を /public に自動コピー)
 npm run lint         # ESLint
 ```
 
-There is no test suite configured.
+テストスイートは設定されていません。
 
-## Architecture
+## アーキテクチャ
 
-### Directory Layout
+### ディレクトリ構成
 
-- **`/front-end`** — Next.js 15 app (React 19, App Router, Tailwind CSS v4, shadcn/ui)
-- **`/apps`** — 64+ self-contained example apps (each has `index.html` + assets)
-- **`/examples`** — YAML metadata files (one per app: title, prompt, tags, screenshot URL)
+- **`/front-end`** — Next.js 15 アプリ (React 19, App Router, Tailwind CSS v4, shadcn/ui)
+- **`/apps`** — 64以上の自己完結型サンプルアプリ (各アプリに `index.html` + アセット)
+- **`/examples`** — YAML メタデータファイル (アプリごとに1つ: タイトル、プロンプト、タグ、スクリーンショット URL)
 
-### Build Pipeline
+### ビルドパイプライン
 
-1. `prebuild` script runs `scripts/copy-docs.mjs` which copies all `/apps/*` directories into `/front-end/public/`
-2. `next.config.ts` dynamically detects example dirs in `/public` and creates URL rewrites (e.g., `/asteroid-game` → `/asteroid-game/index.html`)
-3. Output is a fully static HTML export (`output: "export"` in Next.js config)
+1. `prebuild` スクリプトが `scripts/copy-docs.mjs` を実行し、`/apps/*` の全ディレクトリを `/front-end/public/` にコピー
+2. `next.config.ts` が `/public` 内のサンプルディレクトリを動的に検出し、URL リライトを生成 (例: `/asteroid-game` → `/asteroid-game/index.html`)
+3. 出力は完全な静的 HTML エクスポート (Next.js 設定の `output: "export"`)
 
-### Key Data Flow
+### 主要なデータフロー
 
-- `lib/load-yaml.ts` walks the filesystem to find all `.yaml`/`.yml` files in `/examples`
-- `lib/code-examples.ts` parses YAML into `CodeExample` objects used by components
-- `AppGrid` renders auto-scrolling marquee rows of `AppCard` components
-- `AppCard` opens an `AppModal` with a split layout: iframe preview (left) + prompt/metadata (right)
+- `lib/load-yaml.ts` がファイルシステムを走査し、`/examples` 内のすべての `.yaml`/`.yml` ファイルを検出
+- `lib/code-examples.ts` が YAML を解析し、コンポーネントで使用する `CodeExample` オブジェクトを生成
+- `AppGrid` が `AppCard` コンポーネントの自動スクロールするマーキー行をレンダリング
+- `AppCard` が `AppModal` を開き、分割レイアウトで表示: iframe プレビュー (左) + プロンプト/メタデータ (右)
 
-### Path Alias
+### パスエイリアス
 
-`@/*` maps to the `/front-end` root directory (configured in `tsconfig.json`).
+`@/*` は `/front-end` のルートディレクトリにマッピング (`tsconfig.json` で設定)。
 
-### UI Stack
+### UI スタック
 
-shadcn/ui (New York style) with Radix UI primitives, Tailwind CSS v4, Lucide icons, and custom OpenAI Sans font faces loaded from CDN.
+shadcn/ui (New York スタイル)、Radix UI プリミティブ、Tailwind CSS v4、Lucide アイコン、CDN から読み込むカスタム OpenAI Sans フォント。
 
-## Notes
+## 備考
 
-- Not accepting external contributions (reference/inspiration repo only)
-- Example apps are static single-page HTML apps served via iframe
-- Some examples have v5.2 variants (e.g., `asteroid-game` and `asteroid-game-5.2`)
+- 外部からのコントリビューションは受け付けていない (参考・インスピレーション用リポジトリ)
+- サンプルアプリは iframe で表示される静的シングルページ HTML アプリ
+- 一部のサンプルには v5.2 バリアントがある (例: `asteroid-game` と `asteroid-game-5.2`)
